@@ -17,8 +17,21 @@ Antes de qualquer ação, identificar todas as fontes na mensagem:
 ## Fase 1 — Coleta por fonte
 
 ### Trello
-Buscar via MCP Composio: título, descrição, lista atual, labels, membros, due date, checklists completos (nome + itens com estado), comentários em ordem cronológica.
-Anexos: listar URLs no conteúdo consolidado. **Não baixar imagens do Trello** — não é permitido.
+Executar o script de importação passando o card ID ou URL:
+```bash
+python3 d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/trello_card.py <card_id_ou_url>
+```
+O script gera `d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/<idShort>/`:
+- `card_data.json` — todos os dados do card (título, descrição, lista, labels, membros, due date, checklists, comentários, attachments)
+- `attachments/` — todos os anexos baixados (imagens, PDFs, documentos, etc.) com nome no formato `<nome>_<id>.<ext>`
+
+Após execução:
+1. Ler `card_data.json` como fonte dos dados do card.
+2. Para cada arquivo em `attachments/`:
+   - Imagens (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`) → mover para `images/`
+   - Demais arquivos → mover para a raiz da pasta da tarefa
+3. Todos os anexos devem ser listados e referenciados no conteúdo consolidado.
+4. Limpar a pasta temporária gerada pelo script (`<idShort>/`).
 
 ### PDF
 Copiar o arquivo para a pasta da tarefa e executar OCR:
