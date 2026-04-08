@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(pdftotext:*)",
+      "Bash(pdfimages:*)",
+      "Bash(python:*)",
+      "Bash(xargs wc:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(php:*)",
+      "Bash(composer:*)",
+      "Bash(./gradlew:*)",
+      "Bash(eas:*)",
+      "Read(//d/Joabe/Documents/dev/.claude/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python hooks/validate-protected-paths.py"
+          }
+        ]
+      }
+    ]
+  }
+}
