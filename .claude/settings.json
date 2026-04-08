@@ -2,6 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(pwd:*)",
+      "Bash(find:*)",
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(sort:*)",
+      "Bash(wc:*)",
       "Bash(pdftotext:*)",
       "Bash(pdfimages:*)",
       "Bash(python:*)",
