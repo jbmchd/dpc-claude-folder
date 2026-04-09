@@ -5,7 +5,7 @@ Seu objetivo é gerar o APK do Android do projeto Faisao.
 Execute tudo em um único bloco encadeado:
 
 ```bash
-cd d:/Joabe/Documents/dev/projetos/dpc/Faisao &&
+cd d:/Joabe/Documents/dev/projetos/dpc/workspace/Faisao &&
 HASH=$(git rev-parse --short HEAD) &&
 RELEASED_AT=$(date '+%d/%m %H:%M') &&
 printf 'export const COMMIT_HASH = "%s";\nexport const RELEASED_AT = "%s";\n' "$HASH" "$RELEASED_AT" > src/utils/buildInfo.ts &&
@@ -27,7 +27,7 @@ ls -lh android/app/build/outputs/apk/release/app-release.apk
 Adicionar estes passos **antes** do `./gradlew assembleRelease`:
 
 ```bash
-cd d:/Joabe/Documents/dev/projetos/dpc/Faisao &&
+cd d:/Joabe/Documents/dev/projetos/dpc/workspace/Faisao &&
 git status &&
 rm -rf android/app/build &&
 cd android &&

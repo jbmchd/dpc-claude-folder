@@ -2,7 +2,7 @@
 
 > [!WARNING]
 > **PROJETO OBSOLETO — SOMENTE LEITURA**
-> Este projeto está sendo migrado para [DPC](../../../../DPC) (frontend) e [ApiDPC](../../../../ApiDPC) (backend).
+> Este projeto está sendo migrado para [DPC](../../../DPC) (frontend) e [ApiDPC](../../../ApiDPC) (backend).
 > **Nenhuma alteração deve ser feita neste projeto.** Ele serve exclusivamente como referência para telas ainda não migradas.
 
 ---
