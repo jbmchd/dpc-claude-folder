@@ -4,7 +4,13 @@
       "mcp__composio__*",
       "Bash(claude session:*)",
       "Bash(grep -li \"trello\\\\|composio\\\\|Trello\\\\|Composio\" \"C:/Users/joabe/.claude/projects/d--Joabe-Documents-dev-projetos-dpc--claude/\"*.jsonl)",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(pip install:*)",
+      "Bash(python3 -m pip install requests python-dotenv -q)",
+      "Bash(python3 trello_card.py)",
+      "Bash(python3 trello_card.py --todos)",
+      "Bash(python3 trello_card.py ZG10CBiI -v)",
+      "Bash(gh repo:*)"
     ]
   }
 }
