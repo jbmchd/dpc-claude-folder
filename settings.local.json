@@ -5,12 +5,20 @@
       "Bash(python3 d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/trello_card.py --help)",
       "Bash(python3 d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/trello_card.py --todos)",
       "Bash(python3 d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/trello_card.py https://trello.com/c/ZG10CBiI -v)",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3057/attachments/image_69d54d93fe060784c1feacc2.png\" \"d:/Joabe/Documents/dev/projetos/dpc/workspace/.claude/tarefas/cards/3057-edi-cadastro-projetos/images/tela-maracana-01.png\")",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3057/attachments/image_69d54dc4f9291ee2f4acb558.png\" \"d:/Joabe/Documents/dev/projetos/dpc/workspace/.claude/tarefas/cards/3057-edi-cadastro-projetos/images/tela-maracana-02.png\")",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3057/attachments/image_69d54e45fc1ec5e2f9aa6d1d.png\" \"d:/Joabe/Documents/dev/projetos/dpc/workspace/.claude/tarefas/cards/3057-edi-cadastro-projetos/images/codigo-maracana.png\")",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3057/attachments/image_69d5506e0f403ada372b421e.png\" \"d:/Joabe/Documents/dev/projetos/dpc/workspace/.claude/tarefas/cards/3057-edi-cadastro-projetos/images/menu-dpc-cadastro-projetos-edi.png\")",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3057/attachments/image_69d5512fee301a62d872a9f4.png\" \"d:/Joabe/Documents/dev/projetos/dpc/workspace/.claude/tarefas/cards/3057-edi-cadastro-projetos/images/layout-dpc-referencia.png\")",
-      "Bash(xargs grep:*)"
+      "Bash(Select-String -Pattern \"pdo_pgsql|oci8|pdo_oci|Warning|Error\")",
+      "Bash(\"d:/Joabe/Documents/dev/xampp74-multi/php/php.exe\" --version)",
+      "Bash(\"d:/Joabe/Documents/dev/xampp74-multi/php/php.exe\" \"d:/Joabe/Documents/dev/xampp74-multi/php/composer.phar\" install --no-interaction)",
+      "Bash(\"d:/Joabe/Documents/dev/xampp74-multi/php/php.exe\" \"d:/Joabe/Documents/dev/xampp74-multi/php/composer.phar\" install --no-interaction --ignore-platform-req=ext-oci8)",
+      "Bash(\"d:/Joabe/Documents/dev/xampp74-multi/apache/bin/httpd.exe\" -t)",
+      "Bash(\"d:/Joabe/Documents/dev/xampp74-multi/php/php.exe\" -r \"echo 'PHP OK';\")",
+      "Bash(\"d:/Joabe/Documents/dev/xampp74-multi/php/php.exe\" \"d:/Joabe/Documents/dev/projetos/dpc/workspace/apiauth/artisan\")",
+      "Bash(netstat -ano)",
+      "Read(//c/**)",
+      "Bash(python3 -)",
+      "Bash(python3 /tmp/oracle_rewrite.py)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('hooks', {}\\), indent=2\\)\\)\")",
+      "Bash(python3)",
+      "Bash(python3 -c \" import json, sys d = json.load\\(sys.stdin\\) hooks = {k: v for k, v in d.items\\(\\) if 'hook' in k.lower\\(\\) or 'claude' in k.lower\\(\\)} print\\(json.dumps\\(hooks, indent=2\\)\\) \")"
     ]
   }
 }

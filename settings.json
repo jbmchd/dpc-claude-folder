@@ -1,0 +1,63 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/Joabe/Documents/dev/.claude/**)",
+      "mcp__composio__*",
+      "mcp__dpc_mcp__*",
+      "Bash(./gradlew:*)",
+      "Bash(eas:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(pwd:*)",
+      "Bash(find:*)",
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(sort:*)",
+      "Bash(wc:*)",
+      "Bash(pdftotext:*)",
+      "Bash(pdfimages:*)",
+      "Bash(python:*)",
+      "Bash(xargs wc:*)",
+      "Bash(npm:*)",
+      "Bash(command -v nvm)",
+      "Bash(nvm --version)",
+      "Bash(nvm list:*)",
+      "Bash(npx:*)",
+      "Bash(php:*)",
+      "Bash(composer:*)",
+      "Bash(claude session:*)",
+      "Bash(grep -li \"trello\\\\|composio\\\\|Trello\\\\|Composio\" \"C:/Users/joabe/.claude/projects/d--Joabe-Documents-dev-projetos-dpc-workspace/\"*.jsonl)",
+      "Bash(pip install:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(python3 -m pip install requests python-dotenv -q)",
+      "Bash(python3 trello_*)",
+      "Bash(gh repo:*)",
+      "Bash(gh pr:*)",
+      "Bash(node:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(cmd:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(taskkill:*)",
+      "Bash(xargs grep:*)",
+      "Bash(where php:*)",
+      "Bash(where oci:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python hooks/validate-protected-paths.py"
+          }
+        ]
+      }
+    ]
+  }
+}
