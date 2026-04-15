@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python hooks/validate-protected-paths.py"
+            "command": "python d:/Joabe/Documents/dev/projetos/dpc/workspace/hooks/validate-protected-paths.py"
           }
         ]
       }

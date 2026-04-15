@@ -18,7 +18,11 @@
       "Bash(python3 /tmp/oracle_rewrite.py)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('hooks', {}\\), indent=2\\)\\)\")",
       "Bash(python3)",
-      "Bash(python3 -c \" import json, sys d = json.load\\(sys.stdin\\) hooks = {k: v for k, v in d.items\\(\\) if 'hook' in k.lower\\(\\) or 'claude' in k.lower\\(\\)} print\\(json.dumps\\(hooks, indent=2\\)\\) \")"
+      "Bash(python3 -c \" import json, sys d = json.load\\(sys.stdin\\) hooks = {k: v for k, v in d.items\\(\\) if 'hook' in k.lower\\(\\) or 'claude' in k.lower\\(\\)} print\\(json.dumps\\(hooks, indent=2\\)\\) \")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(mkdir -p \"./.claude/tarefas/cards/3064-dpc-edi-cadastro-de-projetos/images\")",
+      "Bash(cp -v \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3064/attachments/\"* \"./.claude/tarefas/cards/3064-dpc-edi-cadastro-de-projetos/images/\")"
     ]
   }
 }
