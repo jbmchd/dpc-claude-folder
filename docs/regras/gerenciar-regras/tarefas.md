@@ -1,116 +1,111 @@
-# Tarefas – Trello, arquivos e documentação
+# Tarefas — Trello, arquivos e documentação
 
-Ao lidar com tarefas, usar o MCP Trello quando aplicável, operar no board `DPC Dev` e documentar em `.claude/tarefas` ou `.claude/tarefas/cards`.
+Fonte canônica do fluxo de tarefas no workspace DPC. Os commands `/importar-tarefa`, `/planejar-tarefa` e `/executar-tarefa` são stubs finos que apontam para este arquivo.
 
 ## 1. Fonte de verdade da tarefa
 
-- Se a tarefa vier do Trello, usar as ferramentas MCP disponíveis no ambiente atual.
-- Nao assumir dados do Trello sem consultar o MCP.
-- Cards devem ser localizados por link ou `idShort`.
-- Se o usuário nao informar card number ou link, perguntar antes de buscar ou documentar.
-- O usuário também pode fornecer arquivos, texto na conversa ou ambos.
-- Quando houver múltiplas fontes, consolidar tudo e deduplicar cards repetidos.
+- Se a tarefa vier do Trello, usar o MCP Trello (board `DPC Dev`), localizando o card por link ou `idShort`.
+- Nunca assumir dados do Trello sem consultar.
+- Se o usuário não informar card number ou link, perguntar antes de buscar ou documentar.
+- O usuário pode também fornecer arquivos, texto no prompt, ou ambos.
+- Quando houver múltiplas fontes, consolidar tudo e deduplicar.
 
-## 2. Fluxo da tarefa
+## 2. Fluxo em 3 fases
 
-O fluxo documental da tarefa e dividido nas etapas abaixo:
+### 2.1 Importação (`/importar-tarefa`)
+- Cria a pasta da tarefa e consolida a fonte principal em `conteudo-do-card.md` (com Trello) ou `conteudo-da-tarefa.md` (sem Trello).
+- Copia anexos suportados; gera `metadata.json` quando houver contexto.
+- Cria `planejamento.md`, `desenvolvimento.md` e `consideracoes.md` como arquivos iniciais.
+- PDF só encerra com evidência de `ocr.md` ou justificativa explícita.
+- **Não** cria branch nem gera planejamento técnico.
 
-### 2.1 Importacao
+### 2.2 Planejamento (`/planejar-tarefa`)
+- Consome apenas a pasta já criada; não importa arquivos novos.
+- Valida estrutura mínima; se incompleta, orienta rodar `/importar-tarefa` antes.
+- Consulta os docs do projeto alvo em `alterar-codigo/` antes de definir a abordagem.
+- Em tarefas do Faisao, aplica a regra de mapeamento cross-project (`faisao-convencoes.md`).
+- Gera/atualiza `planejamento.md` e preenche a seção **Branch** via `git-workflow-branches.md`.
+- **Não** altera código.
 
-- Executar o fluxo de importacao para criar a pasta local da tarefa via comando `/importar-tarefa`.
-- A importacao deve consolidar a fonte principal da tarefa em `conteudo-do-card.md` ou `conteudo-da-tarefa.md`.
-- A importacao deve copiar anexos suportados e gerar `metadata.json` quando houver contexto suficiente.
-- A importacao deve criar `planejamento.md` e `desenvolvimento.md` como arquivos iniciais da estrutura documental.
-- A importacao deve criar `consideracoes.md` contendo o que foi entendido que é pra ser feito na tarefa.
-- A importacao de PDF so pode ser concluida com evidencia de extracao de imagens (`images/`) ou justificativa explicita de ausencia de imagens extraiveis.
-- A importacao nao deve criar branchs nem gerar planejamento tecnico detalhado.
+### 2.3 Execução (`/executar-tarefa`)
+- Valida que a pasta tem `planejamento.md` (com Branch), `desenvolvimento.md`, `consideracoes.md` e `metadata.json` com `project`.
+- Carrega os docs do projeto alvo (checklists bug/feature + convenções).
+- Executa o fluxo de branch de `git-workflow-branches.md`; não avança com árvore suja.
+- Implementa seguindo os checklists e convenções.
+- Atualiza `desenvolvimento.md` durante e ao final.
+- **Nunca** faz `git commit`, `git push` ou abre PR automaticamente. Encerra com árvore suja e aguarda instrução. Autorização prévia não persiste entre fases.
+- Tarefas de migração Maracanã → DPC/ApiDPC seguem também [migracao-legado.md](migracao-legado.md).
 
-### 2.2 Planejamento
+## 3. Trello
+- Operar sempre no board `DPC Dev`.
+- `idBoard` vem do MCP a partir da lista de boards acessíveis.
+- Se a tarefa explicitamente não vier do Trello, não usar ferramentas do Trello.
 
-- O planejamento deve consumir apenas a pasta ja criada pela importacao via comando `/planejar-tarefa`.
-- O planejamento deve validar a estrutura minima da pasta antes de prosseguir.
-- Em tarefas do `Faisao`, consultar tambem [faisao-principios-projeto.md](../alterar-codigo/faisao-principios-projeto.md) antes de detalhar a solucao e registrar no `planejamento.md` o mapeamento funcional exigido por essa regra.
-- O planejamento deve gerar ou atualizar `planejamento.md` e garantir que `desenvolvimento.md` exista com a estrutura minima esperada.
-- O planejamento nao deve importar arquivos novamente nem alterar codigo.
+## 4. Tratamento de fontes de entrada
 
-### 2.3 Execucao
-
-- A execucao pode alterar codigo no projeto alvo, seguindo as regras especificas do projeto.
-- Durante a execucao, `desenvolvimento.md` deve ser atualizado com a linha do tempo, decisoes e o `Resumo tecnico das alteracoes`.
-- A execucao **nunca** faz `git commit`, `git push` ou abertura de PR automaticamente. Ao concluir as alteracoes de codigo, parar com a working tree suja e aguardar instrucao explicita do usuario. Isso vale mesmo quando o usuario ja autorizou commit em mensagem anterior — autorizacao nao persiste entre fases.
-- Para tarefas de migracao de tela do Maracana para DPC/ApiDPC, seguir [migracao-legado.md](migracao-legado.md) alem deste arquivo.
-
-## 3. Regra de uso do Trello
-
-- Sempre operar no board `DPC Dev`.
-- Se precisar do `idBoard`, obtê-lo via MCP a partir da lista de boards acessíveis.
-- Se a tarefa explicitamente nao vier do Trello, nao usar ferramentas do Trello.
-
-## 4. Tratamento de arquivos e texto
-
-### 4.1 Detecção de fontes de entrada
-
-Antes de criar qualquer arquivo, identificar todas as fontes presentes na mensagem do usuário:
+### 4.1 Detecção
 
 | Tipo | Como detectar |
 |---|---|
-| Link do Trello | padrão `trello.com/c/[a-zA-Z0-9]+` no prompt |
+| Link do Trello | padrão `trello.com/c/[a-zA-Z0-9]+` |
 | Card number | padrão `#\d{3,5}` ou número isolado no contexto de Trello |
-| PDF | arquivo com extensão `.pdf` |
+| PDF | `.pdf` |
 | Imagem avulsa | `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif` |
 | Outro documento | `.docx`, `.txt`, `.csv`, `.xlsx`, etc. |
-| Texto solto | conteúdo textual no próprio prompt sem ser fonte estruturada |
+| Texto solto | conteúdo textual no prompt sem ser fonte estruturada |
 
-Consolidar todas as fontes encontradas antes de iniciar qualquer fetch ou escrita em disco.
+Consolidar todas as fontes antes de iniciar fetch ou escrita em disco. **Toda imagem, de qualquer fonte, vai para `images/` dentro da pasta da tarefa.**
 
-### 4.2 Trello via Composio
+### 4.2 Trello via `trello_card.py`
 
-- Usar o MCP Composio para buscar dados do card quando houver link ou card number.
-- Buscar obrigatoriamente: título, descrição, lista atual, labels, membros atribuídos, data de criação e due date.
-- Buscar obrigatoriamente: checklists completos (nome do checklist + cada item com estado checked/unchecked).
-- Buscar obrigatoriamente: comentários do card em ordem cronológica.
-- Buscar anexos: para cada anexo do tipo imagem, tentar baixar para `images/trello/` dentro da pasta da tarefa.
-- Registrar no `metadata.json` os campos: `id`, `idShort`, `title`, `list`, `labels`, `members`, `due`, `url`.
+Executar o script de importação passando card ID ou URL:
+```bash
+python3 d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/trello_card.py <card_id_ou_url>
+```
+O script gera `d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/<idShort>/`:
+- `card_data.json` — dados do card (título, descrição, lista, labels, membros, due, checklists, comentários, attachments).
+- `attachments/` — anexos baixados com nome `<nome>_<id>.<ext>`.
 
-### 4.3 PDF via pdf_ocr.py
+Após execução:
+1. Ler `card_data.json` como fonte dos dados do card.
+2. Para cada arquivo em `attachments/`:
+   - Imagens (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`) → mover para `images/`.
+   - Demais arquivos → mover para a raiz da pasta da tarefa.
+3. Todos os anexos devem ser listados e referenciados no conteúdo consolidado.
+4. Limpar a pasta temporária gerada pelo script (`<idShort>/`).
 
-- Copiar o arquivo original para dentro da pasta da tarefa, preservando o nome.
-- Executar OCR usando o script em `d:/Joabe/Documents/dev/projetos/joabe/ai-tools/pdf_ocr/pdf_ocr.py`:
-  ```bash
-  python d:/Joabe/Documents/dev/projetos/joabe/ai-tools/pdf_ocr/pdf_ocr.py <arquivo.pdf> -o ocr.md -v
-  ```
-- O script gera `ocr.md` com o texto extraído por página via RapidOCR.
-- Salvar o `ocr.md` dentro da pasta da tarefa.
-- Ao consolidar o conteúdo em `conteudo-do-card.md` ou `conteudo-da-tarefa.md`, referenciar o `ocr.md` e transcrever os trechos relevantes.
-- A importação de PDF só pode ser concluída com evidência de geração do `ocr.md` ou justificativa explícita de falha.
+Campos obrigatórios no `metadata.json`: `id`, `idShort`, `title`, `list`, `labels`, `members`, `due`, `url`.
+
+### 4.3 PDF via `pdf_ocr.py`
+
+```bash
+python d:/Joabe/Documents/dev/projetos/joabe/ai-tools/pdf_ocr/pdf_ocr.py <arquivo.pdf> -o ocr.md -v
+```
+- Copiar o PDF original para a pasta da tarefa.
+- Salvar o `ocr.md` na mesma pasta.
+- Referenciar o `ocr.md` no conteúdo consolidado e transcrever os trechos relevantes.
+- Importação só é concluída com `ocr.md` gerado ou justificativa explícita de falha.
 
 ### 4.4 Imagens avulsas
-
-- Copiar para `images/` dentro da pasta da tarefa.
-- Referenciar no conteúdo consolidado no formato `imagem {n}: images/nome-do-arquivo.png`.
+- Copiar para `images/`, preservando o nome.
+- Referenciar no conteúdo consolidado como `imagem {n}: images/nome-do-arquivo.png`.
 
 ### 4.5 Outros documentos
-
-- Copiar para dentro da pasta da tarefa, preservando os nomes.
-- Extrair e consolidar o conteúdo relevante em `conteudo-do-card.md` ou `conteudo-da-tarefa.md`.
+- Copiar para a pasta da tarefa preservando o nome.
+- Extrair e consolidar o conteúdo relevante no arquivo principal.
 
 ### 4.6 Texto solto do prompt
+- Capturar como seção `## Contexto adicional` no conteúdo consolidado.
+- Não descartar nenhuma informação fornecida textualmente.
 
-- Capturar como seção `## Contexto adicional` no arquivo de conteúdo consolidado.
-- Não descartar nenhuma informação fornecida textualmente pelo usuário.
+### 4.7 Consolidação
 
-### 4.7 Consolidação de múltiplas fontes
+Mesclar todas as fontes em `conteudo-do-card.md` (com Trello) ou `conteudo-da-tarefa.md` (sem Trello), cada fonte em seção própria com cabeçalho de origem. Deduplicar. Incluir mapeamento de referências visuais ao final quando houver imagens.
 
-- Mesclar todas as fontes em `conteudo-do-card.md` (com Trello) ou `conteudo-da-tarefa.md` (sem Trello).
-- Separar cada fonte em seção própria com cabeçalho indicando a origem.
-- Deduplicar informações repetidas entre fontes.
-- Incluir seção de mapeamento de referências visuais ao final quando houver imagens.
-
-Exemplo de estrutura consolidada com múltiplas fontes:
+Exemplo:
 
 ```markdown
 ## Fonte: Trello #3057
-
 **Título:** #DPC - EDI - Cadastro de Projetos
 **Lista:** Fazendo | **Labels:** Novo | **Membros:** Joabe
 
@@ -126,8 +121,6 @@ Exemplo de estrutura consolidada com múltiplas fontes:
 
 ## Fonte: PDF — requisitos.pdf
 (ver ocr.md para texto completo)
-
-Trecho relevante extraído:
 ...
 
 ## Fonte: Imagem — tela-atual.png
@@ -141,54 +134,32 @@ imagem {1}: images/tela-atual.png
 - {2}: images/trello/anexo-1.png
 ```
 
-Exemplo recomendado:
-
-```markdown
-## Itens da tarefa
-
-1. Verificar o bug do Header na aba de clientes ao selecionar um cliente.
-	- imagem {1}: images/page-001-img-01.png
-
-2. Na tela de clientes, quando a busca não retorna resultado, ao clicar no X para limpar, exibir loading durante a nova consulta.
-	- imagens {2}: images/page-001-img-02.png, {3}: images/page-001-img-03.png
-
-## Mapeamento de referências
-- {1}: images/page-001-img-01.png
-- {2}: images/page-001-img-02.png
-- {3}: images/page-001-img-03.png
-```
-
 ## 5. Estrutura da pasta da tarefa
 
-- Garantir a existência de `.claude/tarefas`.
-- Se a tarefa tiver card do Trello, garantir também `.claude/tarefas/cards`.
-- Para tarefa com Trello, usar pasta no formato `{codigo}-{titulo-em-slug}` dentro de `.claude/tarefas/cards`.
-- Para tarefa sem Trello, criar subpasta diretamente em `.claude/tarefas`, com nome em slug e identificador opcional.
-- A pasta da tarefa deve conter `metadata.json`, `conteudo-do-card.md` ou `conteudo-da-tarefa.md`, `planejamento.md`, `desenvolvimento.md` e `consideracoes.md`.
-- `metadata.json` deve concentrar, quando disponiveis, campos como `title`, `id`, `project`, `sourceType`, `sourceReference` e `branchNameSuggested`.
-- Para tarefas com PDF, incluir tambem `pdfAssets` para auditoria da importacao.
+- Base: `.claude/tarefas/`.
+- Com Trello: `.claude/tarefas/cards/{codigo}-{titulo-em-slug}/`.
+- Sem Trello: `.claude/tarefas/{slug}/` (com identificador opcional).
+- Arquivos mínimos obrigatórios:
+  - `conteudo-do-card.md` ou `conteudo-da-tarefa.md`
+  - `metadata.json`
+  - `consideracoes.md` — entendimento inicial da tarefa
+  - `planejamento.md` — plano técnico e passos
+  - `desenvolvimento.md` — linha do tempo + resumo técnico
+- `metadata.json` deve ter, quando disponíveis: `title`, `id`, `idShort`, `project`, `sourceType`, `sourceReference`, `list`, `labels`, `members`, `due`, `url`, `branchNameSuggested`. Para tarefas com PDF, incluir `pdfAssets`.
 
-## 6. Branch da tarefa
+## 6. Branch
 
-- Seguir [git-workflow-branches.md](git-workflow-branches.md) como fonte canonica para identificar, criar ou reutilizar a branch da tarefa.
-- Registrar no `planejamento.md` a seção **Branch** conforme o formato definido nesse arquivo.
+- Fonte canônica: [git-workflow-branches.md](git-workflow-branches.md).
+- `planejamento.md` tem seção **Branch** com nome, origem da decisão, branch base e status (existente/nova).
+- Pré-condição obrigatória em `/executar-tarefa`: antes de qualquer alteração de código, atualizar a base (`main`/`master` via `git pull`), criar/checkout da branch da tarefa, e só então iniciar a codificação.
 
-## 7. Arquivos mínimos obrigatórios
-
-- `conteudo-do-card.md` (tarefa com Trello) ou `conteudo-da-tarefa.md` (tarefa sem Trello).
-- `metadata.json` com os metadados disponiveis da tarefa.
-- `planejamento.md` com plano técnico e passos da execução.
-- `desenvolvimento.md` com linha do tempo, decisões e mensagem de commit sugerida.
-- `consideracoes.md` com o entendimento inicial do que deve ser feito na tarefa.
-
-## 8. Regras para `desenvolvimento.md`
+## 7. `desenvolvimento.md`
 
 - Registrar ações em ordem cronológica na seção `Linha do tempo`.
-- Incluir `Resumo técnico das alterações` sempre que houver modificação de código.
-- Em `Resumo técnico das alterações`, registrar arquivos alterados, tipo da mudança e impactos principais.
-- A seção `Mensagem de commit sugerida` deve ser sempre a última do arquivo.
+- `Resumo técnico das alterações` sempre que houver modificação de código (arquivos alterados, tipo da mudança, impactos).
+- `Mensagem de commit sugerida` deve ser sempre a última seção do arquivo.
 
-Template resumido:
+Template:
 
 ```markdown
 # Desenvolvimento – Card {numero} {titulo}
@@ -197,8 +168,8 @@ Template resumido:
 - YYYY-MM-DD HH:MM – ação realizada
 
 ## Resumo técnico das alterações
-- Arquivos alterados: caminhos principais impactados pela demanda
-- Tipo da mudança: bugfix, feature, refactor, docs ou equivalente
+- Arquivos alterados: caminhos principais impactados
+- Tipo da mudança: bugfix, feature, refactor, docs, etc.
 - Impactos principais: resumo objetivo do que mudou
 
 ## Decisões e regras de negócio
@@ -212,6 +183,6 @@ Template resumido:
 Mensagem em português que resuma o estado atual das mudanças.
 ```
 
-## 9. Limite operacional
+## 8. Limite operacional
 
-- Quando o fluxo pedido for apenas de planejamento ou documentação, nao iniciar alterações de código.
+- Quando o fluxo pedido for apenas planejamento ou documentação, não iniciar alterações de código.

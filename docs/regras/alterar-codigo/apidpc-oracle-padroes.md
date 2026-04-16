@@ -3,7 +3,7 @@
 > Regras específicas para consultas e escrita Oracle no ApiDPC (driver `yajra/laravel-oci8`).
 > Aplicar em `ApiDPC/app/Repositories/**` e em qualquer código que execute SQL contra Oracle.
 
-Ver também: [apidpc-referencia.md](apidpc-referencia.md)
+Ver também: [apidpc-convencoes.md](apidpc-convencoes.md)
 
 ---
 

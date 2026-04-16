@@ -16,7 +16,6 @@ PROTECTED = [
     "/.claude/docs/",
     "/.claude/agents/",
     "/.claude/commands/",
-    "/.claude/instructions/",
 ]
 PROTECTED_FILES = ["CLAUDE.md"]
 

@@ -1,34 +1,23 @@
-Gere ou atualize o planejamento de uma tarefa a partir de uma pasta local já criada, consumindo apenas os arquivos presentes nela. Consulte [tarefas.md](.claude/docs/regras/gerenciar-regras/tarefas.md) e [git-workflow-branches.md](.claude/docs/regras/gerenciar-regras/git-workflow-branches.md) como fontes canônicas.
+# /planejar-tarefa
 
-## Limitações
-- Não alterar código nem criar branches neste fluxo.
-- Não importar arquivos; consumir apenas o que está na pasta informada.
+**Objetivo:** gerar ou atualizar o `planejamento.md` de uma tarefa consumindo apenas os arquivos da pasta já criada.
 
-## Validações obrigatórias
+**Entrada:** caminho da pasta da tarefa (se não informado, perguntar).
 
-Antes de qualquer ação, confirmar que a pasta informada existe e contém a estrutura mínima definida em `tarefas.md`, incluindo `consideracoes.md`. Se a pasta for inválida, incompleta ou `consideracoes.md` ausente, interromper e orientar o usuário a rodar `/importar-tarefa` antes de prosseguir.
+**Saída:** `planejamento.md` atualizado com escopo técnico, passos, riscos e seção **Branch**; `desenvolvimento.md` garantido com estrutura mínima.
 
-## Pré-condição obrigatória de execução (registrar no planejamento.md)
+**Não faz:** alterar código, criar branches, importar arquivos novamente.
 
-O `planejamento.md` deve conter, na seção **Branch**, um aviso destacado de que ao iniciar `/executar-tarefa` — **antes de qualquer alteração de código** — o executor deve:
+**Fluxo detalhado:** [tarefas.md §2.2 e §6](../docs/regras/gerenciar-regras/tarefas.md) · [git-workflow-branches.md](../docs/regras/gerenciar-regras/git-workflow-branches.md).
 
-1. Atualizar a branch base do projeto (`main` ou `master`) com `git pull`.
-2. Criar a branch da tarefa (se não existir) ou fazer checkout dela.
-3. Somente após confirmar que está na branch correta, iniciar a codificação.
+**Pré-condições:**
+- Pasta existe e contém a estrutura mínima (`metadata.json`, `conteudo-*.md`, `consideracoes.md`, `planejamento.md`, `desenvolvimento.md`).
+- Se faltar algum arquivo obrigatório → interromper e orientar rodar `/importar-tarefa`.
 
-Este fluxo segue `git-workflow-branches.md` e deve estar explícito no `planejamento.md` como primeiro bloco da seção Branch.
+**Obrigatório no `planejamento.md`:**
+- Seção **Branch** com nome, origem da decisão, base e status — conforme `git-workflow-branches.md`.
+- Aviso destacado no topo da seção Branch: antes de qualquer alteração de código em `/executar-tarefa`, atualizar a branch base (`git pull`), criar/checkout da branch da tarefa e só então codificar.
+- Consulta prévia aos docs em [alterar-codigo/](../docs/regras/alterar-codigo/) do projeto alvo.
+- Em tarefas do Faisao, mapeamento funcional cross-project conforme [faisao-convencoes.md](../docs/regras/alterar-codigo/faisao-convencoes.md).
 
-## Regras de execução
-
-- Se o caminho da pasta não for informado, perguntar antes de seguir.
-- Ler `metadata.json`, `conteudo-do-card.md` ou `conteudo-da-tarefa.md`, `consideracoes.md` e as imagens em `images/` para extrair contexto completo da tarefa.
-- Consultar os docs do projeto alvo em [regras/alterar-codigo](.claude/docs/regras/alterar-codigo/) antes de definir a abordagem.
-- Para qualquer projeto (`ApiDPC`, `DPC`, `Faisao`), registrar no `planejamento.md` o mapeamento funcional relevante conforme o doc de princípios do projeto em [regras/alterar-codigo](.claude/docs/regras/alterar-codigo/), destacando regras de negócio, contratos, validações e comportamentos que precisam ser preservados.
-- Gerar ou atualizar `planejamento.md` seguindo a estrutura definida em `tarefas.md`.
-- Preencher a seção **Branch** do `planejamento.md` conforme `git-workflow-branches.md`.
-- Garantir que `desenvolvimento.md` exista com a estrutura mínima definida em `tarefas.md`, sem registrar alterações que ainda não aconteceram.
-
-## Encerramento
-
-- Finalizar com resumo do planejamento e dos próximos passos, deixando claro que a etapa seguinte é `/executar-tarefa`.
-- Se a estrutura documental não puder ser validada ou normalizada, interromper e solicitar regularização antes de planejar.
+**Encerramento:** resumo do planejamento e próximos passos, deixando claro que a etapa seguinte é `/executar-tarefa`.

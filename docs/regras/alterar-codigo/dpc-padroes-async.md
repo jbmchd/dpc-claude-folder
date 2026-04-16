@@ -3,7 +3,7 @@
 > Regras para carregamento assíncrono em `mounted()` e dependências entre chamadas no frontend Vue 2.
 > Aplicar em `DPC/src/app/**/*.vue`, principalmente em telas/modais com selects alimentados por API.
 
-Ver também: [dpc-referencia.md](dpc-referencia.md)
+Ver também: [dpc-convencoes.md](dpc-convencoes.md)
 
 ---
 

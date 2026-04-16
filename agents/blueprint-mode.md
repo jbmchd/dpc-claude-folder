@@ -73,4 +73,4 @@ Select based on task:
 
 ## DPC Workspace Context
 
-Consultar [dpc-workspace-agentes.md](.claude/docs/arquitetura/dpc-workspace-agentes.md) antes de implementar qualquer mudança nos projetos deste workspace.
+Consultar [visao-geral-ecossistema-dpc.md](.claude/docs/arquitetura/visao-geral-ecossistema-dpc.md) antes de implementar qualquer mudança nos projetos deste workspace.

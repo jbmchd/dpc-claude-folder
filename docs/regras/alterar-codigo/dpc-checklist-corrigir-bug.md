@@ -1,33 +1,24 @@
-# DPC (admin-dpc-vue) – Checklist: corrigir bug
+# DPC — Checklist: corrigir bug
 
-### Reprodução e escopo
+> Estende [_checklist-base-bug.md](_checklist-base-bug.md).
 
-- [ ] Reproduzir o bug no ambiente de dev (passos, usuário, dados, rota).
-- [ ] Identificar camada: componente Vue, Vuex (qual módulo), rota, ou interceptor/Account/dpcAxios.
-- [ ] Verificar se o problema é de frontend (estado, UI, chamada à API) ou se a API retorna dado errado (inspecionar rede).
+### Camadas a verificar
+- Componente Vue, módulo Vuex, rota, interceptor, `Account.js`, `dpcAxios`.
+- Inspeção de rede: bug é do front (estado/UI/chamada) ou da API (dado errado)?
+- Outros componentes que usam o mesmo store/endpoint.
+- Event bus (`bus.$emit`/`$on`) — conferir outros listeners do mesmo evento.
 
-### Análise de impacto
+### Regras específicas
+- Manter `dpcAxios` para API, Vuex para estado global, formato de resposta da API.
+- Não remover checagens de permissão sem alternativa segura.
+- Se o bug for de cache/exibição, considerar `invalidateQueries` ou reset de state.
+- Modais com dependências assíncronas → ver [dpc-padroes-async.md](dpc-padroes-async.md).
 
-- [ ] Listar componentes que usam o mesmo store (módulo Vuex) ou o mesmo endpoint.
-- [ ] Verificar se o fluxo usa event bus (`bus.$emit`/`$on`); checar outros listeners do mesmo evento.
-- [ ] Ver se há outros lugares com lógica parecida que possam ter o mesmo defeito.
-- [ ] Rodar testes existentes: `npm run unit`.
+### Validação extra
+- Testar com token expirado/inválido (esperado: logout e redirecionamento).
+- Navegar por telas do mesmo módulo e módulos que compartilham store/API.
 
-### Correção
-
-- [ ] Fazer alteração mínima necessária; evitar refactors grandes na mesma entrega.
-- [ ] Manter padrão: dpcAxios para API, Vuex para estado global, formato de resposta da API.
-- [ ] Não remover validações ou checagens de permissão sem substituir por alternativa segura.
-
-### Validação
-
-- [ ] Testar de novo o cenário que falhava; confirmar que o bug foi resolvido.
-- [ ] Testar cenários de sucesso do mesmo fluxo (outro filtro, outro registro).
-- [ ] Navegar por telas relacionadas (mesmo módulo e módulos que compartilham store ou API).
-- [ ] Testar com token expirado ou inválido (esperado: logout e redirecionamento).
-
-### Regressão e entrega
-
-- [ ] Rodar `npm run unit`.
-- [ ] Rodar `npm run build` e abrir a build de produção localmente se possível.
-- [ ] Revisar diff: sem `console.log` desnecessários, sem alteração em arquivos não relacionados.
+### Testes e build
+- `npm run unit`.
+- `npm run build` e abrir build local se possível.
+- Diff sem `console.log` desnecessário.
