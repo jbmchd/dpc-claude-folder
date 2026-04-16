@@ -37,6 +37,8 @@ O fluxo documental da tarefa e dividido nas etapas abaixo:
 
 - A execucao pode alterar codigo no projeto alvo, seguindo as regras especificas do projeto.
 - Durante a execucao, `desenvolvimento.md` deve ser atualizado com a linha do tempo, decisoes e o `Resumo tecnico das alteracoes`.
+- A execucao **nunca** faz `git commit`, `git push` ou abertura de PR automaticamente. Ao concluir as alteracoes de codigo, parar com a working tree suja e aguardar instrucao explicita do usuario. Isso vale mesmo quando o usuario ja autorizou commit em mensagem anterior — autorizacao nao persiste entre fases.
+- Para tarefas de migracao de tela do Maracana para DPC/ApiDPC, seguir [migracao-legado.md](migracao-legado.md) alem deste arquivo.
 
 ## 3. Regra de uso do Trello
 

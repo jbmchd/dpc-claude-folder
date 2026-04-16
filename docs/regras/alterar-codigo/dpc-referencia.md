@@ -2,7 +2,7 @@
 
 > Painel admin Vue.js 2 / Vuex. Aplicar em `DPC/src/**`.
 
-Ver também: [principios-comuns-alterar-codigo.md](principios-comuns-alterar-codigo.md)
+Ver também: [principios-comuns-alterar-codigo.md](principios-comuns-alterar-codigo.md) · [dpc-padroes-async.md](dpc-padroes-async.md)
 
 ## Princípios do projeto
 

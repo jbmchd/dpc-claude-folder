@@ -2,7 +2,7 @@
 
 > Backend PHP 7.2 / Laravel 5.5. Aplicar em `ApiDPC/app/**/*.php` e `ApiDPC/routes/**`.
 
-Ver também: [principios-comuns-alterar-codigo.md](principios-comuns-alterar-codigo.md)
+Ver também: [principios-comuns-alterar-codigo.md](principios-comuns-alterar-codigo.md) · [apidpc-oracle-padroes.md](apidpc-oracle-padroes.md)
 
 ## Princípios do projeto
 
