@@ -9,7 +9,9 @@
       "Bash(python3:*)",
       "Read(//c/**)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3081/attachments/\"* \".claude/tarefas/cards/3081-faisao/images/\")",
+      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3082/attachments/\"* \".claude/tarefas/cards/3082-faisao-rede-do-cliente/images/\")"
     ]
   }
 }
