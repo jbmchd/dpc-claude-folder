@@ -68,13 +68,17 @@ Extrair **a partir do código** (não de screenshots):
 
 ### 3.3 Mapeamento de schema Oracle
 
-Para cada tabela/view tocada pelo DAL, inspecionar via MCP DPC e registrar em `.claude/docs/db/<dominio>.md` (usar o template [db/_template-dominio.md](../../db/_template-dominio.md)):
+**PROIBIDO acessar o banco real durante migração de tela — por qualquer meio**: MCP DPC, queries diretas, scripts, curl, ferramentas externas ou qualquer outro mecanismo. Essa proibição vale mesmo que pareça mais rápido ou conveniente. Só é permitido se o usuário pedir explicitamente na mesma mensagem.
 
-- Colunas, tipos, nullability, PK.
-- Relacionamentos (FKs, tabelas de ligação).
-- Sequences associadas.
+A fonte de verdade é o código do Maracanã: o `dal*.vb` já contém os nomes de colunas, tipos inferíveis pelo uso, filtros e ordenação. Acessar o banco para "confirmar" o schema é desnecessário e viola o fluxo de migração.
 
-Esse documento vira cache reutilizável entre sessões e evita re-descoberta do schema.
+Ao registrar em `.claude/docs/db/<dominio>.md` (template [db/_template-dominio.md](../../db/_template-dominio.md)), extrair as informações **exclusivamente do `dal*.vb`**:
+
+- Colunas e tipos inferidos pelo uso no DAL.
+- Filtros, ordenação e relacionamentos visíveis nas queries.
+- Sequences mencionadas no código VB.NET.
+
+Se o DAL não for suficiente para determinar algo, parar e perguntar ao usuário — nunca acessar o banco como atalho.
 
 ### 3.4 Plano do lado da tela, não do lado do model
 
@@ -119,3 +123,4 @@ Reforço da regra geral: o `/executar-tarefa` **não faz commit automático**. A
 | `ModalSalvar.vue` reescrito 3 vezes | Plano incompleto, correções em loop | §3, §5 |
 | Dropdown mostra código em vez de nome | Race condition ou view errada | §4 + [dpc-padroes-async.md](../alterar-codigo/dpc-padroes-async.md) |
 | Query quebra por ambiguidade `ORDER BY` | SQL escrito de cabeça sem MCP | §4 + [apidpc-oracle-padroes.md §3](../alterar-codigo/apidpc-oracle-padroes.md) |
+| Schema consultado no banco real sem ser pedido | Atalho indevido durante migração | §3.3 |

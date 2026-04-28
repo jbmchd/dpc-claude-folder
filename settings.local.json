@@ -10,8 +10,16 @@
       "Read(//c/**)",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3081/attachments/\"* \".claude/tarefas/cards/3081-faisao/images/\")",
-      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3082/attachments/\"* \".claude/tarefas/cards/3082-faisao-rede-do-cliente/images/\")"
+      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3081/attachments/\"* \"d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/cards/3081-faisao/images/\")",
+      "Bash(cp \"d:/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/3082/attachments/\"* \"d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/cards/3082-faisao-rede-do-cliente/images/\")",
+      "Bash(cp ~/.claude/.credentials-pessoal.json ~/.claude/.credentials.json)",
+      "Bash(claude auth *)",
+      "Bash(cp ~/.claude/.credentials-empresa.json ~/.claude/.credentials.json)",
+      "Bash(php/php.exe -v)",
+      "Bash(php71/php.exe -v)",
+      "Bash(php81/php.exe -v)",
+      "Bash(php82/php.exe -v)",
+      "Bash(apache/bin/httpd.exe -t)"
     ]
   }
 }

@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Read(//d/Joabe/Documents/dev/.claude/**)",
+      "Read(//d/Joabe/Documents/dev/projetos/dpc/.claude-work-items/**)",
+      "Edit(//d/Joabe/Documents/dev/projetos/dpc/.claude-work-items/**)",
+      "Write(//d/Joabe/Documents/dev/projetos/dpc/.claude-work-items/**)",
+
       "mcp__composio__*",
       "mcp__dpc_mcp__*",
       "Bash(./gradlew:*)",

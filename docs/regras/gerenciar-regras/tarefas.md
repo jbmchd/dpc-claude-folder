@@ -136,9 +136,9 @@ imagem {1}: images/tela-atual.png
 
 ## 5. Estrutura da pasta da tarefa
 
-- Base: `.claude/tarefas/`.
-- Com Trello: `.claude/tarefas/cards/{codigo}-{titulo-em-slug}/`.
-- Sem Trello: `.claude/tarefas/{slug}/` (com identificador opcional).
+- Base: `d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/`.
+- Com Trello: `d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/cards/{codigo}-{titulo-em-slug}/`.
+- Sem Trello: `d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/{slug}/` (com identificador opcional).
 - Arquivos mínimos obrigatórios:
   - `conteudo-do-card.md` ou `conteudo-da-tarefa.md`
   - `metadata.json`

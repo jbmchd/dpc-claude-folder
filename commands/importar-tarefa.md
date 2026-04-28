@@ -5,7 +5,7 @@
 **Entradas aceitas:** link do Trello, card number (`#NNNN`), PDF, imagens, outros documentos, texto solto no prompt — isoladamente ou combinados.
 
 **Saídas:**
-- Pasta em `.claude/tarefas/cards/{codigo}-{slug}/` (com Trello) ou `.claude/tarefas/{slug}/` (sem Trello).
+- Pasta em `d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/cards/{codigo}-{slug}/` (com Trello) ou `d:/Joabe/Documents/dev/projetos/dpc/.claude-work-items/{slug}/` (sem Trello).
 - Arquivos mínimos: `metadata.json`, `conteudo-do-card.md` ou `conteudo-da-tarefa.md`, `consideracoes.md`, `planejamento.md` (inicial), `desenvolvimento.md` (inicial), anexos copiados (`images/` + outros).
 
 **Não faz:** alterar código, criar branch, gerar planejamento técnico, processar vídeos.
