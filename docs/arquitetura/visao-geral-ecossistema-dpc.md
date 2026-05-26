@@ -11,6 +11,7 @@ Este documento descreve o ecossistema DPC como um todo: os três projetos princi
 | **ApiDPC** | API REST central (Laravel 5.5); fonte única de dados de negócio para o admin e o app. | [apidpc-arquitetura.md](apidpc-arquitetura.md) |
 | **DPC** | Painel administrativo web (Vue 2 + Vuex); usuários internos (gestão de vendas, clientes, financeiro, usuários, etc.). | [dpc-arquitetura.md](dpc-arquitetura.md) |
 | **Faisao** | Aplicativo mobile (React Native/Expo); vendedores em campo (clientes, pedidos, títulos, rastreamento). | [faisao-arquitetura.md](faisao-arquitetura.md) |
+| **DpcInventario** | SPA de WMS (Vue 3/Vite); operadores de depósito fazem conferência de inventário em tempo real; backend próprio (ApiInventario). | [dpcInventario-arquitetura.md](dpcInventario-arquitetura.md) |
 
 ---
 
@@ -21,12 +22,16 @@ flowchart TB
     subgraph clients [Clientes]
         DPC[DPC Vue Admin]
         Faisao[Faisao Mobile]
+        Inventario[DpcInventario WMS]
     end
     subgraph auth [Autenticação]
         ApiAuth[ApiAuth IMEI]
     end
     subgraph core [ApiDPC]
         API[REST API]
+    end
+    subgraph inv [ApiInventario]
+        ApiInv[REST API Inventário]
     end
     subgraph data [Dados]
         PG[(PostgreSQL)]
@@ -50,9 +55,10 @@ flowchart TB
     API --> ORA
     API --> MYSQL
     API --> NFe
+    Inventario --> ApiInv
 ```
 
-- **Clientes:** DPC (web) e Faisao (mobile).
+- **Clientes:** DPC (web), Faisao (mobile) e DpcInventario (WMS de depósito).
 - **ApiDPC:** núcleo (middleware, 382+ controllers, 302+ repositórios, 300+ models).
 - **Bancos:** PostgreSQL (usuários/app), Oracle (ERP), MySQL (Asterisk CDR).
 - **Autenticação:** DPC usa JWT direto da ApiDPC; Faisao usa ApiAuth (`apiauth.dpcnet.com.br`) para login com IMEI e depois consome ApiDPC com o mesmo token.
@@ -69,6 +75,7 @@ flowchart TB
 | **Faisao** | ApiDPC | Dados de negócio (vendedores, clientes, pedidos, títulos, rastreamento); token em query; base `apidpc.dpcnet.com.br`. |
 | **Faisao** | Api Atendimento | Chamados/atendimento; base `apiatendimento.dpcnet.com.br`. |
 | **ApiDPC** | DPC / Faisao | Resposta padrão `{ "error": 0 ou 1, "msg": "...", "data": [...], "quantidade": N }`; JWT refresh no header `Authorization`. |
+| **DpcInventario** | ApiInventario | Login, lotes, conferência de itens, consulta de endereços; JWT via Bearer; base `apiinventario.dpcnet.com.br`. |
 
 **DPC e Faisao** não se comunicam diretamente. A interação é indireta via ApiDPC (mesmos dados e regras). O admin (DPC) pode receber eventos em tempo real via Pusher/Firebase.
 
@@ -103,6 +110,7 @@ flowchart TB
 | **ApiDPC** | Docker (PHP 7.2, nginx porta 8004); CI/CD GitHub Actions (branches alpha/beta); cron e supervisor. | `deploy.sh`; variáveis em `.env`. |
 | **DPC** | Docker (Node 10 build + Apache), Firebase Hosting. | Variáveis em `config/dev.env.js`, `config/prod.env.js`. |
 | **Faisao** | EAS Build (Expo); sem pipeline de CI no repositório. | URLs atualmente hardcoded; recomendado .env ou EAS env vars. |
+| **DpcInventario** | Docker multi-stage (Node 20 build + Nginx Alpine); porta 8099. | `docker-compose.yml`; `DEV_API_TARGET` hardcoded em `vite.config.js`. |
 
 ---
 
@@ -111,3 +119,4 @@ flowchart TB
 - **apidpc-arquitetura.md** — Detalhes da API REST (stack, camadas, repositórios, autenticação JWT, bancos, rotas, deploy).
 - **dpc-arquitetura.md** — Detalhes do painel admin (Vue/Vuex, módulos, dpcAxios, Firebase/Pusher, deploy).
 - **faisao-arquitetura.md** — Detalhes do app mobile (React Native/Expo, React Query, ApiAuth, rastreamento, deploy).
+- **dpcInventario-arquitetura.md** — Detalhes do WMS de inventário (Vue 3/Vite, roteamento manual, Element Plus, ApiInventario, Docker/Nginx).

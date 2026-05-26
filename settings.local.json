@@ -19,7 +19,13 @@
       "Bash(php71/php.exe -v)",
       "Bash(php81/php.exe -v)",
       "Bash(php82/php.exe -v)",
-      "Bash(apache/bin/httpd.exe -t)"
+      "Bash(apache/bin/httpd.exe -t)",
+      "Bash(cd \"d:\\\\Joabe\\\\Documents\\\\dev\\\\projetos\\\\joabe\\\\ai-tools\\\\trello\" && python trello_card.py 3095)",
+      "Read(//d/Joabe/Documents/dev/projetos/joabe/ai-tools/trello/**)",
+      "PowerShell(git -C \"d:\\\\Joabe\\\\Documents\\\\dev\\\\projetos\\\\dpc\\\\workspace\\\\.claude\" status)",
+      "PowerShell(gh --version)",
+      "PowerShell(gh auth status)",
+      "mcp__context7__query-docs"
     ]
   }
 }

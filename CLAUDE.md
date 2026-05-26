@@ -26,6 +26,7 @@
 |---|---|
 | Visão do ecossistema e contratos cross-project | [visao-geral-ecossistema-dpc.md](.claude/docs/arquitetura/visao-geral-ecossistema-dpc.md) |
 | Arquitetura detalhada por projeto | `.claude/docs/arquitetura/<projeto>-arquitetura.md` |
+| Arquitetura DpcInventario (WMS) | [dpcInventario-arquitetura.md](.claude/docs/arquitetura/dpcInventario-arquitetura.md) |
 | Convenções de código por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-convencoes.md` |
 | Checklist bug / feature por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-checklist-corrigir-bug.md` e `-nova-feature.md` |
 | Fluxo de tarefas e Trello | [tarefas.md](.claude/docs/regras/gerenciar-regras/tarefas.md) |
@@ -41,6 +42,7 @@ Para mudanças que envolvam mais de um projeto, começar sempre pela visão do e
 - **ApiDPC** (`ApiDPC/app/**`, `ApiDPC/routes/**`): Laravel 5.5 / PHP 7.2 — ver [apidpc-convencoes.md](.claude/docs/regras/alterar-codigo/apidpc-convencoes.md).
 - **DPC** (`DPC/src/**`): Vue 2 / Vuex — ver [dpc-convencoes.md](.claude/docs/regras/alterar-codigo/dpc-convencoes.md).
 - **Faisao** (`Faisao/src/**`): React Native / Expo / TS — ver [faisao-convencoes.md](.claude/docs/regras/alterar-codigo/faisao-convencoes.md) (**regra obrigatória de mapeamento cross-project**).
+- **DpcInventario** (`DpcInventario/src/**`): Vue 3 / Vite — backend próprio (ApiInventario); não usa ApiDPC — ver [dpcInventario-arquitetura.md](.claude/docs/arquitetura/dpcInventario-arquitetura.md).
 
 ## Bugfix e nova feature
 - Consultar o checklist do projeto alvo (`<projeto>-checklist-corrigir-bug.md` ou `-nova-feature.md`).
