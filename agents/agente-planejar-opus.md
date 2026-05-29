@@ -1,7 +1,7 @@
 ---
 name: Agente Planejar Tarefa Opus
 description: Gera o planejamento.md para tarefas classificadas como complexas (banco, arquitetura, migração, contrato entre projetos). Use via orquestrador /tarefa-completa.
-model: claude-opus-4-7
+model: claude-opus-4-8
 ---
 
 # Agente Planejar Tarefa (Opus)
