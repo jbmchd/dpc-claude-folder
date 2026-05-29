@@ -4,11 +4,11 @@ Caminho do projeto: `d:/Joabe/Documents/dev/projetos/dpc/workspace/Faisao`
 
 ## Argumentos aceitos
 
-`/gerar-versao [tipo] [--ota|--build] [--skip-lint] [--dry-run]`
+`/gerar-versao [tipo] [--ota|--build] [--lint] [--dry-run]`
 
 - `tipo` (opcional): `patch` | `minor` | `major` | `x.y.z` específico. Se omitido, pergunte ao usuário (com a recomendação destacada).
 - `--ota` / `--build`: força o método de entrega (default = autodetectado).
-- `--skip-lint`: pula `npm run lint`.
+- `--lint`: roda `npm run lint` antes da release (por padrão o lint **não** roda).
 - `--dry-run`: simula, sem executar nada. Aborta se não estiver em main (não troca de branch).
 
 ## Pré-condições
@@ -117,13 +117,13 @@ Abortar se já existir local ou no remote.
 
 ### 8) Lint
 
-Se NÃO foi passado `--skip-lint`:
+Por padrão o lint **não roda** (é pulado). Só rode se foi passado `--lint`:
 
 ```bash
 npm run lint
 ```
 
-Se falhar, abortar sugerindo `--skip-lint` (apenas se for justificável).
+Se rodar e falhar, abortar reportando os erros (o usuário pediu o lint explicitamente, então não force a release).
 
 ### 9) Confirmação final
 
