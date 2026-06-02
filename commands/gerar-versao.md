@@ -158,6 +158,7 @@ gh release create $TAG --generate-notes --title "$TAG"
 Imprimir, em sucesso:
 
 - `[OK] Release $TAG criada.`
+- **Versão e versionCode gerados** (sempre exibir): leia o `versionCode` já incrementado em `android/app/build.gradle` (ex.: `grep versionCode android/app/build.gradle`) e imprima a linha: `Versão gerada: $NEW_VERSION  |  versionCode: <valor lido>`.
 - Se houve troca de branch: `NOTA: você começou em "$ORIGINAL_BRANCH", agora está em main. Pra voltar: git checkout $ORIGINAL_BRANCH`.
 - Próximo passo, **só o do método escolhido**:
   - **OTA**: `npx eas update --branch production --platform android --message "$TAG"`

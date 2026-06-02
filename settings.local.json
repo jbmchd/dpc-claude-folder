@@ -25,7 +25,8 @@
       "PowerShell(git -C \"d:\\\\Joabe\\\\Documents\\\\dev\\\\projetos\\\\dpc\\\\workspace\\\\.claude\" status)",
       "PowerShell(gh --version)",
       "PowerShell(gh auth status)",
-      "mcp__context7__query-docs"
+      "mcp__context7__query-docs",
+      "mcp__context7__resolve-library-id"
     ]
   }
 }
