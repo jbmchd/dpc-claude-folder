@@ -20,4 +20,6 @@
 - Consulta prévia aos docs em [alterar-codigo/](../docs/regras/alterar-codigo/) do projeto alvo.
 - Em tarefas do Faisao, mapeamento funcional cross-project conforme [faisao-convencoes.md](../docs/regras/alterar-codigo/faisao-convencoes.md).
 
+**Modificador `--explicar`:** se a invocação trouxer `--explicar`, após gerar o `planejamento.md`, rodar [`/explicar`](explicar.md) sobre a tarefa e gerar `explicacao.md`. Não altera os limites desta fase (segue sem tocar código).
+
 **Encerramento:** resumo do planejamento e próximos passos, deixando claro que a etapa seguinte é `/executar-tarefa`.

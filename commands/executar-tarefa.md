@@ -25,4 +25,6 @@
 - Qualquer validação falhando → informar e orientar rodar `/planejar-tarefa` para corrigir.
 - Tarefa de migração Maracanã → seguir também [migracao-legado.md](../docs/regras/gerenciar-regras/migracao-legado.md).
 
+**Modificador `--explicar`:** se a invocação trouxer `--explicar`, após concluir a execução, rodar [`/explicar`](explicar.md) sobre a tarefa (modo "já feito") e gerar `explicacao.md`. Não relaxa o limite de nunca commitar/push/PR.
+
 **Encerramento:** resumo das alterações e próximos passos (testes manuais, PR, deploy), mantendo a árvore suja.

@@ -17,4 +17,6 @@
 - PDF sem `ocr.md` gerado → bloquear a conclusão ou documentar justificativa explícita de falha.
 - Tarefa de migração de tela do Maracanã → seguir também [migracao-legado.md](../docs/regras/gerenciar-regras/migracao-legado.md).
 
+**Modificador `--explicar`:** se a invocação trouxer `--explicar`, após concluir a importação, rodar [`/explicar`](explicar.md) sobre a pasta criada e gerar `explicacao.md`. Não altera os limites desta fase.
+
 **Encerramento:** informar o caminho da pasta criada e que o próximo passo é `/planejar-tarefa`.

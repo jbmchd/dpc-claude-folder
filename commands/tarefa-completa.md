@@ -62,6 +62,12 @@ Acionar `Agente Executar Tarefa` passando o caminho da pasta.
 - Se `{"status": "erro"}` → exibir motivo. Orientar a corrigir e rodar `/executar-tarefa` manualmente.
 - Se `{"status": "ok"}` → exibir lista de arquivos alterados e próximos passos (testes manuais, PR, deploy).
 
+### Fase 5 — Explicar (somente se a invocação trouxer `--explicar`)
+
+Acionar **apenas depois** da Fase 4 concluída com `{"status": "ok"}` — ou seja, com a tarefa feita. Rodar [`/explicar`](explicar.md) sobre a pasta em modo "já feito" e gerar `explicacao.md`.
+
+- Se o fluxo encerrou antes da Fase 4 (erro ou pausa não aprovada), **não** acionar `--explicar`.
+
 ---
 
 **Encerramento:** independente da fase final, informar claramente onde o fluxo parou e o próximo passo recomendado.

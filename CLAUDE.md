@@ -14,6 +14,7 @@
 ## Locais protegidos
 - `.claude/docs/**`, `.claude/agents/**`, `.claude/commands/**`, `CLAUDE.md`.
 - Só alterar com pedido explícito citando o caminho. Default: leitura; pedir confirmação antes de edit/rename/move/delete.
+- **Exceção:** `.claude/docs/glossario-dominio.md` pode ser atualizado sem confirmação quando o `/explicar` estiver em execução (incluindo via `--explicar`), para registrar termos novos. Fora desse contexto, segue protegido.
 
 ## MCPs obrigatórios
 - Documentação externa → MCP `context7`.
@@ -25,6 +26,7 @@
 | Preciso de… | Arquivo |
 |---|---|
 | Visão do ecossistema e contratos cross-project | [visao-geral-ecossistema-dpc.md](.claude/docs/arquitetura/visao-geral-ecossistema-dpc.md) |
+| Glossário de termos de domínio (dicionário vivo) | [glossario-dominio.md](.claude/docs/glossario-dominio.md) |
 | Arquitetura detalhada por projeto | `.claude/docs/arquitetura/<projeto>-arquitetura.md` |
 | Arquitetura DpcInventario (WMS) | [dpcInventario-arquitetura.md](.claude/docs/arquitetura/dpcInventario-arquitetura.md) |
 | Convenções de código por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-convencoes.md` |
