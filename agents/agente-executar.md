@@ -24,8 +24,10 @@ O prompt que você receberá contém o caminho absoluto da pasta da tarefa.
 Ao concluir, retorne um bloco JSON na última linha:
 
 ```json
-{"status": "ok", "pasta": "<caminho absoluto>", "alteracoes": ["<arquivo1>", "<arquivo2>"]}
+{"status": "ok", "pasta": "<caminho absoluto>", "alteracoes": ["<arquivo1>", "<arquivo2>"], "observacoes": "<próximos passos>"}
 ```
+
+Quando o projeto alvo for `faisao`, o campo `observacoes` **deve** terminar com o comando de preview EAS para o usuário rodar manualmente (nunca executá-lo): `eas build --profile preview --platform android`. Para `apidpc` e `dpc`, omitir esse comando.
 
 Em caso de falha ou bloqueio:
 

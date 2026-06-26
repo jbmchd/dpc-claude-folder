@@ -27,4 +27,12 @@
 
 **Modificador `--explicar`:** se a invocação trouxer `--explicar`, após concluir a execução, rodar [`/explicar`](explicar.md) sobre a tarefa (modo "já feito") e gerar `explicacao.md`. Não relaxa o limite de nunca commitar/push/PR.
 
-**Encerramento:** resumo das alterações e próximos passos (testes manuais, PR, deploy), mantendo a árvore suja.
+**Comando de preview EAS (somente Faisão):** ao final da execução, quando o projeto alvo for `faisao`, **sempre** incluir no encerramento o comando para gerar o preview via EAS, para o usuário rodar manualmente:
+
+```bash
+eas build --profile preview --platform android
+```
+
+Apenas **exibir** o comando — **nunca** executá-lo (ver memória "Não rodar build sem pedido explícito"). Para projetos `apidpc` e `dpc` não há comando EAS; omitir esta seção.
+
+**Encerramento:** resumo das alterações e próximos passos (testes manuais, PR, deploy), mantendo a árvore suja. Se o projeto for `faisao`, terminar com o comando de preview EAS acima.
