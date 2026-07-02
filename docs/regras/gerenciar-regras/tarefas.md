@@ -34,6 +34,7 @@ Fonte canônica do fluxo de tarefas no workspace DPC. Os commands `/importar-tar
 - Implementa seguindo os checklists e convenções.
 - Atualiza `desenvolvimento.md` durante e ao final.
 - **Nunca** faz `git commit`, `git push` ou abre PR automaticamente. Encerra com árvore suja e aguarda instrução. Autorização prévia não persiste entre fases.
+  - **Exceção:** no fluxo **multi-card Modo A** (§9), o orquestrador `/tarefa-completa` faz auto-commit por card na branch da tarefa para viabilizar a branch de integração — ver [git-workflow-branches.md](git-workflow-branches.md). Push e PR seguem sempre manuais.
 - Tarefas de migração Maracanã → DPC/ApiDPC seguem também [migracao-legado.md](migracao-legado.md).
 
 ## 3. Trello
@@ -146,6 +147,7 @@ imagem {1}: images/tela-atual.png
   - `planejamento.md` — plano técnico e passos
   - `desenvolvimento.md` — linha do tempo + resumo técnico
 - `metadata.json` deve ter, quando disponíveis: `title`, `id`, `idShort`, `project`, `sourceType`, `sourceReference`, `list`, `labels`, `members`, `due`, `url`, `branchNameSuggested`. Para tarefas com PDF, incluir `pdfAssets`.
+- **Tarefa mesclada (Modo B — §9):** além dos campos do card primário (primeiro card), incluir o array `cards: [{ "id", "idShort", "title", "url" }, …]` com todos os cards mesclados. Os demais campos (`title`, `project`, etc.) referem-se à tarefa consolidada.
 
 ## 6. Branch
 
@@ -186,3 +188,30 @@ Mensagem em português que resuma o estado atual das mudanças.
 ## 8. Limite operacional
 
 - Quando o fluxo pedido for apenas planejamento ou documentação, não iniciar alterações de código.
+
+## 9. Múltiplos cards no mesmo pedido
+
+Aplica-se quando o usuário passa **mais de um card do Trello na mesma chamada** (o agrupamento é informado no prompt; não há detecção automática por número de pedido). Com **um único card**, nada muda — o fluxo padrão das §§2–7 vale sem alteração.
+
+### 9.1 Gatilho e escolha de modo
+Ao detectar **≥2 cards** na entrada, o orquestrador `/tarefa-completa` **pergunta** (via `AskUserQuestion`) como tratá-los, entre dois modos:
+
+| | **Modo A — cards separados** | **Modo B — cards mesclados** |
+|---|---|---|
+| Demanda | Cada card é uma demanda independente | Os N cards são uma única demanda |
+| Pastas | N (uma por card) | 1 (consolidada) |
+| Branches | N (`feature/{card}-{slug}`) + `integracao/{cards}` | 1 (`feature/{cards}-{slug}`) |
+| PRs | N (manuais, um por branch de tarefa) | 1 (manual) |
+| Ciclo import→classificar→planejar→executar | roda N vezes (sequencial) | roda 1 vez |
+
+### 9.2 Modo A — cards separados
+- Cada card roda o ciclo completo **como se tivesse sido passado sozinho**: sua própria pasta `cards/{codigo}-{slug}/`, seu `metadata.json` (single-card), sua branch `feature/{card}-{slug}`, seu PR.
+- Processamento **sequencial** (a árvore de trabalho do git é única). Após executar cada card, o orquestrador faz **auto-commit** na branch da tarefa (mensagem sugerida do `desenvolvimento.md`) antes de passar ao próximo — exceção descrita em [git-workflow-branches.md](git-workflow-branches.md).
+- Ao final, uma **branch de integração** `integracao/{cards}` reúne o código de todos os cards **apenas para teste conjunto**. Ela **nunca** recebe PR nem correção: abrir PR e corrigir algo acontecem sempre na branch da tarefa/card correspondente. Ver [git-workflow-branches.md](git-workflow-branches.md).
+
+### 9.3 Modo B — cards mesclados
+- Importação **única** com todos os cards → **uma** pasta `cards/{codigo-primeiro}-{slug}/`.
+- O `conteudo-do-card.md` consolida cada card como uma seção `## Fonte: Trello #NNNN`, reutilizando o mecanismo de consolidação de múltiplas fontes da §4.7 (cada card é tratado como uma fonte da mesma tarefa).
+- O `metadata.json` guarda o array `cards: [...]` além dos campos do card primário (§5).
+- A partir daí, um único ciclo classificar → planejar → executar, produzindo uma branch `feature/{cards}-{slug}` e um PR (manual).
+- **Sem auto-commit:** por ser uma tarefa/branch única, o Modo B se comporta como o fluxo de card único — a execução deixa a árvore suja e o commit é **manual**. O auto-commit é exclusivo do Modo A (§9.2); é a **única** situação do workspace em que um commit automático é permitido.

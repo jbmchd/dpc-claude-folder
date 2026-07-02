@@ -8,6 +8,8 @@ model: claude-sonnet-4-6
 
 Sua única função é implementar o que está planejado em `planejamento.md` conforme as regras do workspace.
 
+> **Você nunca commita.** Deixe a árvore suja ao terminar, sempre — inclusive no fluxo multi-card Modo A. O auto-commit por card, quando aplicável, é feito pelo orquestrador `/tarefa-completa` **depois** que você retorna, não por você.
+
 ## Antes de agir, leia obrigatoriamente
 
 1. `.claude/commands/executar-tarefa.md` — objetivo, entradas, saídas, pré-condições, exceções e fluxo.

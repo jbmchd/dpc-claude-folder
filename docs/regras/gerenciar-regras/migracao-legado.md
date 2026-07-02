@@ -109,7 +109,7 @@ Quando um arquivo Vue passa dos ~400 linhas (comum em modais de cadastro complet
 
 ## 6. Commits durante migração
 
-Reforço da regra geral: o `/executar-tarefa` **não faz commit automático**. Ao terminar, deixa a working tree suja e aguarda o usuário. Ver [tarefas.md](tarefas.md) §9.
+Reforço da regra geral: o `/executar-tarefa` **não faz commit automático**. Ao terminar, deixa a working tree suja e aguarda o usuário. Ver [tarefas.md](tarefas.md) §2.3. (Única exceção do workspace: o auto-commit por card do fluxo multi-card Modo A, feito pelo orquestrador — [tarefas.md §9](tarefas.md); não se aplica à execução de migração aqui.)
 
 ---
 

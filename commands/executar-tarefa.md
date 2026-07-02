@@ -6,7 +6,7 @@
 
 **Saída:** código alterado no projeto; `desenvolvimento.md` atualizado com linha do tempo, decisões e resumo técnico; árvore de trabalho **suja** aguardando instrução do usuário.
 
-**Não faz:** `git commit`, `git push`, abertura de PR — **nunca**, mesmo com autorização prévia em mensagens anteriores. Autorização não persiste entre fases.
+**Não faz:** `git commit`, `git push`, abertura de PR — **nunca**, mesmo com autorização prévia em mensagens anteriores. Autorização não persiste entre fases. Este invariante vale para **toda** execução, inclusive dentro do fluxo multi-card Modo A: quem commita cada card é o **orquestrador** `/tarefa-completa` (após a execução), não este agente. Ver [git-workflow-branches.md §8.1](../docs/regras/gerenciar-regras/git-workflow-branches.md) e [tarefas.md §9](../docs/regras/gerenciar-regras/tarefas.md).
 
 **Fluxo detalhado:** [tarefas.md §2.3](../docs/regras/gerenciar-regras/tarefas.md) · [git-workflow-branches.md](../docs/regras/gerenciar-regras/git-workflow-branches.md).
 

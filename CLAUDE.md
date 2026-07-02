@@ -53,7 +53,8 @@ Para mudanças que envolvam mais de um projeto, começar sempre pela visão do e
 
 ## Tarefas
 - Fluxo canônico: [tarefas.md](.claude/docs/regras/gerenciar-regras/tarefas.md) + commands `/importar-tarefa`, `/planejar-tarefa`, `/executar-tarefa`.
-- Execução **nunca** commita, faz push ou abre PR automaticamente.
+- Execução **nunca** faz push ou abre PR automaticamente e, por padrão, **nunca** commita. Única exceção: o auto-commit por card do **fluxo multi-card Modo A** (feito pelo orquestrador `/tarefa-completa`, não pela execução) — ver [tarefas.md §9](.claude/docs/regras/gerenciar-regras/tarefas.md) e [git-workflow-branches.md §8](.claude/docs/regras/gerenciar-regras/git-workflow-branches.md). Push e PR seguem sempre manuais.
+- Múltiplos cards do Trello na mesma chamada → o `/tarefa-completa` pergunta se são **separados (Modo A)** ou **mesclados (Modo B)** ([tarefas.md §9](.claude/docs/regras/gerenciar-regras/tarefas.md)).
 - Quando o pedido for apenas planejamento ou documentação, não alterar código.
 
 ## Documentação

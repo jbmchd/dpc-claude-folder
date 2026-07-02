@@ -10,6 +10,10 @@
 
 **Não faz:** alterar código, criar branch, gerar planejamento técnico, processar vídeos.
 
+**Múltiplos cards ([tarefas.md §9](../docs/regras/gerenciar-regras/tarefas.md)):**
+- **Modo A (separados):** invocado uma vez por card pelo orquestrador → cada chamada cria uma pasta single-card normal. Sem lógica especial aqui.
+- **Modo B (mesclados):** invocado uma vez com todos os cards → cria **uma** pasta `cards/{codigo-primeiro}-{slug}/`, com `conteudo-do-card.md` consolidando cada card em uma seção `## Fonte: Trello #NNNN` (reuso da consolidação de §4.7) e `metadata.json` com o array `cards: [...]` (§5).
+
 **Fluxo detalhado:** [tarefas.md §2.1 e §4](../docs/regras/gerenciar-regras/tarefas.md).
 
 **Exceções:**
