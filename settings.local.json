@@ -26,7 +26,9 @@
       "PowerShell(gh --version)",
       "PowerShell(gh auth status)",
       "mcp__context7__query-docs",
-      "mcp__context7__resolve-library-id"
+      "mcp__context7__resolve-library-id",
+      "Bash(Get-ChildItem -Path \"d:\\\\Joabe\\\\Documents\\\\dev\\\\projetos\\\\joabe\\\\ai-tools\\\\trello\\\\3160\" -Force)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://api.expo.dev/v2/versions\" -UseBasicParsing -TimeoutSec 20; \"STATUS: $\\($r.StatusCode\\)\"; \"LENGTH: $\\($r.Content.Length\\) bytes\" } catch { \"FALHOU: $\\($_.Exception.Message\\)\" })"
     ]
   }
 }
