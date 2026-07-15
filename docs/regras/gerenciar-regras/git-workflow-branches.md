@@ -131,4 +131,17 @@ git merge feature/{card2}-{slug2}
 ### 8.3 A integração é só para teste
 - A `integracao/{cards}` existe **exclusivamente para testar o conjunto dos cards juntos**.
 - **Nunca** é alvo de PR nem de correção: abrir PR e corrigir qualquer coisa acontecem sempre na branch da tarefa/card correspondente (`feature/{card}-{slug}`).
-- Se uma branch de tarefa mudar depois (correção, ajuste), a integração fica **desatualizada** → remontá-la (recriar `integracao/{cards}` do zero pela §8.2) quando o usuário quiser testar o conjunto de novo.
+- Se uma branch de tarefa mudar depois (correção, ajuste), a integração fica **desatualizada** → remontá-la (recriar `integracao/{cards}` do zero pela §8.2). Ver §8.4 para quando esse rebuild é automático.
+
+### 8.4 Correção em card cujo PR já foi aberto (padrão do Modo A)
+Quando o usuário pede uma **correção** num card do fluxo multi-card Modo A **cujo PR já foi aberto**, o padrão é executar o ciclo completo **sem perguntar de novo**:
+
+1. Aplicar a correção na **branch da tarefa** (`feature/{card}-{slug}`) — nunca na de integração.
+2. **Commit** na branch da tarefa (mensagem coerente com a correção).
+3. **Push** da branch → atualiza o PR já existente automaticamente.
+4. **Rebuild** da `integracao/{cards}` (§8.2) para o teste conjunto refletir a correção.
+
+Escopo e limites:
+- Vale apenas quando **já existe PR** para aquela branch (aberto a pedido do usuário). A **primeira** abertura de PR e o **primeiro** push de uma branch nova continuam sendo feitos **a pedido** do usuário.
+- Push aqui só **atualiza** um PR já aberto; nunca cria PR novo nem publica branch nova por conta própria.
+- Se o push ou o rebuild encontrar conflito/erro, **parar e reportar**.

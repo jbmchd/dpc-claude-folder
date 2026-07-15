@@ -4,12 +4,15 @@ Caminho do projeto: `d:/Joabe/Documents/dev/projetos/dpc/workspace/Faisao`
 
 ## Argumentos aceitos
 
-`/gerar-versao [tipo] [--ota|--build] [--lint] [--dry-run]`
+`/gerar-versao [tipo] [canal] [--ota|--build] [--lint] [--dry-run]`
 
-- `tipo` (opcional): `patch` | `minor` | `major` | `x.y.z` específico. **Só se aplica ao caminho build.** No caminho OTA é ignorado (não há bump). Se omitido no build, pergunte ao usuário (com a recomendação destacada).
-- `--ota` / `--build`: força o método de entrega (default = autodetectado).
+- `tipo` (opcional): `patch` | `minor` | `major` | `x.y.z` específico. **Só se aplica ao caminho build no canal `production`.** No caminho OTA e no canal `preview` é ignorado (não há bump). Se omitido no build production, pergunte ao usuário (com a recomendação destacada).
+- `canal` (opcional): `preview` | `production`. Default = `production`.
+  - **`production`** → fluxo completo na **`main`** (checkout + sync + tag + GitHub Release).
+  - **`preview`** → usa a **branch atual**, seja ela qual for (feature, integração ou a própria main). **Não** troca de branch, **não** cria tag/release, **não** commita nem faz push — só valida e imprime o comando `eas` do canal preview. É o caminho para testar código que ainda não foi mergeado na main.
+- `--ota` / `--build`: força o método de entrega (default = autodetectado). As palavras posicionais `ota`/`build` (qualquer caixa, ex.: `OTA preview`) valem como `--ota`/`--build`.
 - `--lint`: roda `npm run lint` antes da release (por padrão o lint **não** roda).
-- `--dry-run`: simula, sem executar nada. Aborta se não estiver em main (não troca de branch).
+- `--dry-run`: simula, sem executar nada. No canal `production`, aborta se não estiver em main (não troca de branch); no canal `preview` roda normal (preview já não muda nada).
 
 ## Conceito-chave: OTA não mexe na versão
 
@@ -36,17 +39,18 @@ git status --porcelain
 - `gh` não instalado/autenticado → abortar.
 - `git status --porcelain` retornou algo → working tree sujo, abortar listando os arquivos.
 
-### 2) Branch correta
+### 2) Branch correta (depende do canal)
 
 ```bash
 git rev-parse --abbrev-ref HEAD
 ```
 
-- Se != `main`:
+- **Canal `production`** — se != `main`:
   - **Em `--dry-run`**: abortar com "dry-run não troca de branch; rode sem --dry-run ou faça `git checkout main` manualmente".
   - **Modo normal**: rodar `git checkout main && git pull origin main`. Guardar a branch original em `ORIGINAL_BRANCH` para avisar no final.
+- **Canal `preview`**: ficar na branch atual, qualquer que seja. Guardar o nome em `BRANCH_ATUAL` para os resumos/saídas. Não fazer checkout nem pull.
 
-### 3) Sync com origin
+### 3) Sync com origin (só canal `production`)
 
 ```bash
 git fetch origin main
@@ -54,6 +58,8 @@ git rev-list --left-right --count main...origin/main
 ```
 
 A saída é `<ahead>\t<behind>`. Abortar se `ahead > 0` (sugerir `git push`) ou `behind > 0` (sugerir `git pull`).
+
+**Canal `preview`**: pular este passo — a branch pode ser local-only (ex.: `integracao/…`) e nada será pushado.
 
 ### 4) Análise da release (commits + arquivos modificados)
 
@@ -106,6 +112,28 @@ A partir daqui o fluxo **bifurca**. Siga **apenas** o caminho do método escolhi
 ---
 
 ## Caminho BUILD (nova versão nativa)
+
+### B0) Canal `preview` — atalho (sem bump, sem tag)
+
+Se o canal for `preview`, **pular B1→B5 inteiros**. Build preview é APK de teste: usa `version`/`runtimeVersion`/`versionCode` atuais da branch, sem `npm version`, sem commit, sem tag, sem release, sem push.
+
+1. Lint só com `--lint` (igual B3).
+2. Mostrar o resumo:
+
+```
+Modo:     BUILD preview (APK de teste) — versão NÃO muda
+Versão:   X.Y.Z (mantida)
+Branch:   $BRANCH_ATUAL (mantida)
+Commits desde LAST_TAG: N
+  (até 15 primeiros, em formato oneline)
+```
+
+3. **Em `--dry-run`, pare aqui** com "[dry-run] nenhuma alteração feita". Fora dele, imprimir a saída final:
+   - `[OK] Build preview validado na branch $BRANCH_ATUAL — nada foi commitado/tagueado.`
+   - Próximo passo (rodar manualmente): `npx eas build --platform android --profile preview`
+   - Lembrete: o APK sai do código da branch atual; o que estiver fora dela (ex.: não mergeado) não entra.
+
+**Fim do caminho BUILD preview.** Os passos B1→B6 abaixo valem só para o canal `production`.
 
 ### B1) Decidir o bump
 
@@ -193,6 +221,32 @@ git diff --name-only ${LAST_BUILD_TAG:+$LAST_BUILD_TAG..HEAD}
 - Se algum arquivo for **NATIVO** (mesma classificação do passo 4) → **abortar** com aviso, listando os arquivos: "mudança nativa detectada — não chega via OTA; rode o modo build (`/gerar-versao --build`)".
 - Se houver **AMBIGUO** (`package.json`/`-lock`) → mesma pergunta do passo 4; resposta "sim" (tem nativo) → abortar pelo mesmo motivo.
 
+> A guarda O1 vale para **os dois canais** — mudança nativa não chega via OTA nem em preview. No canal `preview`, rodar o diff na branch atual (`${LAST_BUILD_TAG}..HEAD`).
+
+### O1.5) Canal `preview` — atalho (sem tag, sem commit)
+
+Se o canal for `preview`, **pular O2→O5 inteiros**. OTA preview é teste descartável: sem sub-versão `-ota.N`, sem `update-build-info.js` (o `buildInfo.ts` fica o do build base), sem commit, sem tag, sem release, sem push.
+
+1. Lint só com `--lint` (igual O3).
+2. Mostrar o resumo:
+
+```
+Modo:           OTA preview (eas update) — a versão NÃO muda
+Versão:         X.Y.Z (mantida)
+runtimeVersion: X.Y.Z (mantido)
+Base build:     LAST_BUILD_TAG
+Branch:         $BRANCH_ATUAL (mantida)
+Commits desde LAST_TAG: N
+  (até 15 primeiros, em formato oneline)
+```
+
+3. **Em `--dry-run`, pare aqui** com "[dry-run] nenhuma alteração feita". Fora dele, imprimir a saída final:
+   - `[OK] OTA preview validado na branch $BRANCH_ATUAL — nada foi commitado/tagueado.`
+   - Próximo passo (rodar manualmente): `npx eas update --branch preview --platform android --message "preview $BRANCH_ATUAL@<hash-curto-do-HEAD>"`
+   - Lembrete: só aparelhos com build do canal **preview** e `runtimeVersion` X.Y.Z recebem; o canal `production` não é afetado.
+
+**Fim do caminho OTA preview.** Os passos O2→O6 abaixo valem só para o canal `production`.
+
 ### O2) Calcular a sub-versão OTA
 
 ```bash
@@ -257,8 +311,9 @@ Imprimir, em sucesso:
 
 ## Resultado
 
-- **Sucesso (build)**: release `vNEW_VERSION` criada (commit + tag pushados + GitHub Release) e o usuário sabe qual comando de build rodar.
-- **Sucesso (OTA)**: tag `OTA_TAG` criada (commit do build-info + tag + GitHub Release) **sem alterar a versão**, e o usuário sabe qual `eas update` rodar.
+- **Sucesso (build production)**: release `vNEW_VERSION` criada (commit + tag pushados + GitHub Release) e o usuário sabe qual comando de build rodar.
+- **Sucesso (OTA production)**: tag `OTA_TAG` criada (commit do build-info + tag + GitHub Release) **sem alterar a versão**, e o usuário sabe qual `eas update` rodar.
+- **Sucesso (preview, OTA ou build)**: validações passaram na branch atual, **nenhuma alteração em git** (sem commit/tag/release/push), e o usuário sabe qual comando `eas` do canal preview rodar.
 - **Falha**: reportar exatamente em qual passo falhou e o estado atual (ex: "passo B5/O5 falhou em `gh release create`; commit e tag já estão em origin, basta rodar `gh release create <tag> --generate-notes --title <tag>`").
 
 ## Exceções

@@ -31,7 +31,9 @@ O git tem uma árvore de trabalho única; por isso o processamento é **sequenci
 2. Apresentar **uma única pausa de aprovação** listando os N planos (aprovar todos / cancelar). Não avançar sem aprovação explícita.
 3. Aprovado, para cada card **em sequência**: rodar Fase 4 (Executar) na sua branch e, ao terminar, fazer **auto-commit** na branch da tarefa usando a "Mensagem de commit sugerida" do `desenvolvimento.md` (exceção de [git-workflow-branches.md](../docs/regras/gerenciar-regras/git-workflow-branches.md)) — deixando a árvore limpa para o próximo card.
 4. Ao final de todos: criar a branch `integracao/{cards}` (idShorts unidos por `-`, ex.: `integracao/3183-3184-3185`) a partir da base (`main`/`master`) e fazer **merge** de cada branch de tarefa nela. Conflito → parar e pedir resolução.
-5. Reportar: N branches prontas + branch de integração pronta **só para teste**. **Push, abertura de PR e correções são sempre manuais e vão na branch da tarefa/card específico — nunca na de integração.** Se depois uma branch de tarefa mudar, a integração fica desatualizada → oferecer rebuild da `integracao/{cards}`.
+5. Reportar: N branches prontas + branch de integração pronta **só para teste**. **Push e abertura de PR são feitos a pedido do usuário; correções vão sempre na branch da tarefa/card específico — nunca na de integração.**
+   - **Após o PR de um card já ter sido aberto**, correções nesse card seguem o padrão de [git-workflow-branches.md §8.4](../docs/regras/gerenciar-regras/git-workflow-branches.md): aplicar na branch da tarefa → commit → push (atualiza o PR) → rebuild da `integracao/{cards}`, **sem perguntar de novo**.
+   - Enquanto o PR ainda **não** foi aberto, uma correção fica na branch da tarefa e o rebuild da integração é **oferecido** (não automático).
 
 #### Modo B — cards mesclados (ciclo único)
 

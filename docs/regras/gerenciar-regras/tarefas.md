@@ -208,6 +208,7 @@ Ao detectar **≥2 cards** na entrada, o orquestrador `/tarefa-completa` **pergu
 - Cada card roda o ciclo completo **como se tivesse sido passado sozinho**: sua própria pasta `cards/{codigo}-{slug}/`, seu `metadata.json` (single-card), sua branch `feature/{card}-{slug}`, seu PR.
 - Processamento **sequencial** (a árvore de trabalho do git é única). Após executar cada card, o orquestrador faz **auto-commit** na branch da tarefa (mensagem sugerida do `desenvolvimento.md`) antes de passar ao próximo — exceção descrita em [git-workflow-branches.md](git-workflow-branches.md).
 - Ao final, uma **branch de integração** `integracao/{cards}` reúne o código de todos os cards **apenas para teste conjunto**. Ela **nunca** recebe PR nem correção: abrir PR e corrigir algo acontecem sempre na branch da tarefa/card correspondente. Ver [git-workflow-branches.md](git-workflow-branches.md).
+- **Correção após o PR do card já ter sido aberto:** padrão automático (sem perguntar) — aplicar na branch da tarefa → commit → push (atualiza o PR) → rebuild da `integracao/{cards}`. Detalhes e limites em [git-workflow-branches.md §8.4](git-workflow-branches.md).
 
 ### 9.3 Modo B — cards mesclados
 - Importação **única** com todos os cards → **uma** pasta `cards/{codigo-primeiro}-{slug}/`.

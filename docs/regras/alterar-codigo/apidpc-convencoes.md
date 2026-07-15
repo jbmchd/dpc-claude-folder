@@ -10,12 +10,13 @@ Ver também: [apidpc-oracle-padroes.md](apidpc-oracle-padroes.md) · [apidpc-arq
 - Recebe `Illuminate\Http\Request`; parâmetros via `$request->all()`.
 - Instancia Repository (ou Service) e delega; sem regra de negócio no controller.
 - Métodos já em uso: `showAll`, `store`, `edit`, `show`, `destroy`.
-- Resposta: retorno do Repository/Service ou `response()->json()`; não alterar formato existente.
+- **`response()->json()` é responsabilidade exclusiva do controller.** Em código novo, o controller monta o `$retorno` (`error`, `message`, `data`), faz a validação de entrada e o wrap em JSON; não alterar formato de resposta existente.
 
 ## Repositories (`app/Repositories/`)
 - Estende `BaseRepository`, namespace `App\Repositories`.
 - Interface padrão: `show($id)`, `showAll($params)`, `store($params)`, `update($params)`.
-- Retorno padrão: array `{ error: 0|1, msg?, data? }`.
+- **Nunca retornar `response()->json()` em método novo** — retornar dados brutos (array/Collection/int) para permitir reuso da consulta em outros contextos. Um repository que devolve JSON trava o consumidor no formato HTTP (má prática detectada no card #3191, corrigida no PR ApiDPC#987). Métodos legados que já devolvem response ficam como estão até serem tocados por outra demanda.
+- Retorno padrão dos métodos legados: array `{ error: 0|1, msg?, data? }`.
 - Manter o padrão de try/catch do arquivo sendo editado; não padronizar em bloco.
 
 ## Rotas (`routes/`)
