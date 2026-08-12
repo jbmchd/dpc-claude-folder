@@ -1,7 +1,7 @@
 # DPC Workspace
 
 ## Escopo
-- Workspace contém ApiDPC, DPC e Faisao. Regras valem para todos os agentes e sessões.
+- Workspace contém ApiDPC, DPC, Faisao, DpcInventario e ApiNFE. Regras valem para todos os agentes e sessões.
 
 ## Regras transversais
 - Identificar projeto e área afetados antes de alterar código.
@@ -21,6 +21,26 @@
 - Banco de dados → MCP DPC.
 - Trello → MCP Trello (board `DPC Dev`, card por `idShort` ou link).
 
+### Exceção: domínio fiscal (SEFAZ, NF-e, CT-e, MDF-e)
+
+Para regras operacionais da SEFAZ, **não usar Context7** — ele indexa documentação de bibliotecas, e a `sped-nfe` documenta a *API dela*, não as regras do fisco. Pior: a tabela de cStat da `sped-nfe` chegou a descrever o código 656 de forma incompleta, o que atrasou um diagnóstico.
+
+Consultar, nesta ordem:
+
+1. **Portal oficial da NF-e** — Notas Técnicas e Manual de Orientação do Contribuinte (`nfe.fazenda.gov.br`). É a fonte normativa.
+2. **Bases de conhecimento de provedores**, que documentam o comportamento *real* em produção — o que a NT não detalha:
+   - `atendimento.tecnospeed.com.br` e `blog.tecnospeed.com.br`
+   - `blog.nstecnologia.com.br`
+   - `focusnfe.com.br/blog`
+   - `oobj.com.br/bc`
+   - `qive.com.br/blog`
+   - `tributos.io/blog`
+   - `acbr.sourceforge.io` (documentação do ACBr)
+
+Motivo: limites de consumo, causas de rejeição e comportamento de bloqueio raramente estão na NT com a precisão necessária. Os provedores operam esses serviços em escala e publicam o que aprenderam em campo.
+
+Caso concreto: a causa do `cStat 656` que travou a implantação da captura de NF-e não estava na NT 2014.002 nem no Context7 — estava numa base de conhecimento de provedor. Ver [sefaz-656-consumo-indevido.md](../../.claude-work-items/nfe/sefaz-656-consumo-indevido.md).
+
 ## Índice de documentação
 
 | Preciso de… | Arquivo |
@@ -29,6 +49,7 @@
 | Glossário de termos de domínio (dicionário vivo) | [glossario-dominio.md](.claude/docs/glossario-dominio.md) |
 | Arquitetura detalhada por projeto | `.claude/docs/arquitetura/<projeto>-arquitetura.md` |
 | Arquitetura DpcInventario (WMS) | [dpcInventario-arquitetura.md](.claude/docs/arquitetura/dpcInventario-arquitetura.md) |
+| Arquitetura ApiNFE (fiscal: SEFAZ/NF-e/Senig) | [apinfe-arquitetura.md](.claude/docs/arquitetura/apinfe-arquitetura.md) |
 | Convenções de código por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-convencoes.md` |
 | Checklist bug / feature por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-checklist-corrigir-bug.md` e `-nova-feature.md` |
 | Fluxo de tarefas e Trello | [tarefas.md](.claude/docs/regras/gerenciar-regras/tarefas.md) |
@@ -45,6 +66,7 @@ Para mudanças que envolvam mais de um projeto, começar sempre pela visão do e
 - **DPC** (`DPC/src/**`): Vue 2 / Vuex — ver [dpc-convencoes.md](.claude/docs/regras/alterar-codigo/dpc-convencoes.md).
 - **Faisao** (`Faisao/src/**`): React Native / Expo / TS — ver [faisao-convencoes.md](.claude/docs/regras/alterar-codigo/faisao-convencoes.md) (**regra obrigatória de mapeamento cross-project**).
 - **DpcInventario** (`DpcInventario/src/**`): Vue 3 / Vite — backend próprio (ApiInventario); não usa ApiDPC — ver [dpcInventario-arquitetura.md](.claude/docs/arquitetura/dpcInventario-arquitetura.md).
+- **ApiNFE** (`ApiNFE/app/**`, `ApiNFE/routes/**`): **Lumen 10** / PHP 8.2 — API fiscal (SEFAZ, DANFE, Senig); Oracle + certificados digitais — ver [apinfe-convencoes.md](.claude/docs/regras/alterar-codigo/apinfe-convencoes.md). Resposta usa `mensagem` (não `msg`) e token vai em **query string**.
 
 ## Bugfix e nova feature
 - Consultar o checklist do projeto alvo (`<projeto>-checklist-corrigir-bug.md` ou `-nova-feature.md`).
