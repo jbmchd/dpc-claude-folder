@@ -197,7 +197,7 @@ O registro fica aqui inteiro. Cada linha custou horas.
 
 | Item | Situação |
 |---|---|
-| **Teste de volume da empresa 30** | armado: NFE e CTE pausados em 02/09 10:45, cursores em 18.698 e 7.150, acumulando atraso. Reativar e observar a rajada |
+| **Teste de volume da empresa 30** | **adiado em 02/09/2026, sem data.** Os fluxos NFE e CTE seguem pausados e acumulando atraso, o que *preserva* o cenário — retomar não custa preparo. Detalhe abaixo |
 | **Freio por fluxo × global** | a premissa caiu com a correção do cooldown. Remedir com dado limpo antes de mexer |
 | **Chave de NFS-e truncada** | `chave_nf` é `VARCHAR2(44)` e a chave tem 50. Impede religar evento de NFS-e |
 | **CNPJs ociosos** | empresa 900 (`ultNSU = 87`, imóvel) devolve 656 com espera respeitada. Pausada. Decidir na virada da Qive |
@@ -206,6 +206,43 @@ O registro fica aqui inteiro. Cada linha custou horas.
 | **Corte da Qive** | só as empresas **900 (ALL CARS)** e **30** estão livres para consultar; os outros 12 CNPJs seguem atendidos pela Qive e o NSU é compartilhado |
 | **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 4 linhas. Rodar o `scripts/04_parametros_dbeaver.sql` **antes** do deploy |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
+
+### O teste de volume, quando voltar
+
+**Não está agendado.** Foi adiado em 02/09/2026 para dar lugar a outra frente, e
+volta depois. Nada precisa ser desfeito: os dois fluxos continuam pausados e o
+atraso continua crescendo, que é exatamente o cenário que o teste quer medir.
+
+| | |
+|---|---|
+| Fluxos | empresa **30**, `NFE` e `CTE` |
+| Cursores parados em | **18.698** e **7.150** |
+| Pausados desde | 02/09/2026 10:45 |
+| O que se quer medir | se a pausa de 30 s aguenta drenar ~850 NF-e + ~375 CT-e de atraso de uma vez, sem 656 |
+
+**Há um relógio correndo, e ele não é do teste.** A SEFAZ retém por ~90 dias: o
+que entrou na fila em 02/09 começa a sair da janela por volta de **01/12/2026**.
+Retomar depois disso não invalida o teste, mas **perde documento** — e a empresa
+30 é um dos dois CNPJs que podemos consultar, com movimento real.
+
+Ao retomar, primeiro ajustar o motivo gravado no banco, que hoje ainda descreve
+o teste como iminente:
+
+```sql
+update poseidon.dpc_dfe_cursor c
+   set c.dsc_ultimo_motivo = 'pausado: teste de volume adiado em 02/09/2026, sem data',
+       c.updated_at = sysdate,
+       c.updated_by = 'MANUAL'
+ where c.cod_tipo_dfe in ('NFE','CTE')
+   and c.cod_dfe_empresa = (select e.cod_dfe_empresa
+                              from poseidon.dpc_dfe_empresa e
+                             where e.nro_empresa = 30);
+commit;
+```
+
+> Este `update` ficou **pendente**: o túnel SSH estava fora quando o teste foi
+> adiado. Rodar quando houver conexão — senão quem abrir a tela do Monitor lê
+> "acumulando atraso para teste de volume" e conclui que há algo agendado.
 
 ---
 

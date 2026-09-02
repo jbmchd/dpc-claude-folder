@@ -154,6 +154,7 @@ Arquitetura da ApiNFE como um todo (não só o DFe):
 | Produção | as tabelas `dpc_dfe_*` **não** existem em prd, e os 4 parâmetros em `DPC_PARAMETRO` também não foram carregados lá |
 | CNPJs livres da Qive | apenas **900** (ALL CARS) e **30** (DPC MS) — os outros 12 seguem com a Qive, e o NSU é compartilhado |
 | `dfe:manifestar` | desligado, aguardando a contabilidade |
+| Teste de volume (empresa 30) | **adiado, sem data.** Fluxos `NFE` e `CTE` pausados e acumulando atraso de propósito — ver [03_conhecimento-motor.md](03_conhecimento-motor.md) |
 
 Itens abertos, com o porquê de cada um:
 [03_conhecimento-motor.md §8](03_conhecimento-motor.md).
