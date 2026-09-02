@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+#  Certificado digital com chave privada NUNCA entra no repositorio
+# ---------------------------------------------------------------------------
+# O motor DFe nao usa arquivo em disco: le o certificado de
+# poseidon.dpc_conta_certif_digital_emp com a senha descriptografada. Qualquer
+# .pfx aqui e copia de investigacao.
+*.pfx
+*.p12
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+#  Script que carrega certificado EMBUTIDO
+# ---------------------------------------------------------------------------
+# 02_certificado_tst.sql tem o PFX INTEIRO em base64 (12.180 caracteres, hash
+# conferido byte a byte contra o .pfx original) e a senha do certificado.
+#
+# Ele fica junto dos outros scripts do cadastro porque o cadastro nao roda sem
+# ele, mas NAO pode ser versionado. E o mesmo tratamento de um .env: existe no
+# disco de quem tem o workspace, e o git se recusa a ve-lo.
+#
+# O PADRAO E SEM BARRA DE PROPOSITO, e isso importa:
+# a regra anterior era ancorada no caminho completo
+# (docs/nfe_dfe/scripts/teste-all-cars/02_certificado_tst.sql). Quando a pasta
+# foi reorganizada e o arquivo desceu um nivel, a regra deixou de casar EM
+# SILENCIO - e o segredo voltou a ser commitavel. Sem barra, o padrao casa o
+# nome em qualquer profundidade e sobrevive a reorganizacao.
+02_certificado_tst.sql
+
+# ATENCAO: o 01_certificado_emp30.sql NAO entra nesta lista, e e deliberado -
+# ele faz INSERT ... SELECT copiando a linha da empresa 1 dentro do banco, e
+# nao carrega nenhum literal de certificado ou senha.
+#
+# Todo script novo que embutir certificado precisa ser acrescentado aqui. Para
+# conferir que nada com segredo escapou, antes de commitar:
+#
+#   git add -An . | sed "s/^add '//; s/'$//" \
+#     | while read f; do grep -lE "[A-Za-z0-9+/]{200,}" "$f"; done
+#
+# A saida tem que ser vazia.

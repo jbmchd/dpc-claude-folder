@@ -314,14 +314,17 @@ No modo servidor ele passa `public/index.php` como **router script**; sem isso o
 
 ## Captura própria de NF-e de entrada (módulo DFe)
 
-Subsistema que substitui o serviço terceiro **Qive** na captura de notas de entrada. Independente do módulo antigo (`dpc_conta_entrada_*`), que segue intocado.
+Subsistema que substitui o serviço terceiro **Qive** na captura de documento fiscal de entrada: **NF-e, CT-e e NFS-e** hoje, MDF-e preparado e desligado. É 100% CLI — não expõe rota HTTP — e independente do módulo antigo (`dpc_conta_entrada_*`), que segue intocado.
+
+Documentação completa (14 documentos, os 18 scripts de banco, o conhecimento acumulado sobre a SEFAZ e sobre o motor): [nfe_dfe/docs/readme.md](../nfe_dfe/docs/readme.md). O que está aqui é o resumo arquitetural.
 
 ### Commands
 
 | Command | Fala com a SEFAZ? | Papel |
 |---|---|---|
 | `dfe:ingerir` | **sim** | Consome o fluxo de NSU e grava o documento **bruto** (gzip) |
-| `dfe:normalizar` | **nunca** | Interpreta o bruto e popula nota, evento e emitente |
+| `dfe:normalizar` | **nunca** | Interpreta o bruto e popula nota, item, emitente, evento, CT-e e NFS-e |
+| `dfe:conciliar` | não | Casa a nota capturada com a do ERP pela chave de acesso |
 | `dfe:monitorar` | não | Backlog, validade de certificados, fila e pendências |
 | `dfe:manifestar` | sim | Manifestação do destinatário — **desligado por padrão** |
 
@@ -341,11 +344,11 @@ Consequências no código: `--reposicionar-cursor` recusa valor diferente do úl
 
 ### Consumo é por certificado/IP, não por CNPJ
 
-Todas as filiais usam o e-CNPJ da matriz e saem do mesmo servidor, então **disputam uma cota só**. Um `656` aplica espera a todas as empresas e aborta o ciclo. Há freio de emergência (`DFE_MAX_BLOQUEIOS_DIA`) porque 50 bloqueios consecutivos podem virar bloqueio permanente.
+Todas as filiais usam o e-CNPJ da matriz e saem do mesmo servidor, então **disputam uma cota só**. Um `656` aplica espera a todas as empresas e aborta o ciclo. Há freio de emergência porque 50 bloqueios consecutivos podem virar bloqueio permanente. O limite vive em **`POSEIDON.DPC_PARAMETRO`** (`dfe_max_bloqueios_dia`), e não no `.env`: ele é lido pela ApiNFE **e** pela tela do Monitor DFe na ApiDPC, e quando morava no `.env` de cada projeto os dois divergiram — a tela acusava freio acionado com o motor operando normal.
 
 ### Bloqueio de negócio
 
-**Não é possível operar em paralelo com a Qive.** Duas aplicações consultando o mesmo CNPJ é causa documentada de consumo indevido. A migração exige corte seco. Ver [decisao-qive-apresentacao.md](../../../.claude-work-items/nfe/decisao-qive-apresentacao.md) e [sefaz-656-consumo-indevido.md](../../../.claude-work-items/nfe/sefaz-656-consumo-indevido.md).
+**Não é possível operar em paralelo com a Qive.** Duas aplicações consultando o mesmo CNPJ é causa documentada de consumo indevido. A migração exige corte seco. Ver [01_decisao-qive.md](../nfe_dfe/docs/01_decisao-qive.md) e [12_sefaz-656-consumo-indevido.md](../nfe_dfe/docs/12_sefaz-656-consumo-indevido.md).
 
 ### Armadilhas do driver, já resolvidas
 

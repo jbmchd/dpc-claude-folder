@@ -39,7 +39,7 @@ Consultar, nesta ordem:
 
 Motivo: limites de consumo, causas de rejeição e comportamento de bloqueio raramente estão na NT com a precisão necessária. Os provedores operam esses serviços em escala e publicam o que aprenderam em campo.
 
-Caso concreto: a causa do `cStat 656` que travou a implantação da captura de NF-e não estava na NT 2014.002 nem no Context7 — estava numa base de conhecimento de provedor. Ver [sefaz-656-consumo-indevido.md](../../.claude-work-items/nfe/sefaz-656-consumo-indevido.md).
+Caso concreto: a causa do `cStat 656` que travou a implantação da captura de NF-e não estava na NT 2014.002 nem no Context7 — estava numa base de conhecimento de provedor. Ver [12_sefaz-656-consumo-indevido.md](.claude/docs/nfe_dfe/docs/12_sefaz-656-consumo-indevido.md).
 
 ## Índice de documentação
 
@@ -50,6 +50,7 @@ Caso concreto: a causa do `cStat 656` que travou a implantação da captura de N
 | Arquitetura detalhada por projeto | `.claude/docs/arquitetura/<projeto>-arquitetura.md` |
 | Arquitetura DpcInventario (WMS) | [dpcInventario-arquitetura.md](.claude/docs/arquitetura/dpcInventario-arquitetura.md) |
 | Arquitetura ApiNFE (fiscal: SEFAZ/NF-e/Senig) | [apinfe-arquitetura.md](.claude/docs/arquitetura/apinfe-arquitetura.md) |
+| **Módulo DFe** — captura própria de NF-e/CT-e/NFS-e de entrada, que substitui a Qive. Hub com 14 documentos e os scripts de banco | [nfe_dfe/docs/readme.md](.claude/docs/nfe_dfe/docs/readme.md) |
 | Convenções de código por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-convencoes.md` |
 | Checklist bug / feature por projeto | `.claude/docs/regras/alterar-codigo/<projeto>-checklist-corrigir-bug.md` e `-nova-feature.md` |
 | Fluxo de tarefas e Trello | [tarefas.md](.claude/docs/regras/gerenciar-regras/tarefas.md) |

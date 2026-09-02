@@ -1,0 +1,17 @@
+# ---------------------------------------------------------------------------
+#  Scripts de DBeaver PRECISAM ser CRLF
+# ---------------------------------------------------------------------------
+# Em LF o divisor de statements do DBeaver corta o bloco PL/SQL no `end if;` e
+# devolve `PLS-00103: Encountered the symbol "end-of-file"`. Aconteceu de
+# verdade com o v10_cte_evento, e o instalador de producao 01_estrutura tinha o
+# mesmo defeito sem que ninguem tivesse notado.
+#
+# Nao remover porque "no Windows funciona": funciona por causa do
+# core.autocrlf, que nao esta garantido em outra maquina nem em CI.
+*.sql text eol=crlf
+
+# ---------------------------------------------------------------------------
+#  Certificado digital NUNCA entra no repositorio
+# ---------------------------------------------------------------------------
+# Ver .gitignore. A regra esta anotada aqui tambem porque este e o arquivo que
+# alguem le ao mexer em como o repo trata arquivos.
