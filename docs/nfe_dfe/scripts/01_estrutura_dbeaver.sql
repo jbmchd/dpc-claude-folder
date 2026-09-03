@@ -384,6 +384,10 @@ begin
       dta_estado_erp       TIMESTAMP(6),
       seq_notamestre_erp   NUMBER,
       dta_lancamento_erp   DATE,
+      cod_cfop_erp         NUMBER(5),
+      dsc_ocorr_dev_erp    VARCHAR2(5),
+      seq_comprador_erp    NUMBER,
+      dsc_comprador_erp    VARCHAR2(40),
       created_at           DATE default sysdate,
       created_by           VARCHAR2(50),
       updated_at           DATE,
@@ -1431,6 +1435,17 @@ begin
   end if;
 end;
 
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_indexes
+   where owner = 'POSEIDON' and index_name = 'DPCI_DFE_NOTA_COMPRADOR';
+
+  if qtd = 0 then
+    execute immediate 'create index poseidon.dpci_dfe_nota_comprador on poseidon.dpc_dfe_nota (cod_dfe_empresa, seq_comprador_erp) tablespace TSD_POSEIDON';
+  end if;
+end;
+
 --  eventos de uma nota, e o religamento de orfao
 declare
   qtd number;
@@ -1914,6 +1929,18 @@ comment on column poseidon.dpc_dfe_nota.seq_notamestre_erp is
 
 comment on column poseidon.dpc_dfe_nota.dta_lancamento_erp is
   'Data de lancamento fiscal (rf_notamestre.DTALANCAMENTO). dta_lancamento_erp - dta_emissao e o atraso de escrituracao: mediana medida de 1 dia, maximo de 74.';
+
+comment on column poseidon.dpc_dfe_nota.cod_cfop_erp is
+  'CFOP do item de MAIOR VALOR da nota, lido de consinco.rf_notaitem quando ela chega em ESCRITURADA. Insumo da categoria - a classificacao NAO e gravada, para que mudanca nas listas de CFOP reclassifique sem reprocessar.';
+
+comment on column poseidon.dpc_dfe_nota.dsc_ocorr_dev_erp is
+  'consinco.mlf_notafiscal.OCORRENCIADEV. Nao nulo = devolucao, e vence o CFOP na classificacao. Guardado o valor, e nao um flag, para nao perder informacao.';
+
+comment on column poseidon.dpc_dfe_nota.seq_comprador_erp is
+  'Comprador responsavel pelo item de maior valor (rf_notaitem -> map_produto -> map_famdivisao nrodivisao=1 -> max_comprador). E o que a tela FILTRA.';
+
+comment on column poseidon.dpc_dfe_nota.dsc_comprador_erp is
+  'Nome do comprador, para exibicao. Denormalizado de proposito: aqui e rotulo, nao chave - o vinculo e o seq_comprador_erp.';
 comment on column poseidon.dpc_dfe_nota.created_at is
   'Data de inclusao da linha.';
 comment on column poseidon.dpc_dfe_nota.created_by is
