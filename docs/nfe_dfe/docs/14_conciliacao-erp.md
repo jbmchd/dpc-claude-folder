@@ -204,7 +204,75 @@ silêncio até a hora do `alter`.
 que significa "conferido, e o ERP não tem". Preencher no `alter` seria afirmar
 algo que não foi medido. A tela mostra `NAO_CONCILIADA` para esse caso.
 
-## 10. Aberto
+## 10. A tela parou de ler o ERP por completo
+
+Depois da v12 o **status** vinha da coluna, mas **categoria** e **comprador**
+continuavam em `OUTER APPLY`. Isso mantinha o problema inteiro para eles: nao
+atravessam conexao, entao vinham vazios — e vazio parecia dado (nota sem CFOP
+cai em `SEM_CLASSIFICACAO`, que nao parece falha).
+
+A **v13** materializa os dois, e os cinco `OUTER APPLY` sairam. O repositorio da
+tela passou de 35.947 para 29.740 bytes e **nao le mais nada do Consinco**.
+
+### Grava os insumos, nao a categoria
+
+| Coluna | O que e |
+|---|---|
+| `cod_cfop_erp` | CFOP do item de maior valor |
+| `dsc_ocorr_dev_erp` | `mlf.ocorrenciadev` — nao nulo vence o CFOP |
+| `seq_comprador_erp` | o que a tela **filtra** |
+| `dsc_comprador_erp` | nome, para exibicao |
+
+A classificacao **nao** e gravada de proposito: as listas de CFOP sao regra de
+negocio e mudam. Gravando os insumos, o `CASE` fica num lugar so e mudanca de
+regra reclassifica tudo na hora, sem reprocessar acervo.
+
+🔵 Backfill: **784 com CFOP, 783 com comprador** (1 legitimamente sem — a familia
+do item nao tem divisao 1), 23 com `ocorrenciadev`. CFOP predominante: 2152 em
+761 notas.
+
+⚠️ **O CFOP 1411 esta nas listas de `DEVOLUCAO` e de `COMPRAS`.** A ordem
+resolve (devolucao e testada primeiro), mas a ambiguidade e da regra, nao do
+codigo. 22 notas nesse caso.
+
+### O ultimo vinculo com o ERP tambem caiu
+
+O filtro que exclui nota emitida por nos lia `consinco.ge_empresa.NROCGC`. Nao
+precisava: o mesmo CNPJ esta em `dpc_dfe_empresa.num_cnpj`, que **e** a fonte
+unica de identidade do modulo desde o `39b172d`.
+
+### `--todas` passou a incluir as escrituradas
+
+A v13 nasceu com as colunas nulas, e nota escriturada **sai da fila** da
+conciliacao — nunca receberia CFOP. `--todas` derruba tambem esse filtro, e nao
+so a cadencia. E o que permite as duas coisas que precisam do acervo inteiro:
+preencher campo novo, e varrer regressao de proposito.
+
+## 11. Os dois eixos, separados
+
+`AGUARDANDO_XML` vencia tudo e **escondia a etapa no ERP**: 🔵 **46 notas
+ESCRITURADAS** apareciam como "Aguardando XML" — verdade sobre a nossa captura,
+irrelevante para quem cobra o lancamento.
+
+| Pergunta | Onde aparece |
+|---|---|
+| onde esta no ERP? | coluna **Status** |
+| temos o XML completo? | **icone ao lado da chave** |
+
+Quem cuida de recebimento olha o status; quem cuida de captura olha o icone. Uma
+coluna que responde duas coisas acerta uma.
+
+## 12. O que a tela mostra agora
+
+| | Antes | Agora |
+|---|---|---|
+| Registradas no ERP | **0** (no print) | **784** |
+| Pendentes | 61 de 61 | **31** |
+| Rotulo da linha | `AGUARDANDO_ENTRADA` em 445 de 768 | a etapa real |
+| Pendencias por comprador | "Sem dados" | LUIZA MARIA RODRIGUES, 263 notas |
+| Leituras no Consinco por carga de pagina | 5 `OUTER APPLY`, um deles com 4 joins | **zero** |
+
+## 13. Aberto
 
 | Questão | Situação |
 |---|---|
