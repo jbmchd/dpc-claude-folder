@@ -172,7 +172,8 @@ ocorrência.
 
 | Item | Estado |
 |---|---|
-| `v12_estado_erp_dbeaver.sql` — 6 colunas + 2 constraints | ✅ tst · prd: as tabelas do módulo não existem lá ainda |
+| `v12_estado_erp_dbeaver.sql` — 6 colunas + 2 constraints | ✅ **executado no DBeaver** em tst · prd: as tabelas do módulo não existem lá ainda |
+| `v13_categoria_comprador_erp_dbeaver.sql` — 4 colunas + 1 índice | ✅ **executado no DBeaver** em tst · prd: idem |
 | Parâmetro `dfe_conexao_erp` = `oracle` (produção) | ✅ tst |
 | `DfeConciliacaoRepository` — três famílias, conexão parametrizável, cadência | ✅ |
 | `dfe:conciliar` — quatro estados e regressão | ✅ rodado: **784 escrituradas, 30 aguardando, 1 em digitação, 0 regressões** |
@@ -180,6 +181,22 @@ ocorrência.
 | Tela (ApiDPC) — status e KPI da coluna materializada | ✅ KPI passou de **0** para **784 registradas no ERP** |
 | Tela (DPC) — rótulos e badges dos estados novos | ✅ `Main.vue` e `ModalVisualizarNota.vue` |
 | `01_estrutura` + `estrutura_final.json` | ⏸ **a pedido: refletir depois de validado** |
+
+### Os dois scripts passaram pelo `Alt+X`
+
+Confirmado com o usuário em 03/09/2026: **ele executou os dois no DBeaver**, e não
+apenas os pedacos que eu apliquei à mão para testar o SQL.
+
+Isso prova mais do que a validez do SQL: prova que os arquivos atravessam o
+**divisor de statements** do DBeaver. Era risco concreto, não teórico — foi
+exatamente ali que o `v10` falhou com `PLS-00103`, por estar em LF. Como pista de
+que rodaram inteiros, os 10 comentários de coluna estão no dicionário com o texto
+idêntico ao dos scripts, e eu nunca executei aqueles `comment on column`.
+
+Verificado no banco: 6+4 colunas, `CK4`/`CK5` **ENABLED**,
+`DPCI_DFE_NOTA_COMPRADOR` **VALID** com as duas colunas na ordem certa. E a
+`CK4` testada na prática — gravar `ESCRITURADA` com ordinal 0 foi barrado com
+`ORA-02290`, sem deixar rastro.
 
 ### O que a validação provou
 
