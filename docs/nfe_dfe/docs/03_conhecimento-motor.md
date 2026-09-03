@@ -193,7 +193,19 @@ O registro fica aqui inteiro. Cada linha custou horas.
 | 656 por serviço | **33 NFE, 0 CTE** — o CT-e teve 32 execuções e 5.031 documentos no período | 02/09 |
 | 🔴 Taxa "normal" de 656 | ~2,5/dia por fluxo, e projeção de ~32/dia com 13 CNPJs — **derrubado**: era o cooldown quebrado. Ver [02_conhecimento-sefaz.md §5](02_conhecimento-sefaz.md) | revisto 02/09 |
 
-## 8. Itens abertos
+## 8. A conciliacao com o ERP
+
+Frente aberta em 02/09/2026, **documentada à parte** enquanto o desenho não
+assenta: [14_conciliacao-erp.md](14_conciliacao-erp.md).
+
+Em uma linha: o motor sabe o que existe na SEFAZ, mas não sabe o que já entrou
+no ERP — e a entrada não é um evento, é um processo com etapas, cada uma numa
+tabela diferente do schema `consinco`. Quando fechar, o que for conhecimento
+permanente volta para cá.
+
+---
+
+## 9. Itens abertos
 
 | Item | Situação |
 |---|---|

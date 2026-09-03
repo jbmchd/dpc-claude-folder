@@ -16,11 +16,11 @@ with esperado as (
   select 'tabelas'      as objeto, 13 as qtd from dual union all
   select 'sequences',      13 from dual union all
   select 'triggers',       13 from dual union all
-  select 'constraints',    52 from dual union all
+  select 'constraints',    54 from dual union all
   select 'indices',        47 from dual union all
-  select 'colunas',       263 from dual union all
+  select 'colunas',       269 from dual union all
   select 'comentarios de tabela', 13 from dual union all
-  select 'comentarios de coluna', 263 from dual
+  select 'comentarios de coluna', 269 from dual
 ), encontrado as (   -- NAO usar "real": e tipo de dado no Oracle
   select 'tabelas' as objeto, count(*) as qtd
     from all_tables      where owner = 'POSEIDON' and table_name like 'DPC_DFE%'

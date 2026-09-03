@@ -378,6 +378,12 @@ begin
       seq_nf_erp           NUMBER,
       dta_entrada_erp      DATE,
       dta_conciliacao      TIMESTAMP(6),
+      sig_estado_erp       VARCHAR2(20),
+      num_estado_erp       NUMBER(1),
+      num_estado_erp_max   NUMBER(1),
+      dta_estado_erp       TIMESTAMP(6),
+      seq_notamestre_erp   NUMBER,
+      dta_lancamento_erp   DATE,
       created_at           DATE default sysdate,
       created_by           VARCHAR2(50),
       updated_at           DATE,
@@ -965,6 +971,28 @@ begin
 
   if qtd = 0 then
     execute immediate q'[alter table poseidon.dpc_dfe_nota add constraint DPC_DFE_NOTA_CK3 check (sig_papel_empresa in ('DEST','EMIT','TRANSP','AUTXML','OUTRO','INDEF'))]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_NOTA_CK4';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_nota add constraint DPC_DFE_NOTA_CK4 check ((sig_estado_erp is null and num_estado_erp is null) or (sig_estado_erp = 'AGUARDANDO_ENTRADA' and num_estado_erp = 0) or (sig_estado_erp = 'EM_DIGITACAO' and num_estado_erp = 1) or (sig_estado_erp = 'RECEBIDA' and num_estado_erp = 2) or (sig_estado_erp = 'ESCRITURADA' and num_estado_erp = 3))]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_NOTA_CK5';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_nota add constraint DPC_DFE_NOTA_CK5 check (num_estado_erp_max is null or num_estado_erp_max between 0 and 3)]';
   end if;
 end;
 
@@ -1868,6 +1896,24 @@ comment on column poseidon.dpc_dfe_nota.dta_entrada_erp is
   'Data de entrada da nota no ERP. A diferenca entre esta data e dta_emissao e o atraso de lancamento.';
 comment on column poseidon.dpc_dfe_nota.dta_conciliacao is
   'Quando a nota foi conferida contra o ERP. NULA = nunca conferida, que e diferente de conferida-e-ausente. Sem essa distincao, STATUS_RECEBIMENTO = N confunde os dois casos.';
+
+comment on column poseidon.dpc_dfe_nota.sig_estado_erp is
+  'Etapa da nota no ERP: AGUARDANDO_ENTRADA | EM_DIGITACAO | RECEBIDA | ESCRITURADA. NULO = ainda nao conciliada nenhuma vez. Preenchido pelo dfe:conciliar.';
+
+comment on column poseidon.dpc_dfe_nota.num_estado_erp is
+  'Ordinal da etapa: 0 aguardando, 1 digitada, 2 recebida, 3 escriturada. Existe para comparar ORDEM - regressao e num_estado_erp < num_estado_erp_max.';
+
+comment on column poseidon.dpc_dfe_nota.num_estado_erp_max is
+  'Maior ordinal que esta nota ja atingiu. Nunca diminui. Quando fica ACIMA do atual, a nota REGREDIU no ERP - foi desfeita uma etapa.';
+
+comment on column poseidon.dpc_dfe_nota.dta_estado_erp is
+  'Quando o estado atual foi observado pela ultima vez. Nao e quando mudou: e quando foi conferido.';
+
+comment on column poseidon.dpc_dfe_nota.seq_notamestre_erp is
+  'consinco.rf_notamestre.SEQNOTA correspondente. REFERENCIA para localizar a escrituracao, nao chave unica.';
+
+comment on column poseidon.dpc_dfe_nota.dta_lancamento_erp is
+  'Data de lancamento fiscal (rf_notamestre.DTALANCAMENTO). dta_lancamento_erp - dta_emissao e o atraso de escrituracao: mediana medida de 1 dia, maximo de 74.';
 comment on column poseidon.dpc_dfe_nota.created_at is
   'Data de inclusao da linha.';
 comment on column poseidon.dpc_dfe_nota.created_by is

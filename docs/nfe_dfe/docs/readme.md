@@ -34,12 +34,15 @@ e NFS-e de entrada direto da SEFAZ (`DistDFe`) e do ADN Nacional, dentro da
 | A investigação do **cStat 656** | [12_sefaz-656-consumo-indevido.md](12_sefaz-656-consumo-indevido.md) |
 | A **tela de monitoramento** | [13_tela-monitor-dfe.md](13_tela-monitor-dfe.md) |
 | A **decisão de negócio** sobre a Qive | [01_decisao-qive.md](01_decisao-qive.md) |
+| **Conciliar com o ERP** — frente em andamento, documentada à parte | [14_conciliacao-erp.md](14_conciliacao-erp.md) 🚧 |
 
 O **número no nome é a ordem sugerida de leitura**, de quem chega agora: por que o
 motor existe, o comportamento da SEFAZ, o desenho, os dados, como operar, como
 instalar, e por fim o material de referência. Quem já conhece o sistema usa a
 tabela acima e ignora a ordem. O `readme.md` não tem número porque é o índice,
 não um capítulo.
+
+🚧 = **frente em andamento**, documentada à parte até o desenho assentar.
 
 🔄 = **documento vivo**: atualizar sempre que um conhecimento for adquirido ou
 cair. Os dois carregam marcas de confiança (🟢 normativo · 🔵 medido ·
@@ -124,7 +127,8 @@ workspace/
     │   ├── 10_cadastros-de-teste.md
     │   ├── 11_registro-alteracoes-tst.md
     │   ├── 12_sefaz-656-consumo-indevido.md
-    │   └── 13_tela-monitor-dfe.md
+    │   ├── 13_tela-monitor-dfe.md
+    │   └── 14_conciliacao-erp.md                frente aberta, à parte
     │
     ├── itens/                               o que NAO e versionado
     │   ├── *.pfx                            os dois certificados A1

@@ -54,7 +54,12 @@ ordem do `v11`: **[07_ddl-instalacao.md](07_ddl-instalacao.md)**.
 | Pasta | Arquivos | Para que |
 |---|---|---|
 | raiz de `scripts/` | `01_estrutura` · `02_carga_inicial` · `03_validacao` · **`04_parametros`** · `99_rollback` | base nova: `01` → `02` → `03` → `04` |
-| `scripts/alteracoes/` | **um só**: `atualizacao_v7_a_v10_dbeaver.sql` | base já instalada, anterior ao v7 — e depois o `04_parametros` |
+| `scripts/alteracoes/` | `atualizacao_v7_a_v10_dbeaver.sql` · `v12_estado_erp_dbeaver.sql` | base já instalada — e depois o `04_parametros` |
+
+O **v12** acrescenta a escada de estado no ERP em `DPC_DFE_NOTA`: 6 colunas e
+2 constraints (`CK4`/`CK5` — o `CK3` já existia). Aplicado em tst e **refletido
+no `01_estrutura`**, então instalação nova já nasce com ele. Ver
+[14_conciliacao-erp.md](14_conciliacao-erp.md).
 
 Os quatro scripts de estrutura `v7`–`v10` foram unificados em 02/09/2026 por
 concatenação verbatim (559 linhas executáveis, conferidas linha a linha). O
