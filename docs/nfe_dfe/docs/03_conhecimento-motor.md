@@ -211,7 +211,7 @@ permanente volta para cá.
 |---|---|
 | **Teste de volume da empresa 30** | **adiado em 02/09/2026, sem data.** Os fluxos NFE e CTE seguem pausados e acumulando atraso, o que *preserva* o cenário — retomar não custa preparo. Detalhe abaixo |
 | **Freio por fluxo × global** | a premissa caiu com a correção do cooldown. Remedir com dado limpo antes de mexer |
-| **Chave de NFS-e truncada** | `chave_nf` é `VARCHAR2(44)` e a chave tem 50. Impede religar evento de NFS-e |
+| ~~Chave de NFS-e truncada~~ | ✅ **fechado.** Conferido em 03/09/2026: `DPC_DFE_DOCUMENTO.CHAVE_NF` e `DPC_DFE_NFSE.CHAVE_NFSE` são `VARCHAR2(50)`, e as 37 NFS-e têm chave de 50 caracteres. As colunas de 44 que restam guardam chave de NF-e e CT-e, que têm 44 mesmo |
 | **CNPJs ociosos** | empresa 900 (`ultNSU = 87`, imóvel) devolve 656 com espera respeitada. Pausada. Decidir na virada da Qive |
 | **MDF-e** | `procEvMDF` nunca ativado; 14 fluxos pausados |
 | **`dfe:manifestar`** | desligado, aguardando a contabilidade |

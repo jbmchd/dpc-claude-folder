@@ -293,9 +293,9 @@ coluna que responde duas coisas acerta uma.
 
 | Questão | Situação |
 |---|---|
-| Cadência decrescente do re-check | proposta, não decidida |
+| ~~Cadência decrescente do re-check~~ | ✅ decidida e implementada: nunca conferida primeiro, recente todo ciclo, com mais de 30 dias uma vez por dia. O número é palpite calibrado para 815 notas — **remedir quando o volume subir** |
 | A tela precisa distinguir `RECEBIDA` de `ESCRITURADA`? | o negócio pediu os quatro estados; medido que `RECEBIDA` fica em 0 |
-| Validação end-to-end | homologação **não consegue**: o ERP daqui para em 25/07 e a captura vai até 02/09. Dá para validar a lógica contra abril–julho; o comportamento com nota recém-entrada só se vê em produção |
+| ~~Validação end-to-end~~ | ✅ resolvido pelo `dfe_conexao_erp`: a conciliação lê a Consinco de **produção** a partir de homologação. Validado com notas emitidas no dia — 784 escrituradas, 30 aguardando |
 
 ---
 
