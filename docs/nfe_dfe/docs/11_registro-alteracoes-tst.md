@@ -13,7 +13,7 @@ Decisão que originou este registro: preservar o código da ApiNFE intocado e re
 | 3 | 10/08/2026 | `poseidon.dpc_conta_certif_digital_emp` | insert `cod_certi_digital = 101`, `cod_empresa = 900` | `02_certificado_tst.sql` | ☐ |
 | 4 | 10/08/2026 | `poseidon.dpc_dfe_empresa` | insert `nro_empresa = 900`, cursor 0 | `03_dfe_empresa_tst.sql` | ☐ |
 
-Reverter com [99_rollback_tst.sql](../scripts/alteracoes/teste-all-cars/99_rollback_tst.sql).
+Reverter com o `99_rollback_tst.sql` da ALL CARS, **removido do repositório em 09/09/2026** (descartável, por decisão) — está no histórico do git.
 
 ## Validação — cadastro concluído em 10/08/2026
 

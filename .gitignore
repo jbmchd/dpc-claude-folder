@@ -26,6 +26,19 @@
 # SILENCIO - e o segredo voltou a ser commitavel. Sem barra, o padrao casa o
 # nome em qualquer profundidade e sobrevive a reorganizacao.
 02_certificado_tst.sql
+02_certificado_all_cars_tst.sql
+
+# E A PASTA INTEIRA, que e a regra que de fato resiste:
+#
+# em 09/09/2026 o arquivo foi movido para docs/nfe_dfe/itens/, ao lado do .pfx
+# de onde ele sai - e no caminho ganhou "all_cars" no nome. A regra acima casa
+# NOME EXATO, entao o rename a burlou e o segredo voltou a ser commitavel, pela
+# segunda vez, pelo mesmo motivo de antes com outra roupa.
+#
+# Nome exato protege um arquivo; a pasta protege o proposito. itens/ existe para
+# guardar material de certificado - .pfx e o script que o embute - e nada ali
+# deve ser versionado, com qualquer nome que venha a ter.
+docs/nfe_dfe/itens/
 
 # ATENCAO: o 01_certificado_emp30.sql NAO entra nesta lista, e e deliberado -
 # ele faz INSERT ... SELECT copiando a linha da empresa 1 dentro do banco, e

@@ -14,7 +14,7 @@ deles.
 | Qive atende? | não | não (confirmado 18/08/2026) |
 | Serve para produção? | **não** — cadastro descartável de `tst` | sim, é filial real |
 | Movimento | pouco (`ultNSU` 87, imóvel) | real: ~847 NF-e + ~375 CT-e/dia |
-| Scripts | [`scripts/teste-all-cars/`](../scripts/alteracoes/teste-all-cars/) | [`scripts/empresa-30-ms/`](../scripts/alteracoes/empresa-30-ms/) |
+| Scripts | **removidos em 09/09/2026** — a ALL CARS saiu do repositório por ser descartável; o certificado dela vive em `itens/`, fora de versionamento. Recuperáveis no histórico do git | [`ddl/02_01_empresa_30`](../scripts/ddl/02_01_empresa_30_dbeaver.sql) e [`ddl/02_99_rollback`](../scripts/ddl/02_99_rollback_empresa_30_dbeaver.sql) |
 
 Ambos **somente `tst`**: as tabelas `dpc_dfe_*` não existem em produção.
 

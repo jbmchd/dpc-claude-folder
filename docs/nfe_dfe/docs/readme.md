@@ -70,7 +70,7 @@ flowchart TD
         CUR[("DPC_DFE_CURSOR<br/>posição de leitura")]
         DOC[("DPC_DFE_DOCUMENTO<br/>XML bruto = a fila")]
         NRM[("NOTA · ITEM · CTE<br/>NFSE · EVENTO · EMITENTE")]
-        PAR[("DPC_PARAMETRO<br/>os 4 parâmetros")]
+        PAR[("DPC_PARAMETRO<br/>os 5 parâmetros")]
     end
 
     subgraph TELA["Monitor DFe"]
@@ -132,17 +132,21 @@ workspace/
     │
     ├── itens/                               o que NAO e versionado
     │   ├── *.pfx                            os dois certificados A1
+    │   ├── 02_certificado_all_cars_tst.sql  PFX em base64 + senha
     │   └── sefaz-656-consumo-indevido.md    stub, sustenta um link do CLAUDE.md
     │
     └── scripts/                             SO .sql de DBeaver
-        ├── 01_estrutura · 02_carga_inicial   instalação de base nova,
-        ├── 03_validacao · 04_parametros      na ordem 01 → 02 → 03 → 04
-        ├── 99_rollback
-        └── alteracoes/
-            ├── atualizacao_v7_a_v10         base já instalada, e depois o 04
-            ├── levantamento-nfse-municipios
-            ├── empresa-30-ms/               cadastro do CNPJ de MS
-            └── teste-all-cars/              cadastro descartável de teste
+        ├── levantamento-nfse-municipios.sql   diagnostico, nao instalacao
+        └── ddl/                             o UNICO caminho de instalacao
+            ├── 01_01_estrutura              ┐
+            ├── 01_02_estabelecimentos       │ BLOCO 01 - MOTOR
+            ├── 01_03_parametros             │ 13 tabelas de captura
+            ├── 01_04_validacao              │
+            ├── 01_99_rollback_motor         ┘
+            ├── 02_01_empresa_30             ┐ BLOCO 02 - a filial MS,
+            ├── 02_99_rollback_empresa_30    ┘ que precisa de certificado
+            ├── 03_01_parametrizacao_telas   ┐ BLOCO 03 - permissao e
+            └── 03_99_rollback_telas         ┘ limiar dos paineis
 ```
 
 Arquitetura da ApiNFE como um todo (não só o DFe):
@@ -155,7 +159,7 @@ Arquitetura da ApiNFE como um todo (não só o DFe):
 | Base normalizada | **18.757 documentos**, todos concluídos — 0 pendente, 0 erro, 0 ignorado |
 | Fluxos ativos | **2 de 56** (só NFS-e da 30 e da 900) |
 | Ambiente | roda em `dkalpha00`, cron ativo, base **homolog**, SEFAZ **real** |
-| Produção | as tabelas `dpc_dfe_*` **não** existem em prd, e os 4 parâmetros em `DPC_PARAMETRO` também não foram carregados lá |
+| Produção | as tabelas `dpc_dfe_*` **não** existem em prd, e os 5 parâmetros em `DPC_PARAMETRO` também não foram carregados lá |
 | CNPJs livres da Qive | apenas **900** (ALL CARS) e **30** (DPC MS) — os outros 12 seguem com a Qive, e o NSU é compartilhado |
 | `dfe:manifestar` | desligado, aguardando a contabilidade |
 | Teste de volume (empresa 30) | **adiado, sem data.** Fluxos `NFE` e `CTE` pausados e acumulando atraso de propósito — ver [03_conhecimento-motor.md](03_conhecimento-motor.md) |
@@ -168,9 +172,9 @@ Itens abertos, com o porquê de cada um:
 | | |
 |---|---|
 | **Domínio fiscal não usa Context7** | ele indexa doc de bibliotecas; a `sped-nfe` documenta a API dela, não as regras do fisco. Ordem: portal da NF-e → bases de provedores. Detalhe no cabeçalho de [02_conhecimento-sefaz.md](02_conhecimento-sefaz.md) |
-| **Certificado nunca é versionado** | os dois `.pfx` ficam em `itens/`, fora de repositório. O `scripts/teste-all-cars/02_certificado_tst.sql`, que carrega o PFX em base64 e a senha, mora no hub mas está no `.gitignore`. O motor lê o certificado do banco, não do disco |
+| **Certificado nunca é versionado** | os dois `.pfx` e o `02_certificado_all_cars_tst.sql` — que carrega o PFX em base64 e a senha — ficam em `itens/`, e a pasta **inteira** está no `.gitignore` desde 09/09/2026. A regra era por nome de arquivo e um rename a burlou em silêncio, pela segunda vez; ignorar a pasta protege o propósito, e não um nome. O motor lê o certificado do banco, não do disco |
 | **Pasta `scripts/` só tem `.sql`** | nenhum README lá dentro: a explicação de cada grupo é um documento do hub, e o [catálogo](09_catalogo-scripts.md) diz qual |
 | **DDL em CRLF** | em LF o DBeaver corta o bloco PL/SQL no `end if;` e devolve `PLS-00103`. Garantido por `workspace/.claude/.gitattributes` |
-| **`scripts/04_parametros` antes do deploy** | ele carrega valores que o código **lê**; na ordem inversa o freio cai para 5 e o motor se trava em silêncio |
+| **`ddl/01_03_parametros` antes do deploy** | ele carrega valores que o código **lê**; na ordem inversa o freio cai para 5 e o motor se trava em silêncio, e a conciliação passa a ler o clone de homologação em vez de produção |
 | **Os dois caminhos terminam no `04_parametros`** | `DPC_PARAMETRO` é tabela compartilhada do ecossistema, então o `01_estrutura` **não** carrega as linhas dela |
 | **Nunca escrever `nro_ultimo_nsu` a mão** | valor arbitrário = `cStat 656` e certificado bloqueado por 1 hora, atingindo todas as filiais do e-CNPJ |

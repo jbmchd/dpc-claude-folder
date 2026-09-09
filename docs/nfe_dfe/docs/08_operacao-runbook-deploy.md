@@ -54,9 +54,9 @@ select count(*) from poseidon.dpc_parametro where lower(nome) like 'dfe%';
 
 > Eram 7 tabelas na instalação de 06/08/2026, e chegaram a 13 com os alters `v2` a
 > `v10`. Para a conferência completa — constraints, índices, colunas e comentários
-> — rodar o `scripts/03_validacao_dbeaver.sql`, que compara com o esperado.
+> — rodar o `scripts/ddl/01_04_validacao_dbeaver.sql`, que compara com o esperado.
 
-Se faltar, rodar `workspace/.claude/docs/nfe_dfe/scripts/01_estrutura_dbeaver.sql` — a explicacao esta no `07_ddl-instalacao.md`.
+Se faltar, rodar `workspace/.claude/docs/nfe_dfe/scripts/ddl/01_01_estrutura_dbeaver.sql` — a explicacao esta no `07_ddl-instalacao.md`.
 
 > O `install_dbeaver.sql` e os cinco alters (`v2` a `v6`) foram **removidos do repositório** em 20/08/2026, substituídos pelos scripts consolidados da raiz de `scripts/`. Aqueles arquivos recriariam objetos que o `alter_v2` havia removido por `cascade constraints` e manteriam a UK antiga de `dpc_dfe_documento`, cuja consequência é **perda de documento**. Continuam no histórico do git, se precisar consultar a sequência aplicada em homologação.
 
@@ -68,7 +68,7 @@ Valem ainda as duas armadilhas do DBeaver que já custaram uma instalação sile
 parâmetros do módulo — `dfe_max_consultas`, `dfe_pausa_seg`,
 `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` — saíram do `.env` em 02/09/2026
 e vivem em `POSEIDON.DPC_PARAMETRO`. Se a consulta da seção 1 vier vazia, rodar
-o `scripts/04_parametros_dbeaver.sql` **antes do deploy do código**.
+o `scripts/ddl/01_03_parametros_dbeaver.sql` **antes do deploy do código**.
 
 As duas que ficam no `.env` **decidem o comportamento** e precisam de decisão
 consciente:

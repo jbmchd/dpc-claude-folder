@@ -12,40 +12,57 @@
 
 ---
 
-## Qual caminho usar
+## Um caminho só
 
-| Situação | Onde ir |
+Até 09/09/2026 havia dois, e escolher errado custava caro. Hoje é um: os
+arquivos de **`scripts/ddl/`**, em três blocos.
+
+| | |
 |---|---|
-| **Base nova**, nada instalado | os cinco da raiz de `scripts/` — `01` → `02` → `03` → `04` |
-| **Base já instalada**, anterior ao v7 | `scripts/alteracoes/atualizacao_v7_a_v10_dbeaver.sql` e depois **`scripts/04_parametros`** |
+| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, e depois `02_01` e `03_01` |
+| **Desfazer** | `03_99` → `02_99` → `01_99`, do bloco mais específico para o motor |
 
-Os dois caminhos **convergem para a mesma estrutura** e terminam no **mesmo
-`04`**. Não são sequenciais: o `01` cria por `CREATE` o que o arquivo de
-alterações faz por `ALTER`. Rodar os dois não quebra — tudo é idempotente — mas
-o segundo não faz nada.
+O primeiro número é o bloco, o segundo é a ordem dentro dele. O `_99` de cada
+bloco é o rollback daquele bloco.
 
-> **Por que o `04` existe separado.** Ele carrega os 4 parâmetros em
+O que eliminou a escolha foi a **seção 3 do `01_01`**: ela confere as 273
+colunas uma a uma e acrescenta a que faltar. O `create table` da seção 2 é
+pulado quando a tabela existe — era exatamente por isso que uma base parcial
+precisava de um segundo conjunto de arquivos, que fazia por `ALTER` o que o
+instalador fazia por `CREATE`.
+
+> **Por que o `01_03` existe separado.** Ele carrega os 5 parâmetros em
 > `POSEIDON.DPC_PARAMETRO`, que é tabela **compartilhada do ecossistema**: já
-> existe, não pertence ao módulo, e por isso nunca entrou no `01`.
+> existe, não pertence ao módulo, e por isso nunca entrou no `01_01`.
 >
 > Isso ficou por um dia como "seção 5 do arquivo de alterações, com um aviso
 > dentro". Virou passo numerado da instalação porque **aviso dentro de um
 > arquivo de 66 KB não é garantia** — e o custo de esquecer é o freio de consumo
 > indevido cair para o default 5, ficar abaixo do ruído normal, e o motor se
-> recusar a consultar a SEFAZ **em silêncio**.
+> recusar a consultar a SEFAZ **em silêncio**. O quinto parâmetro tem um custo
+> parecido e ainda mais discreto: sem `dfe_conexao_erp`, a conciliação lê o
+> clone de homologação e conclui que **nenhuma** nota entrou no ERP.
 
-## 1. Base nova — os cinco da raiz de `scripts/`
+## 1. Bloco 01 — o motor
 
 | # | Arquivo | O que faz | Escreve? |
 |---|---|---|---|
-| 1 | `01_estrutura_dbeaver.sql` | sequences, tabelas, constraints, índices, triggers e comentários das **13 tabelas** | sim (DDL) |
-| 2 | `02_carga_inicial_dbeaver.sql` | 13 estabelecimentos e 52 fluxos, **todos pausados** | sim (DML) |
-| 3 | `03_validacao_dbeaver.sql` | confere tudo; a seção 5 faz insert + `rollback` | praticamente não |
-| 4 | `04_parametros_dbeaver.sql` | os 4 parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
-| — | `99_rollback_dbeaver.sql` | desfaz as 13 tabelas e as 13 sequences. **Destrutivo** | sim |
+| 1 | `01_01_estrutura` | 13 tabelas, 13 sequences, 13 triggers, 54 constraints, 24 índices, 286 comentários — e a seção 3, que reconcilia as 273 colunas | sim (DDL) |
+| 2 | `01_02_estabelecimentos` | 12 CNPJs e 48 fluxos, **todos pausados** | sim (DML) |
+| 3 | `01_03_parametros` | os 5 parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
+| 4 | `01_04_validacao` | confere motor e telas; a seção 5 faz insert + `rollback` | praticamente não |
+| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 5 parâmetros | sim |
 
-Os dois primeiros são **reexecutáveis**: cada objeto é criado só se ainda não
-existir. Falha no meio se resolve corrigindo e rodando de novo.
+Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
+
+| Bloco | Arquivo | O que faz |
+|---|---|---|
+| 02 | `02_01_empresa_30` | a filial MS: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1 |
+| 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
+
+Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha
+inserida só se ainda não existir, coluna acrescentada só se faltar. Falha no
+meio se resolve corrigindo e rodando de novo.
 
 ### Por que não há um único `alter` aqui
 
@@ -169,13 +186,15 @@ o Oracle armazena índice descendente, criando coluna virtual oculta. O índice 
 `FUNCTION-BASED` com expressão `"DTA_INICIO"`, exatamente o que `dta_inicio desc`
 produz.
 
-## 2. Base já instalada — um único arquivo
+## 2. De onde veio o que está no `01_01`
 
-📄 `scripts/alteracoes/atualizacao_v7_a_v10_dbeaver.sql`, e depois o
-`scripts/04_parametros_dbeaver.sql`.
+Esta seção é **história**, e não um caminho a rodar. Os arquivos citados aqui
+foram removidos em 09/09/2026, quando o `01_01` passou a servir a qualquer base
+— seguem no git do `.claude` e no da ApiNFE.
 
-Os quatro scripts de estrutura (`v7` a `v10`) foram **unificados em 02/09/2026**.
-Cada um segue recuperável no histórico do git da ApiNFE:
+Os quatro scripts de estrutura (`v7` a `v10`) foram unificados em 02/09/2026, e
+absorvidos pelo instalador em 09/09. Cada um segue recuperável no histórico do
+git da ApiNFE:
 
 | Seção | O que acrescenta | vinha de | commit |
 |---|---|---|---|
@@ -184,8 +203,28 @@ Cada um segue recuperável no histórico do git da ApiNFE:
 | 3 | `NOTA.VLR_TOTAL_PRODUTO` — o `vProd` do `ICMSTot`, para a conferência comparar grandezas iguais | `v9` | `1bdc4a7` |
 | 4 | `DPC_DFE_CTE_EVENTO` — trouxe 2.853 eventos, o comprovante de entrega e **20 CT-e cancelados** (R$ 26.796,56) que passavam por válidos | `v10` | `77771bc` |
 
-O antigo `v11` **não está aqui**: virou [`04_parametros_dbeaver.sql`](#qual-caminho-usar),
-porque os dois caminhos de instalação precisam dele.
+O antigo `v11` virou o **`01_03_parametros`**, e o `v12` e o `v13` — a escada de
+estado no ERP e a categoria com o comprador — foram absorvidos pelo `01_01`
+junto com estes quatro.
+
+> **Duas correções de 09/09/2026, feitas ao reinstalar em tst depois de a base
+> de teste ser refeita — no arquivo que depois foi absorvido pelo `01_01`.**
+>
+> A seção 1 tinha uma **cópia da conferência da seção 3**, e ela lia
+> `VLR_TOTAL_PRODUTO` — coluna que a seção 3 cria ~300 linhas adiante. Numa base
+> que ainda não tinha a coluna, o script morria com
+> `ORA-00904: "N"."VLR_TOTAL_PRODUTO": invalid identifier`. Era o único forward
+> reference do arquivo. A cópia saiu (a da seção 3 é melhor: filtra pela
+> tolerância de 0,02 e devolve só as divergências), e o comentário que mandava
+> rodar `v9_total_produto_nota_dbeaver.sql` antes saiu com ela — aquele arquivo
+> não existe mais desde a unificação, virou a própria seção 3.
+>
+> E o `04` ganhou um **quinto parâmetro**, o `dfe_conexao_erp`. Ele é de outra
+> natureza: os quatro primeiros calibram o motor e o default do código serve;
+> este responde **onde está o ERP**, e o default é "a conexão corrente" — que em
+> homologação é a errada. Tinha sido criado à mão em 03/09 e nenhum script o
+> registrava, então quando a base foi refeita ele sumiu sem deixar rastro e não
+> havia de onde recriá-lo.
 
 Tudo já aplicado em **tst**; em **prd** nada disto rodou (as tabelas `dpc_dfe_*`
 não existem lá).

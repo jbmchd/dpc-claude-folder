@@ -172,8 +172,8 @@ ocorrência.
 
 | Item | Estado |
 |---|---|
-| `v12_estado_erp_dbeaver.sql` — 6 colunas + 2 constraints | ✅ **executado no DBeaver** em tst · prd: as tabelas do módulo não existem lá ainda |
-| `v13_categoria_comprador_erp_dbeaver.sql` — 4 colunas + 1 índice | ✅ **executado no DBeaver** em tst · prd: idem |
+| v12 — 6 colunas + 2 constraints | ✅ **executado no DBeaver** em tst · prd: as tabelas do módulo não existem lá ainda. O script avulso foi absorvido pelo [`ddl/01_01_estrutura`](../scripts/ddl/01_01_estrutura_dbeaver.sql) em 09/09/2026 |
+| v13 — 4 colunas + 1 índice | ✅ **executado no DBeaver** em tst · prd: idem. Absorvido pelo mesmo `ddl/01_01_estrutura` |
 | Parâmetro `dfe_conexao_erp` = `oracle` (produção) | ✅ tst |
 | `DfeConciliacaoRepository` — três famílias, conexão parametrizável, cadência | ✅ |
 | `dfe:conciliar` — quatro estados e regressão | ✅ rodado: **784 escrituradas, 30 aguardando, 1 em digitação, 0 regressões** |

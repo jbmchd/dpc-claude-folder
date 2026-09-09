@@ -1,54 +1,75 @@
 -- ==========================================================================
---  04 - PARAMETROS OPERACIONAIS DO MODULO DFe
+--  MODULO DFe - PARAMETROS OPERACIONAIS (ARQUIVO 01_03)
 -- ==========================================================================
 --
---  ULTIMO PASSO DA INSTALACAO, e o unico que os DOIS caminhos compartilham:
---  base nova (depois de 01, 02, 03) e base se atualizando (depois de
---  alteracoes/atualizacao_v7_a_v10_dbeaver.sql).
+--  Carrega 5 linhas em POSEIDON.DPC_PARAMETRO. Nao cria objeto: essa tabela ja
+--  existe e e compartilhada pelo ecossistema (99 linhas de outros modulos).
 --
---  Nao cria objeto: carrega 4 linhas em POSEIDON.DPC_PARAMETRO, que ja
---  existe e e compartilhada pelo ecossistema.
+--  Rodar DEPOIS do 01_01 e do 01_02, como POSEIDON, inteiro com Alt+X.
+--  Reexecutavel:
+--  cada insert e guardado por WHERE NOT EXISTS, e reexecutar NAO sobrescreve
+--  valor que o operador tenha ajustado a mao.
 --
---  POR QUE ESTE PASSO EXISTE SEPARADO DO 01
---  ----------------------------------------
---  O 01_estrutura cria as 13 tabelas DO MODULO. DPC_PARAMETRO nao e uma
---  delas - e tabela global, de outro dono - entao o instalador nunca a
---  incluiu. Isso deixou um buraco na documentacao: quem seguisse "base nova
---  nao roda alteracoes" instalava sem os parametros.
---
---  E NAO E INOFENSIVO. Sem estas linhas o motor cai nos defaults internos, e
---  um deles MUDA COMPORTAMENTO: o freio de consumo indevido volta a 5
---  bloqueios/dia, fica abaixo do ruido normal do sistema, e o motor se
---  recusa a consultar a SEFAZ - em silencio, sem erro em log nenhum.
---
---  ORDEM: ANTES DO DEPLOY DO CODIGO
---  --------------------------------
---    04 antes do deploy    correto
---    deploy antes do 04    no intervalo o freio opera com 5 e o motor para
+--  ==========================================================================
+--   ORDEM: ANTES DO DEPLOY DO CODIGO
+--  ==========================================================================
+--    01_03 antes do deploy    correto
+--    deploy antes do 01_03    no intervalo o freio opera com 5 e o motor para
 --
 --  Rodar antes e seguro nos dois sentidos: codigo antigo nao le esta tabela,
 --  entao as linhas ficam inertes ate o deploy.
 --
---  Explicacao completa:
---  workspace/.claude/docs/nfe_dfe/docs/07_ddl-instalacao.md
+--  ==========================================================================
+--   POR QUE ISTO E UM PASSO SEPARADO
+--  ==========================================================================
+--  O 01_estrutura cria as 13 tabelas DO MODULO. DPC_PARAMETRO nao e uma delas
+--  - e tabela global, de outro dono - entao o instalador nunca a incluiu. Isso
+--  deixou um buraco: quem seguisse "base nova nao roda alteracoes" instalava
+--  sem os parametros.
+--
+--  E NAO E INOFENSIVO. Sem estas linhas o motor cai nos defaults internos, e
+--  dois deles MUDAM COMPORTAMENTO:
+--
+--    dfe_max_bloqueios_dia  volta a 5, fica abaixo do ruido normal do sistema,
+--                           e o motor se recusa a consultar a SEFAZ - em
+--                           silencio, sem erro em log nenhum;
+--    dfe_conexao_erp        volta a "conexao corrente", e em homologacao isso
+--                           faz a conciliacao ler um clone congelado e concluir
+--                           que NENHUMA nota entrou no ERP - tambem em
+--                           silencio, porque "nada encontrado" e resposta
+--                           valida.
+--
+--  ==========================================================================
+--   A TABELA NAO TEM PK NEM CHECK
+--  ==========================================================================
+--  Nada no banco impede duas linhas com o mesmo NOME, nem VALOR = 'abc' onde
+--  se espera numero. Por isso:
+--    - cada insert abaixo e guardado por WHERE NOT EXISTS (reexecutavel, nao
+--      duplica);
+--    - a validacao de tipo e faixa vive no codigo (DpcParametroRepository):
+--      valor invalido e RECUSADO, cai no default conservador e gera aviso no
+--      dfe:monitorar e no log. Nunca passa por valor bom.
+--
+--  Ao final ha um SELECT de conferencia. O COMMIT e explicito, no fim.
 -- ==========================================================================
 
 
 -- ============================================================================
---  v11 - PARAMETROS OPERACIONAIS DO MODULO DFe EM POSEIDON.DPC_PARAMETRO
+--  OS 5 PARAMETROS
 -- ============================================================================
 --
---  Nao cria objeto nenhum. E carga de 4 linhas na tabela de parametros do
+--  Nao cria objeto nenhum. E carga de 5 linhas na tabela de parametros do
 --  ecossistema, que ja existe. Rodar como POSEIDON.
 --
 --  POR QUE ISTO PRECISA RODAR
 --  --------------------------
---  Ate agora esses 4 valores vinham do .env de cada projeto. O codigo novo le
---  da tabela; sem estas linhas ele cai nos defaults internos, e um deles
---  MUDA O COMPORTAMENTO: o freio de consumo indevido volta a 5 bloqueios/dia,
---  que fica ABAIXO do ruido normal do sistema (medido de 28 a 31/08/2026:
---  exatamente 5 por dia, todos os dias, sem defeito nenhum). O motor passaria
---  a se travar sozinho todo dia.
+--  Ate agora os QUATRO PRIMEIROS vinham do .env de cada projeto (o quinto,
+--  dfe_conexao_erp, nunca esteve la). O codigo novo le da tabela; sem estas
+--  linhas ele cai nos defaults internos, e um deles MUDA O COMPORTAMENTO: o
+--  freio de consumo indevido volta a 5 bloqueios/dia, que fica ABAIXO do ruido
+--  normal do sistema (medido de 28 a 31/08/2026: exatamente 5 por dia, todos
+--  os dias, sem defeito nenhum). O motor passaria a se travar sozinho todo
+--  dia.
 --
 --  POR QUE SAIRAM DO .env
 --  ----------------------
@@ -143,11 +164,44 @@ select 'dfe_min_backoff_656', '60',
  where not exists (select 1 from poseidon.dpc_parametro
                     where lower(nome) = 'dfe_min_backoff_656');
 
+-- ---------------------------------------------------------------------------
+-- dfe_conexao_erp = oracle   (nome de conexao, nao numero)
+-- o unico parametro que NAO e ajuste de motor: diz de qual banco ler o ERP
+-- ---------------------------------------------------------------------------
+--  DIFERENTE DOS QUATRO ACIMA. Aqueles calibram o motor e o default do codigo
+--  serve; este responde ONDE ESTA O ERP, e o default do codigo e "a conexao
+--  corrente" - que em homologacao e a errada.
+--
+--  Em producao o valor coincide com a conexao corrente e a linha e apenas
+--  explicita. Em homologacao ela e ESSENCIAL: a conciliacao precisa ler as
+--  tabelas do Consinco de PRODUCAO, senao le um clone congelado, nao encontra
+--  as notas lancadas e conclui que nada entrou no ERP - em silencio, porque
+--  "nenhuma nota encontrada" e resposta valida.
+--
+--  Faltava aqui. O parametro foi criado a mao em 03/09/2026 e nenhum script o
+--  registrava; quando a base de teste foi refeita, em 09/09/2026, ele sumiu
+--  sem deixar rastro e nao havia de onde recria-lo. E o que este bloco corrige.
+insert into poseidon.dpc_parametro (nome, valor, explicacao)
+select 'dfe_conexao_erp', 'oracle',
+       'Modulo DFe (ApiNFE) - nome da conexao de banco de onde o dfe:conciliar '
+    || 'le as tabelas de recebimento do Consinco (mlf_auxnotafiscal, '
+    || 'mlf_notafiscal, rf_notamestre) para descobrir a etapa da nota no ERP. '
+    || 'Valores validos: os nomes configurados na ApiNFE - oracle (producao) e '
+    || 'oracle_tst (homologacao). DEVE APONTAR PARA PRODUCAO mesmo rodando em '
+    || 'homologacao: as tabelas do Consinco que valem sao as de producao, e '
+    || 'homologacao e clone congelado. Sem esta linha o codigo usa a conexao '
+    || 'corrente, e em homologacao isso faz TODA nota parecer nao lancada. '
+    || 'Consequencia operacional: rodando em homologacao, um job de 30 minutos '
+    || 'le producao - e leitura, nunca escrita.'
+  from dual
+ where not exists (select 1 from poseidon.dpc_parametro
+                    where lower(nome) = 'dfe_conexao_erp');
+
 commit;
 
 
 -- ============================================================================
---  CONFERENCIA - deve devolver as 4 linhas, uma vez cada
+--  CONFERENCIA - deve devolver as 5 linhas, uma vez cada
 -- ============================================================================
 select nome, valor, length(explicacao) as tam_explicacao, count(*) over () as total
   from poseidon.dpc_parametro

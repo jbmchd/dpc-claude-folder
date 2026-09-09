@@ -1,8 +1,23 @@
 -- ============================================================================
---  MODULO DFe - CARGA INICIAL EM PRODUCAO
+--  MODULO DFe - ESTABELECIMENTOS E FLUXOS (ARQUIVO 01_02)
 -- ============================================================================
---  Rodar DEPOIS do 01_estrutura_dbeaver.sql.
---  Como POSEIDON, script inteiro com Alt+X. Reexecutavel.
+--  Carrega os 12 CNPJs do bloco GERAL e os 48 fluxos deles, todos pausados.
+--  Rodar DEPOIS do 01_01_estrutura_dbeaver.sql, como POSEIDON, inteiro com Alt+X.
+--  Reexecutavel: cada linha e criada so se ainda nao existir.
+--
+--  ==========================================================================
+--   GERAL x ESPECIFICO
+--  ==========================================================================
+--  Este arquivo nao conhece empresa especifica. A empresa 30 (filial MS) NAO
+--  esta aqui: ela tem arquivo proprio, o 02_01_empresa_30_dbeaver.sql, porque
+--  precisa tambem do certificado - que mora em tabela do ERP, e nao do modulo.
+--  Por isso o loop de fluxos desta secao 2 exclui a 30: os 4 fluxos dela sao
+--  criados la, com o motivo de pausa que e dela.
+--
+--  A ALL CARS (900) tambem esta excluida do loop. E cadastro de TESTE, de outra
+--  raiz de CNPJ (45694407), e nao pertence a carga de producao. Se uma linha
+--  dela existir na base por heranca de teste, este arquivo NAO cria fluxo para
+--  ela. Os scripts dela seguem em alteracoes/teste-all-cars/.
 --
 --  ==========================================================================
 --   TODO FLUXO NASCE PAUSADO. ISSO NAO E CAUTELA GENERICA.
@@ -18,8 +33,8 @@
 --  primeiro, saber a data e hora em que a Qive para de consultar aquele CNPJ.
 --
 --  Confirmado em 20/08/2026: a Qive atende TODOS os CNPJs da DPC, com duas
---  excecoes - a empresa 900 (ALL CARS, cadastro de teste) e a empresa 30
---  (filial MS). Toda validacao em producao foi feita nessas duas.
+--  excecoes - a empresa 30 (filial MS) e um cadastro de teste. Toda validacao
+--  em producao foi feita nessas duas.
 --
 --  ==========================================================================
 --   DE ONDE VEM ESTA IDENTIDADE
@@ -36,9 +51,6 @@
 --     cidade era nulo, e uma function do ERP devolvia NULL sem erro quando a
 --     pessoa nao estava cadastrada. Nenhuma das duas e mais usada aqui.
 --
---  A ALL CARS (900) NAO entra: e cadastro de teste e o certificado dela nao
---  existe em producao.
---
 --  ==========================================================================
 --   CADASTRO AQUI NAO E CERTIFICADO LA
 --  ==========================================================================
@@ -54,7 +66,7 @@
 
 
 -- ###########################################################################
---  1. ESTABELECIMENTOS  (13 linhas)
+--  1. ESTABELECIMENTOS  (12 linhas; a 30 esta no 02_01)
 -- ###########################################################################
 
 declare
@@ -237,24 +249,9 @@ begin
   end if;
 end;
 
-declare
-  qtd number;
-begin
-  select count(*) into qtd from poseidon.dpc_dfe_empresa where num_cnpj = '66471517003001';
-
-  if qtd = 0 then
-    insert into poseidon.dpc_dfe_empresa
-      (nro_empresa, num_cnpj, dsc_razao_social, sig_uf, num_inscr_estadual,
-       status_manifestar, created_at, created_by)
-    values
-      (30, '66471517003001', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'MS', '500041350',
-       'N', sysdate, 'CARGA INICIAL');
-  end if;
-end;
-
 
 -- ###########################################################################
---  2. FLUXOS  (4 por estabelecimento = 52 linhas, TODAS pausadas)
+--  2. FLUXOS  (4 por estabelecimento = 48 linhas, TODAS pausadas)
 -- ###########################################################################
 --  Um cursor por CNPJ e TIPO, porque os servicos tem sequencias de NSU
 --  INDEPENDENTES para o mesmo CNPJ:
@@ -280,8 +277,16 @@ end;
 declare
   qtd_ins number := 0;
 begin
+  -- FILTRO DELIBERADO, e nao descuido:
+  --   30  tem arquivo proprio (05), que cria os 4 fluxos dela junto com o
+  --       certificado - se ela ja tiver fluxo, o NOT EXISTS abaixo protege
+  --       de qualquer jeito, mas nao e este arquivo que deve criar;
+  --   900 e cadastro de TESTE de outra raiz de CNPJ. Sem o filtro, uma linha
+  --       dela herdada de teste ganharia 4 fluxos de producao sem ninguem
+  --       pedir - e fluxo criado e fluxo que o dfe:monitorar passa a cobrar.
   for e in (select cod_dfe_empresa, nro_empresa
               from poseidon.dpc_dfe_empresa
+             where nro_empresa not in (30, 900)
              order by nro_empresa) loop
     -- Lista por UNION ALL, e nao por table(sys.odcivarchar2list(...)): aquele
     -- tipo depende de grant de execucao em SYS, e uma instalacao nao deve
@@ -319,18 +324,46 @@ commit;
 -- ###########################################################################
 --  3. CONFERENCIA
 -- ###########################################################################
---  ESPERADO: 13 estabelecimentos, 52 fluxos, TODOS com status P.
-select (select count(*) from poseidon.dpc_dfe_empresa)                            as estabelecimentos,
-       (select count(*) from poseidon.dpc_dfe_cursor)                             as fluxos,
-       (select count(*) from poseidon.dpc_dfe_cursor where status_sincronismo = 'P') as pausados,
-       (select count(*) from poseidon.dpc_dfe_cursor where status_sincronismo <> 'P') as nao_pausados
+--  ESPERADO: 12 gerais, 48 fluxos gerais, todos pausados, 0 nao pausado.
+--
+--  A contagem e POR CNPJ, e nao um count(*) da tabela, de proposito: assim o
+--  veredito e o mesmo antes ou depois de rodar o 02_01 (empresa 30). O total da
+--  base vem ao lado, como informacao.
+with gerais as (
+  select cod_dfe_empresa from poseidon.dpc_dfe_empresa
+   where num_cnpj in ('66471517000177', '66471517000258', '66471517000339',
+                 '66471517000924', '66471517001149', '66471517000843',
+                 '66471517001491', '66471517002544', '66471517001653',
+                 '66471517001734', '66471517001815', '66471517001904')
+)
+select (select count(*) from gerais)                                       as estabelecimentos_gerais,
+       (select count(*) from poseidon.dpc_dfe_empresa)                     as total_na_base,
+       (select count(*) from poseidon.dpc_dfe_cursor c
+         where c.cod_dfe_empresa in (select cod_dfe_empresa from gerais))  as fluxos_gerais,
+       (select count(*) from poseidon.dpc_dfe_cursor c
+         where c.cod_dfe_empresa in (select cod_dfe_empresa from gerais)
+           and c.status_sincronismo = 'P')                                 as pausados,
+       (select count(*) from poseidon.dpc_dfe_cursor c
+         where c.cod_dfe_empresa in (select cod_dfe_empresa from gerais)
+           and c.status_sincronismo <> 'P')                                as nao_pausados
   from dual;
 
---  Fluxos por tipo: 13 de cada.
-select cod_tipo_dfe, status_sincronismo, count(*) as qtd
-  from poseidon.dpc_dfe_cursor
- group by cod_tipo_dfe, status_sincronismo
- order by cod_tipo_dfe;
+--  Fluxos por tipo, so os gerais: 12 de cada, todos P.
+select c.cod_tipo_dfe, c.status_sincronismo, count(*) as qtd
+  from poseidon.dpc_dfe_cursor c
+  join poseidon.dpc_dfe_empresa e on e.cod_dfe_empresa = c.cod_dfe_empresa
+ where e.num_cnpj in ('66471517000177', '66471517000258', '66471517000339',
+                 '66471517000924', '66471517001149', '66471517000843',
+                 '66471517001491', '66471517002544', '66471517001653',
+                 '66471517001734', '66471517001815', '66471517001904')
+ group by c.cod_tipo_dfe, c.status_sincronismo
+ order by c.cod_tipo_dfe;
+
+--  Nenhum fluxo da ALL CARS: ESPERADO nenhuma linha.
+select e.nro_empresa, e.num_cnpj, c.cod_tipo_dfe
+  from poseidon.dpc_dfe_empresa e
+  join poseidon.dpc_dfe_cursor  c on c.cod_dfe_empresa = e.cod_dfe_empresa
+ where e.nro_empresa = 900;
 
 --  Quais estabelecimentos tem certificado utilizavel HOJE. Nenhuma alteracao:
 --  so leitura, para dimensionar quanto do motor tem como operar.
@@ -351,7 +384,7 @@ select e.nro_empresa, e.num_cnpj, e.sig_uf,
 --  primeira consulta. Reposicionar e consultar na sequencia reenvia a MESMA
 --  requisicao e e assim que se toma 656.
 --
---      dfe:ingerir --empresa=30 --tipo=NFE --reposicionar-cursor=0 --confirmar
+--      dfe:ingerir --empresa=1 --tipo=NFE --reposicionar-cursor=0 --confirmar
 --
 --  E confira antes, sem consumir cota nenhuma:
 --

@@ -1,6 +1,6 @@
 # Tabelas do módulo DFe — para que serve cada uma
 
-> **Atualizado em 02/09/2026.** As **13 tabelas** criadas por [`scripts/01_estrutura_dbeaver.sql`](../scripts/01_estrutura_dbeaver.sql), no schema `POSEIDON`.
+> **Atualizado em 02/09/2026.** As **13 tabelas** do motor, criadas por [`scripts/ddl/01_01_estrutura_dbeaver.sql`](../scripts/ddl/01_01_estrutura_dbeaver.sql), no schema `POSEIDON`. O bloco de telas tem outras três — ver o [03_01_parametrizacao_telas](../scripts/ddl/03_01_parametrizacao_telas_dbeaver.sql).
 
 Este documento responde **o que cada tabela é e por que existe separada**. Para coluna a coluna, com queries e armadilhas de tela, ver [05_dados-consumo-frontend.md](05_dados-consumo-frontend.md). Para operar, [06_operacao-comandos.md](06_operacao-comandos.md).
 
@@ -187,7 +187,7 @@ E uma quinta, de precisão: `vUnCom` usa **até 10 decimais** no dado real (`6.4
 
 **Escala:** a maior nota do acervo tem **300 itens**; a média é ~44. É a tabela que mais cresce depois de `dpc_dfe_documento`.
 
-> **Como criar:** instalação nova já vem com ela no [`01_estrutura_dbeaver.sql`](../scripts/01_estrutura_dbeaver.sql). Base **já instalada** roda a seção 1 de [`alteracoes/atualizacao_v7_a_v10_dbeaver.sql`](../scripts/alteracoes/atualizacao_v7_a_v10_dbeaver.sql), e depois um `dfe:normalizar` popula o acervo já capturado — sem nenhuma chamada à SEFAZ.
+> **Como criar:** o [`ddl/01_01_estrutura_dbeaver.sql`](../scripts/ddl/01_01_estrutura_dbeaver.sql), em qualquer base — vazia, parcial ou completa. A seção 3 dele confere as colunas uma a uma e acrescenta a que faltar, então não existe mais um script de alteração à parte. Depois, um `dfe:normalizar` popula o acervo já capturado — sem nenhuma chamada à SEFAZ.
 
 ### `DPC_DFE_EMITENTE` — o fornecedor
 

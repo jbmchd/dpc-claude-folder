@@ -1,56 +1,94 @@
 -- ============================================================================
---  MODULO DFe - INSTALACAO COMPLETA EM PRODUCAO
+--  MODULO DFe - ESTRUTURA DO MOTOR (ARQUIVO 01_01)
 -- ============================================================================
 --  Captura propria de documento fiscal de ENTRADA: NF-e, CT-e e NFS-e.
 --  Schema POSEIDON, tablespace TSD_POSEIDON.
 --
 --  ==========================================================================
---   POR QUE ESTE ARQUIVO EXISTE
+--   UM CAMINHO SO
 --  ==========================================================================
---  Em homologacao a estrutura foi construida por install_dbeaver.sql e cinco
---  alters aplicados ao longo de duas semanas (v2 a v6). Aqueles arquivos foram
---  REMOVIDOS do repositorio em 20/08/2026 - seguem no historico do git - porque
---  reproduzir a sequencia em producao seria repetir historia, com dois riscos
---  concretos:
+--  Este arquivo leva a estrutura ao estado correto partindo de QUALQUER base:
+--  vazia, parcial, ou ja completa. Nao existe mais "rode este se a base e
+--  nova, aquele se ja tem o modulo" - a diferenca que existia entre os dois
+--  caminhos era a secao 3 (COLUNAS), e ela agora esta aqui.
 --
---   1. Objetos que o v2 removeu por CASCADE CONSTRAINTS - a check
---      DPC_DFE_EMPRESA_CK1 e o indice DPC_DFE_EMPRESA_IX1, ambos sobre colunas
---      de cursor que sairam da tabela - continuam escritos no install antigo.
---      Rodar aquele arquivo hoje recriaria objeto que nao deve existir.
---   2. A UK DPC_DFE_DOCUMENTO_UK1 (empresa, nsu) foi SUBSTITUIDA pela UK2
---      (cursor, nsu). Manter a antiga faria o NSU 100 da NF-e colidir com o
---      NSU 100 do CT-e: a unique que protege contra duplicidade viraria PERDA
---      de documento.
---
---  Este arquivo e o ESTADO FINAL, gerado a partir daqueles scripts com os
---  deltas ja aplicados. Nao ha alter aqui: tudo e create.
+--  Rodar duas vezes seguidas produz exatamente o mesmo resultado da primeira.
+--  Cada objeto e criado somente se ainda nao existir, cada coluna e conferida
+--  uma a uma, e a unica coisa que reexecutar reescreve sao os comentarios e as
+--  triggers - que sao identicos.
 --
 --  ==========================================================================
 --   COMO RODAR (DBeaver)
 --  ==========================================================================
---  Conectado como POSEIDON, script inteiro com Alt+X. Sem "/" para terminar
---  bloco.
+--  Conectado como POSEIDON, arquivo INTEIRO com Alt+X. Sem "/" para terminar
+--  bloco. E CRLF de proposito: em LF o divisor de statements do DBeaver corta
+--  o bloco PL/SQL no fim do IF e devolve PLS-00103.
 --
---  E REEXECUTAVEL: cada objeto e criado somente se ainda nao existir. Se algo
---  falhar no meio, corrija e rode o arquivo de novo - o que ja passou nao e
---  refeito nem duplicado.
+--  LIGUE O DBMS_OUTPUT (aba Output do editor de SQL). A secao 3 avisa por ali
+--  o que acrescentou e o que exige decisao humana; sem o Output ligado esses
+--  avisos passam invisiveis.
+--
+--  Se algo falhar no meio, corrija e rode o arquivo de novo - o que ja passou
+--  nao e refeito nem duplicado.
 --
 --  ==========================================================================
 --   O QUE ESTE SCRIPT NAO FAZ
 --  ==========================================================================
---   - nao cadastra empresa nem cria fluxo: e o 02_carga_inicial_dbeaver.sql
+--   - nao cadastra empresa nem cria fluxo: e o 01_02 e o 02_01 (empresa 30)
+--   - nao carrega parametro: e o 01_03
 --   - nao mexe em nada fora do schema POSEIDON
 --   - nao le nem altera nada do ERP. O motor foi desacoplado dele; a unica
 --     leitura do ERP no modulo e a conciliacao (dfe:conciliar), que nao
 --     precisa de objeto novo
+--   - nao altera tipo nem tamanho de coluna que ja existe (ver secao 3)
 --
 --  ==========================================================================
---   ORDEM DOS ARQUIVOS
+--   ORDEM DOS ARQUIVOS DESTA PASTA
 --  ==========================================================================
---   01_estrutura_dbeaver.sql     <- este
---   02_carga_inicial_dbeaver.sql    empresas e fluxos (todos PAUSADOS)
---   03_validacao_dbeaver.sql        confere estrutura e compara com homologacao
---   99_rollback_dbeaver.sql         desfaz tudo, se necessario
+--  O primeiro numero e o BLOCO, o segundo e a ordem dentro dele. O _99 de cada
+--  bloco e o rollback DAQUELE bloco: quem desfaz mora ao lado de quem faz.
+--
+--   BLOCO 01 - MOTOR
+--   as 13 tabelas de captura. Serve a qualquer base e nao conhece empresa
+--   especifica nem usuario - o motor e CLI e banco, sem sessao e sem login.
+--
+--     01_01_estrutura_dbeaver.sql             <- este
+--     01_02_estabelecimentos_dbeaver.sql      12 CNPJs e 48 fluxos, PAUSADOS
+--     01_03_parametros_dbeaver.sql            os 5 em DPC_PARAMETRO
+--     01_04_validacao_dbeaver.sql             confere o motor e as telas
+--     01_99_rollback_motor_dbeaver.sql        desfaz o bloco 01
+--
+--   BLOCO 02 - EMPRESA 30, filial MS
+--   o unico estabelecimento com arquivo proprio, porque e o unico que precisa
+--   de algo FORA das tabelas do modulo: o certificado, que mora no ERP.
+--
+--     02_01_empresa_30_dbeaver.sql            identidade, 4 fluxos, certificado
+--     02_99_rollback_empresa_30_dbeaver.sql   desfaz o bloco 02
+--
+--   BLOCO 03 - TELAS
+--   permissao de acesso aos paineis e o limiar de alerta que eles usam para
+--   pintar a linha. Nao e do motor: o motor nao sabe o que e um usuario.
+--
+--     03_01_parametrizacao_telas_dbeaver.sql  dpc_dfe_usuario_empresa,
+--                                             dpc_dfe_usuario_aba e
+--                                             dpc_dfe_painel_alerta
+--     03_99_rollback_telas_dbeaver.sql        desfaz o bloco 03
+--
+--   INSTALAR   01_01, 01_02, 01_03, 01_04, e depois 02_01 e 03_01
+--   DESFAZER   03_99, 02_99, 01_99 - do bloco mais especifico para o motor
+--
+--  ==========================================================================
+--   O QUE HAVIA ANTES
+--  ==========================================================================
+--  Ate 09/09/2026 instalar era escolher entre DOIS conjuntos: scripts/01..04
+--  para base nova, e scripts/alteracoes/ para base ja instalada. Errar a
+--  escolha custava caro - rodar o instalador numa base parcial gerava 14
+--  ORA-00904 e NAO consertava as colunas que faltavam, porque o create table e
+--  pulado quando a tabela existe.
+--
+--  Aqueles arquivos foram REMOVIDOS. Seguem no historico do git do .claude, e o
+--  que cada um fazia esta em docs/09_catalogo-scripts.md, na secao "o que foi
+--  apagado, e onde recuperar".
 -- ============================================================================
 
 -- ###########################################################################
@@ -58,14 +96,18 @@
 --  Para nao descobrir no meio da instalacao. Nenhuma linha abaixo altera nada.
 -- ###########################################################################
 
---  Deve devolver: usuario POSEIDON, o tablespace existente e ONLINE, e ZERO
---  objeto DPC_DFE_* preexistente. Objeto preexistente nao impede a execucao
---  (o script e reexecutavel), mas voce precisa saber ANTES se esta instalando
+--  Deve devolver: usuario POSEIDON, o tablespace existente e ONLINE, e quantos
+--  objetos DPC_DFE_* ja existem. Objeto preexistente nao impede a execucao (o
+--  script e convergente), mas voce quer saber ANTES se esta instalando de zero
 --  ou completando.
+--
+--  USER_TABLESPACES, e nao ALL_TABLESPACES: essa view nao existe no Oracle - a
+--  familia e USER_/DBA_ apenas. Ate 09/09/2026 estava escrito ALL_ aqui, e o
+--  PRIMEIRO statement da instalacao morria com ORA-00942.
 select user                                                    as conectado_como,
-       (select count(*) from all_tablespaces
+       (select count(*) from user_tablespaces
          where tablespace_name = 'TSD_POSEIDON')                as tablespace_existe,
-       (select status from all_tablespaces
+       (select status from user_tablespaces
          where tablespace_name = 'TSD_POSEIDON')                as tablespace_status,
        (select count(*) from all_tables
          where owner = 'POSEIDON' and table_name like 'DPC_DFE%')  as tabelas_ja_existentes,
@@ -76,7 +118,7 @@ select user                                                    as conectado_como
 -- ###########################################################################
 --  1. SEQUENCES
 --  Uma por tabela. A PK NUNCA e informada pela aplicacao: quem preenche e a
---  trigger da secao 5, lendo daqui. Padrao do ecossistema DPC.
+--  trigger da secao 6, lendo daqui. Padrao do ecossistema DPC.
 --
 --  cache 20 em todas. Em homologacao as quatro mais novas (cursor, cte,
 --  cte_nfe, nfse) ficaram nocache por acidente de copia; aqui esta
@@ -230,7 +272,7 @@ end;
 -- ###########################################################################
 --  2. TABELAS
 --  Ordem de dependencia: a tabela referenciada por FK vem antes.
---  As constraints ficam na secao 3, para que uma falha de FK nao interrompa a
+--  As constraints ficam na secao 4, para que uma falha de FK nao interrompa a
 --  criacao das tabelas.
 -- ###########################################################################
 -- ---------- DPC_DFE_EMPRESA ----------
@@ -716,7 +758,625 @@ end;
 
 
 -- ###########################################################################
---  3. CONSTRAINTS
+--  3. COLUNAS
+--  E esta secao que faz o arquivo servir a QUALQUER base, e por isso nao
+--  existe mais um script de "alteracao" separado.
+--
+--  O create table da secao 2 e PULADO quando a tabela existe. Logo, numa base
+--  instalada por uma versao ANTERIOR deste arquivo, as tabelas estao no lugar
+--  e as colunas novas nao. Foi exatamente o que aconteceu em 09/09/2026: a
+--  base de teste voltou a um snapshot de 13 dias antes, com as 13 tabelas
+--  presentes e 11 colunas de DPC_DFE_NOTA ausentes - e recuperar exigiu
+--  escolher a dedo tres scripts de alteracao, na ordem certa.
+--
+--  Aqui a lista de colunas de cada tabela e conferida uma a uma, e a que
+--  faltar e acrescentada. Numa base recem-criada pela secao 2 todas existem, e
+--  a secao inteira e no-op.
+--
+--  MANUTENCAO: coluna nova do modulo entra em DOIS lugares deste arquivo - no
+--  create table da secao 2 e na lista da secao 3. Sao a mesma lista, e a
+--  secao 1 do 01_04_validacao_dbeaver.sql compara as duas contra o banco.
+--
+--  ==========================================================================
+--   POR QUE CADA COLUNA TEM EXCEPTION PROPRIA
+--  ==========================================================================
+--  Das 273 colunas do modulo, 41 sao NOT NULL sem DEFAULT - as PKs e as FKs.
+--  Acrescentar uma dessas a uma tabela QUE JA TEM LINHAS falha com ORA-01758,
+--  e falhar e o comportamento correto: nao existe valor para as linhas antigas.
+--
+--  Sem o handler, uma dessas abortaria o arquivo inteiro e as secoes seguintes
+--  nao rodariam. Com ele o script termina, o DBMS_OUTPUT diz exatamente qual
+--  coluna exige decisao humana, e a validacao acusa a coluna ausente.
+--
+--  As outras 232 - 211 anulaveis e 21 com DEFAULT - entram sempre. Toda coluna
+--  que o modulo ganhou depois da instalacao original e anulavel: as 11 da
+--  etapa no ERP e a VLR_TOTAL_PRODUTO.
+--
+--  ==========================================================================
+--   O QUE ESTA SECAO NAO FAZ
+--  ==========================================================================
+--  Nao altera tipo nem tamanho de coluna existente. ALTER MODIFY pode falhar
+--  por causa do dado gravado e nao cabe em script automatico. Divergencia de
+--  tipo e REPORTADA pela secao 4 do 01_04_validacao_dbeaver.sql, que guarda os
+--  casos que ja custaram diagnostico - CHAVE_NF com 44 onde a NFS-e precisa de
+--  50, por exemplo.
+-- ###########################################################################
+
+-- ---------- DPC_DFE_EMPRESA ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_empresa'    as nome, 'NUMBER not null'                    as def from dual union all
+    select 'nro_empresa'               , 'NUMBER not null'                           from dual union all
+    select 'num_cnpj'                  , 'VARCHAR2(14) not null'                     from dual union all
+    select 'status_manifestar'         , 'VARCHAR2(1) default ''N'' not null'        from dual union all
+    select 'dsc_razao_social'          , 'VARCHAR2(120) not null'                    from dual union all
+    select 'sig_uf'                    , 'VARCHAR2(2) not null'                      from dual union all
+    select 'num_inscr_estadual'        , 'VARCHAR2(20)'                              from dual union all
+    select 'created_at'                , 'DATE default sysdate'                      from dual union all
+    select 'created_by'                , 'VARCHAR2(50)'                              from dual union all
+    select 'updated_at'                , 'DATE'                                      from dual union all
+    select 'updated_by'                , 'VARCHAR2(50)'                              from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_EMPRESA'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_empresa add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_EMPRESA: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_EMPRESA: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_CURSOR ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_cursor'         as nome, 'NUMBER not null'                    as def from dual union all
+    select 'cod_dfe_empresa'               , 'NUMBER not null'                           from dual union all
+    select 'cod_tipo_dfe'                  , 'VARCHAR2(4) not null'                      from dual union all
+    select 'status_sincronismo'            , 'VARCHAR2(1) default ''A'' not null'        from dual union all
+    select 'nro_ultimo_nsu'                , 'NUMBER default 0 not null'                 from dual union all
+    select 'nro_maximo_nsu'                , 'NUMBER default 0 not null'                 from dual union all
+    select 'qtd_min_entre_consulta'        , 'NUMBER default 3 not null'                 from dual union all
+    select 'qtd_min_em_dia'                , 'NUMBER default 60 not null'                from dual union all
+    select 'dta_ultima_consulta'           , 'TIMESTAMP(6)'                              from dual union all
+    select 'dta_liberado_em'               , 'TIMESTAMP(6)'                              from dual union all
+    select 'cod_ultimo_status'             , 'VARCHAR2(5)'                               from dual union all
+    select 'dsc_ultimo_motivo'             , 'VARCHAR2(255)'                             from dual union all
+    select 'created_at'                    , 'DATE default sysdate'                      from dual union all
+    select 'created_by'                    , 'VARCHAR2(50)'                              from dual union all
+    select 'updated_at'                    , 'DATE'                                      from dual union all
+    select 'updated_by'                    , 'VARCHAR2(50)'                              from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_CURSOR'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_cursor add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_CURSOR: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_CURSOR: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_EMITENTE ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_emitente'   as nome, 'NUMBER not null'       as def from dual union all
+    select 'num_cnpj_cpf'              , 'VARCHAR2(14) not null'        from dual union all
+    select 'dsc_razao_social'          , 'VARCHAR2(120)'                from dual union all
+    select 'num_inscr_estadual'        , 'VARCHAR2(20)'                 from dual union all
+    select 'created_at'                , 'DATE default sysdate'         from dual union all
+    select 'created_by'                , 'VARCHAR2(50)'                 from dual union all
+    select 'updated_at'                , 'DATE'                         from dual union all
+    select 'updated_by'                , 'VARCHAR2(50)'                 from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_EMITENTE'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_emitente add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_EMITENTE: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_EMITENTE: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_DOCUMENTO ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_documento' as nome, 'NUMBER not null'                            as def from dual union all
+    select 'cod_dfe_cursor'           , 'NUMBER not null'                                   from dual union all
+    select 'cod_dfe_empresa'          , 'NUMBER not null'                                   from dual union all
+    select 'nro_nsu'                  , 'NUMBER not null'                                   from dual union all
+    select 'dsc_schema'               , 'VARCHAR2(60)'                                      from dual union all
+    select 'dsc_tipo_doc'             , 'VARCHAR2(10)'                                      from dual union all
+    select 'chave_nf'                 , 'VARCHAR2(50)'                                      from dual union all
+    select 'bin_documento'            , 'BLOB'                                              from dual union all
+    select 'status_process'           , 'VARCHAR2(1) default ''P'' not null'                from dual union all
+    select 'qtd_tentativa'            , 'NUMBER default 0 not null'                         from dual union all
+    select 'det_erro'                 , 'VARCHAR2(4000)'                                    from dual union all
+    select 'dta_recebimento'          , 'TIMESTAMP(6) default systimestamp not null'        from dual union all
+    select 'dta_processado'           , 'TIMESTAMP(6)'                                      from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_DOCUMENTO'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_documento add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_DOCUMENTO: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_DOCUMENTO: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_NOTA ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_nota'        as nome, 'NUMBER not null'                    as def from dual union all
+    select 'cod_dfe_empresa'            , 'NUMBER not null'                           from dual union all
+    select 'cod_dfe_emitente'           , 'NUMBER'                                    from dual union all
+    select 'chave_nf'                   , 'VARCHAR2(44) not null'                     from dual union all
+    select 'nro_nsu'                    , 'NUMBER'                                    from dual union all
+    select 'dsc_tipo_doc'               , 'VARCHAR2(10)'                              from dual union all
+    select 'nro_modelo'                 , 'NUMBER'                                    from dual union all
+    select 'nro_serie'                  , 'NUMBER'                                    from dual union all
+    select 'nro_nf'                     , 'NUMBER'                                    from dual union all
+    select 'tipo_nf'                    , 'NUMBER'                                    from dual union all
+    select 'vlr_nota'                   , 'NUMBER'                                    from dual union all
+    select 'vlr_total_produto'          , 'NUMBER'                                    from dual union all
+    select 'dta_emissao'                , 'DATE'                                      from dual union all
+    select 'dta_recibo'                 , 'DATE'                                      from dual union all
+    select 'nro_protocolo'              , 'VARCHAR2(20)'                              from dual union all
+    select 'cod_situacao'               , 'NUMBER'                                    from dual union all
+    select 'dsc_situacao'               , 'VARCHAR2(20)'                              from dual union all
+    select 'status_manifestacao'        , 'VARCHAR2(1) default ''N'' not null'        from dual union all
+    select 'sig_papel_empresa'          , 'VARCHAR2(6)'                               from dual union all
+    select 'status_recebimento'         , 'VARCHAR2(1) default ''N'' not null'        from dual union all
+    select 'seq_nf_erp'                 , 'NUMBER'                                    from dual union all
+    select 'dta_entrada_erp'            , 'DATE'                                      from dual union all
+    select 'dta_conciliacao'            , 'TIMESTAMP(6)'                              from dual union all
+    select 'sig_estado_erp'             , 'VARCHAR2(20)'                              from dual union all
+    select 'num_estado_erp'             , 'NUMBER(1)'                                 from dual union all
+    select 'num_estado_erp_max'         , 'NUMBER(1)'                                 from dual union all
+    select 'dta_estado_erp'             , 'TIMESTAMP(6)'                              from dual union all
+    select 'seq_notamestre_erp'         , 'NUMBER'                                    from dual union all
+    select 'dta_lancamento_erp'         , 'DATE'                                      from dual union all
+    select 'cod_cfop_erp'               , 'NUMBER(5)'                                 from dual union all
+    select 'dsc_ocorr_dev_erp'          , 'VARCHAR2(5)'                               from dual union all
+    select 'seq_comprador_erp'          , 'NUMBER'                                    from dual union all
+    select 'dsc_comprador_erp'          , 'VARCHAR2(40)'                              from dual union all
+    select 'created_at'                 , 'DATE default sysdate'                      from dual union all
+    select 'created_by'                 , 'VARCHAR2(50)'                              from dual union all
+    select 'updated_at'                 , 'DATE'                                      from dual union all
+    select 'updated_by'                 , 'VARCHAR2(50)'                              from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_NOTA'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_nota add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_NOTA: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_NOTA: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_NOTA_ITEM ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_nota_item'   as nome, 'NUMBER not null'      as def from dual union all
+    select 'cod_dfe_nota'               , 'NUMBER not null'             from dual union all
+    select 'nro_item'                   , 'NUMBER not null'             from dual union all
+    select 'cod_produto'                , 'VARCHAR2(60)'                from dual union all
+    select 'cod_ean'                    , 'VARCHAR2(20)'                from dual union all
+    select 'dsc_produto'                , 'VARCHAR2(120)'               from dual union all
+    select 'cod_ncm'                    , 'VARCHAR2(8)'                 from dual union all
+    select 'cod_cest'                   , 'VARCHAR2(7)'                 from dual union all
+    select 'cod_ex_tipi'                , 'VARCHAR2(3)'                 from dual union all
+    select 'cod_cfop'                   , 'VARCHAR2(4)'                 from dual union all
+    select 'cod_beneficio'              , 'VARCHAR2(10)'                from dual union all
+    select 'sig_unid_com'               , 'VARCHAR2(6)'                 from dual union all
+    select 'qtd_comercial'              , 'NUMBER'                      from dual union all
+    select 'vlr_unit_com'               , 'NUMBER'                      from dual union all
+    select 'vlr_produto'                , 'NUMBER'                      from dual union all
+    select 'sig_unid_trib'              , 'VARCHAR2(6)'                 from dual union all
+    select 'qtd_tributavel'             , 'NUMBER'                      from dual union all
+    select 'vlr_unit_trib'              , 'NUMBER'                      from dual union all
+    select 'vlr_frete'                  , 'NUMBER'                      from dual union all
+    select 'vlr_seguro'                 , 'NUMBER'                      from dual union all
+    select 'vlr_desconto'               , 'NUMBER'                      from dual union all
+    select 'vlr_outros'                 , 'NUMBER'                      from dual union all
+    select 'status_compoe_total'        , 'VARCHAR2(1)'                 from dual union all
+    select 'vlr_item'                   , 'NUMBER'                      from dual union all
+    select 'dsc_inf_adic'               , 'VARCHAR2(500)'               from dual union all
+    select 'cod_cst_icms'               , 'VARCHAR2(4)'                 from dual union all
+    select 'cod_origem'                 , 'VARCHAR2(1)'                 from dual union all
+    select 'vlr_bc_icms'                , 'NUMBER'                      from dual union all
+    select 'pct_icms'                   , 'NUMBER'                      from dual union all
+    select 'vlr_icms'                   , 'NUMBER'                      from dual union all
+    select 'vlr_bc_icms_st'             , 'NUMBER'                      from dual union all
+    select 'vlr_icms_st'                , 'NUMBER'                      from dual union all
+    select 'cod_cst_ipi'                , 'VARCHAR2(2)'                 from dual union all
+    select 'vlr_bc_ipi'                 , 'NUMBER'                      from dual union all
+    select 'pct_ipi'                    , 'NUMBER'                      from dual union all
+    select 'vlr_ipi'                    , 'NUMBER'                      from dual union all
+    select 'cod_cst_pis'                , 'VARCHAR2(2)'                 from dual union all
+    select 'vlr_bc_pis'                 , 'NUMBER'                      from dual union all
+    select 'pct_pis'                    , 'NUMBER'                      from dual union all
+    select 'vlr_pis'                    , 'NUMBER'                      from dual union all
+    select 'cod_cst_cofins'             , 'VARCHAR2(2)'                 from dual union all
+    select 'vlr_bc_cofins'              , 'NUMBER'                      from dual union all
+    select 'pct_cofins'                 , 'NUMBER'                      from dual union all
+    select 'vlr_cofins'                 , 'NUMBER'                      from dual union all
+    select 'cod_cst_ibscbs'             , 'VARCHAR2(3)'                 from dual union all
+    select 'cod_class_trib'             , 'VARCHAR2(6)'                 from dual union all
+    select 'vlr_bc_ibscbs'              , 'NUMBER'                      from dual union all
+    select 'vlr_ibs'                    , 'NUMBER'                      from dual union all
+    select 'vlr_cbs'                    , 'NUMBER'                      from dual union all
+    select 'created_at'                 , 'DATE default sysdate'        from dual union all
+    select 'created_by'                 , 'VARCHAR2(50)'                from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_NOTA_ITEM'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_nota_item add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_NOTA_ITEM: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_NOTA_ITEM: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_EVENTO ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_evento'  as nome, 'NUMBER not null'           as def from dual union all
+    select 'cod_dfe_empresa'        , 'NUMBER not null'                  from dual union all
+    select 'cod_dfe_nota'           , 'NUMBER'                           from dual union all
+    select 'chave_nf'               , 'VARCHAR2(44) not null'            from dual union all
+    select 'nro_nsu'                , 'NUMBER'                           from dual union all
+    select 'cod_tipo_evento'        , 'VARCHAR2(6)'                      from dual union all
+    select 'dsc_evento'             , 'VARCHAR2(255)'                    from dual union all
+    select 'nro_seq_evento'         , 'NUMBER default 1 not null'        from dual union all
+    select 'nro_protocolo'          , 'VARCHAR2(20)'                     from dual union all
+    select 'cod_status'             , 'VARCHAR2(5)'                      from dual union all
+    select 'dsc_motivo'             , 'VARCHAR2(255)'                    from dual union all
+    select 'dta_evento'             , 'TIMESTAMP(6)'                     from dual union all
+    select 'created_at'             , 'DATE default sysdate'             from dual union all
+    select 'created_by'             , 'VARCHAR2(50)'                     from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_EVENTO'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_evento add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_EVENTO: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_EVENTO: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_EXECUCAO ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_execucao' as nome, 'NUMBER not null'                            as def from dual union all
+    select 'cod_dfe_cursor'          , 'NUMBER not null'                                   from dual union all
+    select 'cod_dfe_empresa'         , 'NUMBER not null'                                   from dual union all
+    select 'dta_inicio'              , 'TIMESTAMP(6) default systimestamp not null'        from dual union all
+    select 'dta_fim'                 , 'TIMESTAMP(6)'                                      from dual union all
+    select 'nro_nsu_inicial'         , 'NUMBER'                                            from dual union all
+    select 'nro_nsu_final'           , 'NUMBER'                                            from dual union all
+    select 'qtd_consulta'            , 'NUMBER default 0 not null'                         from dual union all
+    select 'qtd_documento'           , 'NUMBER default 0 not null'                         from dual union all
+    select 'qtd_nota'                , 'NUMBER default 0 not null'                         from dual union all
+    select 'qtd_evento'              , 'NUMBER default 0 not null'                         from dual union all
+    select 'qtd_erro'                , 'NUMBER default 0 not null'                         from dual union all
+    select 'cod_resultado'           , 'VARCHAR2(20)'                                      from dual union all
+    select 'dsc_resultado'           , 'VARCHAR2(4000)'                                    from dual union all
+    select 'created_by'              , 'VARCHAR2(50)'                                      from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_EXECUCAO'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_execucao add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_EXECUCAO: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_EXECUCAO: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_MANIFESTACAO ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_manifestacao' as nome, 'NUMBER not null'                    as def from dual union all
+    select 'cod_dfe_nota'                , 'NUMBER not null'                           from dual union all
+    select 'cod_tipo_evento'             , 'VARCHAR2(6) not null'                      from dual union all
+    select 'status_envio'                , 'VARCHAR2(1) default ''P'' not null'        from dual union all
+    select 'cod_status_retorno'          , 'VARCHAR2(5)'                               from dual union all
+    select 'dsc_status_retorno'          , 'VARCHAR2(255)'                             from dual union all
+    select 'nro_protocolo'               , 'VARCHAR2(20)'                              from dual union all
+    select 'qtd_tentativa'               , 'NUMBER default 0 not null'                 from dual union all
+    select 'det_erro'                    , 'VARCHAR2(4000)'                            from dual union all
+    select 'xml_retorno'                 , 'CLOB'                                      from dual union all
+    select 'dta_envio'                   , 'TIMESTAMP(6)'                              from dual union all
+    select 'dta_ultima_tentativa'        , 'TIMESTAMP(6)'                              from dual union all
+    select 'dta_atualizacao'             , 'TIMESTAMP(6)'                              from dual union all
+    select 'created_at'                  , 'DATE default sysdate'                      from dual union all
+    select 'created_by'                  , 'VARCHAR2(50)'                              from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_MANIFESTACAO'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_manifestacao add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_MANIFESTACAO: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_MANIFESTACAO: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_CTE ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_cte'        as nome, 'NUMBER not null'       as def from dual union all
+    select 'cod_dfe_empresa'           , 'NUMBER not null'              from dual union all
+    select 'chave_cte'                 , 'VARCHAR2(44) not null'        from dual union all
+    select 'nro_nsu'                   , 'NUMBER'                       from dual union all
+    select 'dsc_tipo_doc'              , 'VARCHAR2(10)'                 from dual union all
+    select 'nro_modelo'                , 'NUMBER'                       from dual union all
+    select 'nro_serie'                 , 'NUMBER'                       from dual union all
+    select 'nro_cte'                   , 'NUMBER'                       from dual union all
+    select 'dta_emissao'               , 'DATE'                         from dual union all
+    select 'cod_cfop'                  , 'VARCHAR2(4)'                  from dual union all
+    select 'dsc_natureza_oper'         , 'VARCHAR2(60)'                 from dual union all
+    select 'cod_modal'                 , 'VARCHAR2(2)'                  from dual union all
+    select 'cod_tipo_servico'          , 'VARCHAR2(1)'                  from dual union all
+    select 'cod_tipo_cte'              , 'VARCHAR2(1)'                  from dual union all
+    select 'dsc_municipio_ini'         , 'VARCHAR2(60)'                 from dual union all
+    select 'sig_uf_ini'                , 'VARCHAR2(2)'                  from dual union all
+    select 'dsc_municipio_fim'         , 'VARCHAR2(60)'                 from dual union all
+    select 'sig_uf_fim'                , 'VARCHAR2(2)'                  from dual union all
+    select 'num_cnpj_emitente'         , 'VARCHAR2(14)'                 from dual union all
+    select 'dsc_razao_emitente'        , 'VARCHAR2(120)'                from dual union all
+    select 'num_cnpj_remetente'        , 'VARCHAR2(14)'                 from dual union all
+    select 'num_cnpj_expedidor'        , 'VARCHAR2(14)'                 from dual union all
+    select 'num_cnpj_recebedor'        , 'VARCHAR2(14)'                 from dual union all
+    select 'num_cnpj_destinat'         , 'VARCHAR2(14)'                 from dual union all
+    select 'cod_tomador'               , 'VARCHAR2(1)'                  from dual union all
+    select 'sig_papel_empresa'         , 'VARCHAR2(6)'                  from dual union all
+    select 'vlr_prestacao'             , 'NUMBER'                       from dual union all
+    select 'vlr_receber'               , 'NUMBER'                       from dual union all
+    select 'nro_protocolo'             , 'VARCHAR2(20)'                 from dual union all
+    select 'cod_situacao'              , 'NUMBER'                       from dual union all
+    select 'dsc_situacao'              , 'VARCHAR2(20)'                 from dual union all
+    select 'created_at'                , 'DATE default sysdate'         from dual union all
+    select 'created_by'                , 'VARCHAR2(50)'                 from dual union all
+    select 'updated_at'                , 'DATE'                         from dual union all
+    select 'updated_by'                , 'VARCHAR2(50)'                 from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_CTE'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_cte add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_CTE: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_CTE: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_CTE_NFE ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_cte_nfe' as nome, 'NUMBER not null'       as def from dual union all
+    select 'cod_dfe_cte'            , 'NUMBER not null'              from dual union all
+    select 'chave_nf'               , 'VARCHAR2(44) not null'        from dual union all
+    select 'created_at'             , 'DATE default sysdate'         from dual union all
+    select 'created_by'             , 'VARCHAR2(50)'                 from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_CTE_NFE'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_cte_nfe add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_CTE_NFE: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_CTE_NFE: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_CTE_EVENTO ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_cte_evento' as nome, 'NUMBER not null'           as def from dual union all
+    select 'cod_dfe_empresa'           , 'NUMBER not null'                  from dual union all
+    select 'cod_dfe_cte'               , 'NUMBER'                           from dual union all
+    select 'chave_cte'                 , 'VARCHAR2(44) not null'            from dual union all
+    select 'nro_nsu'                   , 'NUMBER'                           from dual union all
+    select 'cod_tipo_evento'           , 'VARCHAR2(6)'                      from dual union all
+    select 'dsc_evento'                , 'VARCHAR2(255)'                    from dual union all
+    select 'nro_seq_evento'            , 'NUMBER default 1 not null'        from dual union all
+    select 'nro_protocolo'             , 'VARCHAR2(20)'                     from dual union all
+    select 'cod_status'                , 'VARCHAR2(5)'                      from dual union all
+    select 'dsc_motivo'                , 'VARCHAR2(255)'                    from dual union all
+    select 'dta_evento'                , 'TIMESTAMP(6)'                     from dual union all
+    select 'num_cnpj_autor'            , 'VARCHAR2(14)'                     from dual union all
+    select 'dta_entrega'               , 'TIMESTAMP(6)'                     from dual union all
+    select 'num_doc_recebedor'         , 'VARCHAR2(60)'                     from dual union all
+    select 'dsc_nome_recebedor'        , 'VARCHAR2(60)'                     from dual union all
+    select 'dsc_hash_entrega'          , 'VARCHAR2(60)'                     from dual union all
+    select 'chave_mdfe'                , 'VARCHAR2(44)'                     from dual union all
+    select 'created_at'                , 'DATE default sysdate'             from dual union all
+    select 'created_by'                , 'VARCHAR2(50)'                     from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_CTE_EVENTO'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_cte_evento add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_CTE_EVENTO: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_CTE_EVENTO: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+-- ---------- DPC_DFE_NFSE ----------
+declare
+  qtd number;
+begin
+  for c in (
+    select 'cod_dfe_nfse'         as nome, 'NUMBER not null'       as def from dual union all
+    select 'cod_dfe_empresa'             , 'NUMBER not null'              from dual union all
+    select 'chave_nfse'                  , 'VARCHAR2(50) not null'        from dual union all
+    select 'nro_nsu'                     , 'NUMBER'                       from dual union all
+    select 'dsc_tipo_doc'                , 'VARCHAR2(10)'                 from dual union all
+    select 'nro_nfse'                    , 'VARCHAR2(15)'                 from dual union all
+    select 'dta_processamento'           , 'DATE'                         from dual union all
+    select 'dta_competencia'             , 'DATE'                         from dual union all
+    select 'cod_situacao'                , 'NUMBER'                       from dual union all
+    select 'dsc_situacao'                , 'VARCHAR2(20)'                 from dual union all
+    select 'sig_papel_empresa'           , 'VARCHAR2(6)'                  from dual union all
+    select 'num_cnpj_cpf_prest'          , 'VARCHAR2(14)'                 from dual union all
+    select 'dsc_razao_prest'             , 'VARCHAR2(120)'                from dual union all
+    select 'num_insc_munic_prest'        , 'VARCHAR2(20)'                 from dual union all
+    select 'cod_municipio_prest'         , 'VARCHAR2(7)'                  from dual union all
+    select 'sig_uf_prest'                , 'VARCHAR2(2)'                  from dual union all
+    select 'num_cnpj_cpf_toma'           , 'VARCHAR2(14)'                 from dual union all
+    select 'dsc_razao_toma'              , 'VARCHAR2(120)'                from dual union all
+    select 'cod_municipio_incid'         , 'VARCHAR2(7)'                  from dual union all
+    select 'dsc_municipio_incid'         , 'VARCHAR2(60)'                 from dual union all
+    select 'cod_trib_nacional'           , 'VARCHAR2(10)'                 from dual union all
+    select 'cod_trib_municipal'          , 'VARCHAR2(20)'                 from dual union all
+    select 'dsc_servico'                 , 'VARCHAR2(2000)'               from dual union all
+    select 'vlr_servico'                 , 'NUMBER'                       from dual union all
+    select 'vlr_base_calculo'            , 'NUMBER'                       from dual union all
+    select 'pct_aliquota'                , 'NUMBER'                       from dual union all
+    select 'vlr_issqn'                   , 'NUMBER'                       from dual union all
+    select 'vlr_retido'                  , 'NUMBER'                       from dual union all
+    select 'vlr_liquido'                 , 'NUMBER'                       from dual union all
+    select 'created_at'                  , 'DATE default sysdate'         from dual union all
+    select 'created_by'                  , 'VARCHAR2(50)'                 from dual union all
+    select 'updated_at'                  , 'DATE'                         from dual union all
+    select 'updated_by'                  , 'VARCHAR2(50)'                 from dual
+  ) loop
+    begin
+      select count(*) into qtd from all_tab_columns
+       where owner = 'POSEIDON' and table_name = 'DPC_DFE_NFSE'
+         and column_name = upper(c.nome);
+
+      if qtd = 0 then
+        execute immediate 'alter table poseidon.dpc_dfe_nfse add ('
+                          || c.nome || ' ' || c.def || ')';
+        dbms_output.put_line('DPC_DFE_NFSE: acrescentada -> ' || c.nome);
+      end if;
+    exception
+      when others then
+        dbms_output.put_line('DPC_DFE_NFSE: FALHOU em ' || c.nome || ' -> ' || sqlerrm);
+    end;
+  end loop;
+end;
+
+
+-- ###########################################################################
+--  4. CONSTRAINTS
 --  Duas ausencias sao DELIBERADAS e cada uma tem historia:
 --
 --   DPC_DFE_EMPRESA_CK1 - existia sobre status_sincronismo, coluna que saiu
@@ -1332,7 +1992,7 @@ end;
 
 
 -- ###########################################################################
---  4. INDICES
+--  5. INDICES
 --  Somente os que nao vem de constraint. PK e UK ja criam o seu.
 --
 --  DPC_DFE_EMPRESA_IX1 nao esta aqui, e a ausencia e deliberada: ele era
@@ -1372,6 +2032,21 @@ begin
 
   if qtd = 0 then
     execute immediate q'[create index poseidon.DPC_DFE_DOCUMENTO_IX2 on poseidon.dpc_dfe_documento (chave_nf) tablespace TSD_POSEIDON]';
+  end if;
+end;
+
+--  FK sem indice faz lock de tabela no filho quando se apaga linha do pai, e
+--  este filho e o que guarda os BLOB. Tambem serve ao delete por empresa do
+--  98/99_rollback. Achado em 09/09/2026 pelo assert "FK sem indice" da
+--  validacao, que acusava 1 numa base tida por completa.
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_indexes
+   where owner = 'POSEIDON' and index_name = 'DPC_DFE_DOCUMENTO_IX3';
+
+  if qtd = 0 then
+    execute immediate q'[create index poseidon.DPC_DFE_DOCUMENTO_IX3 on poseidon.dpc_dfe_documento (cod_dfe_empresa) tablespace TSD_POSEIDON]';
   end if;
 end;
 
@@ -1616,7 +2291,7 @@ end;
 
 
 -- ###########################################################################
---  5. TRIGGERS
+--  6. TRIGGERS
 --  PK por trigger + sequence, padrao do ecossistema DPC: a aplicacao nunca
 --  seta a chave. O IF ... IS NULL preserva um valor informado de proposito -
 --  necessario em carga e em correcao pontual.
@@ -1742,7 +2417,7 @@ end dpct_dfe_nfse;
 
 
 -- ###########################################################################
---  6. COMENTARIOS
+--  7. COMENTARIOS
 --  Obrigatorios pela convencao do projeto, e nao e burocracia: um SELECT
 --  nesta base sem comentario obriga quem chega a ler codigo PHP para saber o
 --  que a coluna significa.
@@ -2360,33 +3035,78 @@ comment on column poseidon.dpc_dfe_nfse.updated_by is
 
 
 -- ###########################################################################
---  7. CONFERENCIA RAPIDA
---  O detalhamento esta no 03_validacao_dbeaver.sql. Isto aqui e o suficiente
+--  8. CONFERENCIA RAPIDA
+--  O detalhamento esta no 01_04_validacao_dbeaver.sql. Isto aqui e o suficiente
 --  para saber se a instalacao terminou.
+--
+--  SEM CONTAGEM GLOBAL ESCRITA A MAO. Ate 09/09/2026 esta secao comparava
+--  contra 12 tabelas, 52 constraints e 242 colunas comentadas - os numeros de
+--  antes das colunas de etapa no ERP. Quem instalasse numa base limpa leria
+--  "esperado 12, achado 13" e concluiria que a instalacao falhou.
+--
+--  Numero que envelhece sozinho e pior que numero nenhum. As duas consultas
+--  abaixo trocam a contagem global por INVARIANTES - relacoes que continuam
+--  verdadeiras quando o modulo cresce - e, onde o numero e inevitavel, por uma
+--  contagem POR TABELA, que muda junto com o create table da secao 2.
 -- ###########################################################################
 
-select 'tabelas'      as objeto, count(*) as qtd, 12 as esperado
-  from all_tables      where owner = 'POSEIDON' and table_name like 'DPC_DFE%'
+--  1) INVARIANTES. Nao envelhecem: nenhuma delas cita quantidade.
+--     ESPERADO: as quatro linhas com qtd = 0.
+select 'coluna sem comentario'  as invariante, count(*) as qtd
+  from all_tab_columns c
+ where c.owner = 'POSEIDON' and c.table_name like 'DPC_DFE%'
+   and not exists (select 1 from all_col_comments m
+                    where m.owner = c.owner
+                      and m.table_name = c.table_name
+                      and m.column_name = c.column_name
+                      and m.comments is not null)
 union all
-select 'sequences', count(*), 12
-  from all_sequences   where sequence_owner = 'POSEIDON' and sequence_name like 'DPCS_DFE%'
+select 'tabela sem comentario', count(*)
+  from all_tables t
+ where t.owner = 'POSEIDON' and t.table_name like 'DPC_DFE%'
+   and not exists (select 1 from all_tab_comments m
+                    where m.owner = t.owner
+                      and m.table_name = t.table_name
+                      and m.comments is not null)
 union all
-select 'triggers', count(*), 12
-  from all_triggers    where owner = 'POSEIDON' and trigger_name like 'DPCT_DFE%'
+select 'tabela sem PK', count(*)
+  from all_tables t
+ where t.owner = 'POSEIDON' and t.table_name like 'DPC_DFE%'
+   and not exists (select 1 from all_constraints k
+                    where k.owner = t.owner
+                      and k.table_name = t.table_name
+                      and k.constraint_type = 'P')
 union all
-select 'constraints (PK/UK/FK/CK nomeadas)', count(*), 52
-  from all_constraints where owner = 'POSEIDON' and table_name like 'DPC_DFE%'
-                         and constraint_name not like 'SYS_%'
-union all
-select 'indices', count(*), 22
-  from all_indexes     where owner = 'POSEIDON' and table_name like 'DPC_DFE%'
-union all
-select 'colunas comentadas', count(*), 242
-  from all_col_comments
- where owner = 'POSEIDON' and table_name like 'DPC_DFE%' and comments is not null;
-
---  Objeto INVALIDO deve ser zero.
-select object_name, object_type, status
+select 'objeto invalido', count(*)
   from all_objects
  where owner = 'POSEIDON' and object_name like '%DFE%' and status <> 'VALID';
 
+
+--  2) COLUNA POR TABELA. Treze numeros, e nao 273: quando uma coluna entra no
+--     modulo, muda UM deles. A lista sai do mesmo create table da secao 2.
+--     ESPERADO: diferenca toda em zero, e nenhuma linha com achado nulo.
+with esperado as (
+  select 'dpc_dfe_empresa'        as tabela,  11 as esperado from dual union all
+  select 'dpc_dfe_cursor'                  ,  16             from dual union all
+  select 'dpc_dfe_emitente'                ,   8             from dual union all
+  select 'dpc_dfe_documento'               ,  13             from dual union all
+  select 'dpc_dfe_nota'                    ,  37             from dual union all
+  select 'dpc_dfe_nota_item'               ,  51             from dual union all
+  select 'dpc_dfe_evento'                  ,  14             from dual union all
+  select 'dpc_dfe_execucao'                ,  15             from dual union all
+  select 'dpc_dfe_manifestacao'            ,  15             from dual union all
+  select 'dpc_dfe_cte'                     ,  35             from dual union all
+  select 'dpc_dfe_cte_nfe'                 ,   5             from dual union all
+  select 'dpc_dfe_cte_evento'              ,  20             from dual union all
+  select 'dpc_dfe_nfse'                    ,  33             from dual
+), achado as (
+  select lower(table_name) as tabela, count(*) as qtd
+    from all_tab_columns
+   where owner = 'POSEIDON' and table_name like 'DPC_DFE%'
+   group by table_name
+)
+select e.tabela, e.esperado, a.qtd as achado,
+       nvl(a.qtd, 0) - e.esperado as diferenca
+  from esperado e
+  left join achado a on a.tabela = e.tabela
+ order by case when nvl(a.qtd, 0) - e.esperado <> 0 then 0 else 1 end, e.tabela;

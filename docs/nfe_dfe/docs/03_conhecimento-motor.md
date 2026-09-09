@@ -216,7 +216,7 @@ permanente volta para cá.
 | **MDF-e** | `procEvMDF` nunca ativado; 14 fluxos pausados |
 | **`dfe:manifestar`** | desligado, aguardando a contabilidade |
 | **Corte da Qive** | só as empresas **900 (ALL CARS)** e **30** estão livres para consultar; os outros 12 CNPJs seguem atendidos pela Qive e o NSU é compartilhado |
-| **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 4 linhas. Rodar o `scripts/04_parametros_dbeaver.sql` **antes** do deploy |
+| **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 5 linhas. Rodar o `scripts/ddl/01_03_parametros_dbeaver.sql` **antes** do deploy |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
 
 ### O teste de volume, quando voltar

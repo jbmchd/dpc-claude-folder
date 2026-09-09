@@ -1,8 +1,20 @@
 -- ============================================================================
---  MODULO DFe - ROLLBACK DA INSTALACAO EM PRODUCAO
+--  MODULO DFe - ROLLBACK DO MOTOR (ARQUIVO 01_99)
 -- ============================================================================
---  DESTRUTIVO. Remove as 13 tabelas, as 13 sequences e, por consequencia, todo
---  documento fiscal capturado.
+--  DESTRUTIVO. Remove as 13 tabelas, as 13 sequences, todo documento fiscal
+--  capturado e as 5 linhas de parametro do modulo.
+--
+--  ==========================================================================
+--   RODE OS OUTROS DOIS ANTES
+--  ==========================================================================
+--      03_99_rollback_telas_dbeaver.sql        as telas
+--      02_99_rollback_empresa_30_dbeaver.sql   a empresa 30
+--      01_99_rollback_motor_dbeaver.sql        <- este, por ultimo
+--
+--  Este arquivo NAO alcanca o certificado da empresa 30: ele mora em
+--  poseidon.dpc_conta_certif_digital_emp, que e tabela do ERP e nao do modulo.
+--  Rodar so este deixaria uma linha de certificado apontando para uma empresa
+--  que nao existe mais aqui. Quem apaga essa linha e o 02_99.
 --
 --  ==========================================================================
 --   LEIA ISTO ANTES
@@ -22,6 +34,12 @@
 --             dsc_ultimo_motivo  = 'pausado: <motivo>',
 --             updated_at = sysdate, updated_by = 'MANUAL';
 --      commit;
+--
+--  ==========================================================================
+--   REEXECUTAVEL
+--  ==========================================================================
+--  Cada drop e guardado por existencia, e o delete de parametro por nome. Rodar
+--  duas vezes seguidas nao devolve erro: a segunda nao encontra o que apagar.
 --
 --  ==========================================================================
 --   ANTES DE APAGAR, MEDIR
@@ -355,14 +373,76 @@ end;
 
 
 -- ###########################################################################
---  4. CONFERENCIA
+--  4. PARAMETROS
+-- ###########################################################################
+--  POSEIDON.DPC_PARAMETRO e tabela COMPARTILHADA do ecossistema - tem ~99
+--  linhas de outros modulos. Por isso o delete lista os cinco nomes, um a um, e
+--  nao usa curinga: um  like 'dfe%'  pegaria qualquer parametro futuro de outro
+--  modulo que por azar comece com essas tres letras.
+--
+--  POR QUE ISTO PRECISA ESTAR AQUI. Ate 09/09/2026 o rollback nao tocava nesta
+--  tabela, e "apagar e recriar" deixava as 5 linhas vivas. Reinstalar depois
+--  NAO as corrige, porque o 03_parametros e guardado por WHERE NOT EXISTS de
+--  proposito - para nao sobrescrever valor que o operador ajustou a mao. O
+--  resultado era uma base "nova" carregando parametro velho.
+delete from poseidon.dpc_parametro
+ where lower(nome) in ('dfe_max_bloqueios_dia',
+                       'dfe_max_consultas',
+                       'dfe_pausa_seg',
+                       'dfe_min_backoff_656',
+                       'dfe_conexao_erp');
+
+commit;
+
+
+-- ###########################################################################
+--  5. CONFERENCIA
 -- ###########################################################################
 --  ESPERADO: tudo zero. As triggers caem junto com as tabelas.
+--
+--  As TRES tabelas do bloco de telas ficam de fora destas contagens de
+--  proposito. Elas compartilham o prefixo DPC_DFE_ desde 09/09/2026, mas nao
+--  sao do motor e nao sao apagadas aqui - quem apaga e o
+--  03_99_rollback_telas_dbeaver.sql. Sem esta exclusao, este arquivo
+--  acusaria as permissoes dos usuarios como "sobra" a cada execucao.
 select (select count(*) from all_tables
-         where owner='POSEIDON' and table_name like 'DPC_DFE%')          as tabelas,
+         where owner='POSEIDON' and table_name like 'DPC_DFE%'
+           and table_name not in ('DPC_DFE_USUARIO_EMPRESA', 'DPC_DFE_USUARIO_ABA',
+                                  'DPC_DFE_PAINEL_ALERTA'))              as tabelas,
        (select count(*) from all_sequences
          where sequence_owner='POSEIDON' and sequence_name like 'DPCS_DFE%') as sequences,
        (select count(*) from all_triggers
-         where owner='POSEIDON' and trigger_name like 'DPCT_DFE%')       as triggers
+         where owner='POSEIDON' and trigger_name like 'DPCT_DFE%')       as triggers,
+       (select count(*) from poseidon.dpc_parametro
+         where lower(nome) like 'dfe%')                                  as parametros
   from dual;
+
+--  O que sobra do MOTOR em qualquer lugar do schema. ESPERADO: nenhuma linha.
+--  Se aparecer algo, foi objeto criado fora do 01_01 - anote antes de apagar.
+--
+--  O filtro exclui as tres tabelas de telas e os objetos delas: a PK e a UK de
+--  cada uma se chamam DPC_DFE_USUARIO_..._PK / _UK1 desde o rename, e cairiam
+--  neste padrao sem serem do motor.
+select object_name, object_type
+  from all_objects
+ where owner = 'POSEIDON'
+   and (object_name like 'DPC_DFE%' or object_name like 'DPCS_DFE%'
+     or object_name like 'DPCT_DFE%' or object_name like 'DPCI_DFE%')
+   and object_name not like 'DPC_DFE_USUARIO_%'
+   and object_name not like 'DPC_DFE_PAINEL_%'
+ order by object_type, object_name;
+
+--  E o contrario, para nao esconder problema: o bloco de TELAS continua de pe?
+--  Informativo. Depois de rodar so o 01_99, ESPERADO: as tres presentes.
+select table_name, 'de pe' as situacao
+  from all_tables
+ where owner = 'POSEIDON'
+   and table_name in ('DPC_DFE_USUARIO_EMPRESA', 'DPC_DFE_USUARIO_ABA', 'DPC_DFE_PAINEL_ALERTA')
+ order by table_name;
+
+--  Certificado da empresa 30: NAO e apagado por este arquivo (tabela do ERP).
+--  ESPERADO 0 se o 02_99 rodou antes; 1 se nao rodou - e nesse caso rode o 02_99.
+select count(*) as certificado_emp30_orfao
+  from poseidon.dpc_conta_certif_digital_emp
+ where cod_empresa = 30;
 -- ============================================================================
