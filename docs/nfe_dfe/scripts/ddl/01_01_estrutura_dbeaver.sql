@@ -1396,6 +1396,7 @@ end;
 --  mistura frete que emitimos com aparecemos por outro motivo. Para separar,
 --  a tela compara num_cnpj_emitente com o CNPJ da empresa.
 -- ###########################################################################
+
 declare
   qtd number;
 begin
@@ -1752,50 +1753,6 @@ declare
   qtd number;
 begin
   select count(*) into qtd from all_constraints
-   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_PK';
-
-  if qtd = 0 then
-    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_PK primary key (cod_dfe_cte_evento) using index tablespace TSD_POSEIDON]';
-  end if;
-end;
-
-declare
-  qtd number;
-begin
-  select count(*) into qtd from all_constraints
-   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_UK1';
-
-  if qtd = 0 then
-    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_UK1 unique (chave_cte, cod_tipo_evento, nro_seq_evento) using index tablespace TSD_POSEIDON]';
-  end if;
-end;
-
-declare
-  qtd number;
-begin
-  select count(*) into qtd from all_constraints
-   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_FK1';
-
-  if qtd = 0 then
-    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_FK1 foreign key (cod_dfe_empresa) references poseidon.dpc_dfe_empresa (cod_dfe_empresa)]';
-  end if;
-end;
-
-declare
-  qtd number;
-begin
-  select count(*) into qtd from all_constraints
-   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_FK2';
-
-  if qtd = 0 then
-    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_FK2 foreign key (cod_dfe_cte) references poseidon.dpc_dfe_cte (cod_dfe_cte)]';
-  end if;
-end;
-
-declare
-  qtd number;
-begin
-  select count(*) into qtd from all_constraints
    where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_EXECUCAO_PK';
 
   if qtd = 0 then
@@ -1943,6 +1900,50 @@ begin
 
   if qtd = 0 then
     execute immediate q'[alter table poseidon.dpc_dfe_cte_nfe add constraint DPC_DFE_CTE_NFE_FK1 foreign key (cod_dfe_cte) references poseidon.dpc_dfe_cte (cod_dfe_cte)]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_PK';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_PK primary key (cod_dfe_cte_evento) using index tablespace TSD_POSEIDON]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_UK1';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_UK1 unique (chave_cte, cod_tipo_evento, nro_seq_evento) using index tablespace TSD_POSEIDON]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_FK1';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_FK1 foreign key (cod_dfe_empresa) references poseidon.dpc_dfe_empresa (cod_dfe_empresa)]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_CTE_EVENTO_FK2';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_cte_evento add constraint DPC_DFE_CTE_EVENTO_FK2 foreign key (cod_dfe_cte) references poseidon.dpc_dfe_cte (cod_dfe_cte)]';
   end if;
 end;
 
