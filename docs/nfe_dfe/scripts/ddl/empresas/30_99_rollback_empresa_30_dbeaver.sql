@@ -1,8 +1,8 @@
 -- ============================================================================
---  MODULO DFe - ROLLBACK DA EMPRESA 30 (ARQUIVO 02_99)
+--  MODULO DFe - ROLLBACK DA EMPRESA 30 (ARQUIVO empresas/30_99)
 -- ============================================================================
 --  DESTRUTIVO, mas de escopo estreito: apaga o que o
---  02_01_empresa_30_dbeaver.sql criou, e nada mais. As outras empresas, a
+--  30_01_empresa_30_dbeaver.sql criou, e nada mais. As outras empresas, a
 --  estrutura e os parametros ficam intactos.
 --
 --  Como POSEIDON, arquivo inteiro com Alt+X. LIGUE O DBMS_OUTPUT: cada bloco
@@ -12,7 +12,7 @@
 --   ORDEM: O ESPECIFICO ANTES DO GERAL
 --  ==========================================================================
 --      03_99_rollback_telas_dbeaver.sql        as telas, se for apagar tudo
---      02_99_rollback_empresa_30_dbeaver.sql   <- este
+--      30_99_rollback_empresa_30_dbeaver.sql   <- este
 --      01_99_rollback_motor_dbeaver.sql        o motor, por ultimo
 --
 --  Por que nesta ordem: o certificado da empresa 30 mora em
@@ -300,7 +300,7 @@ end;
 -- ###########################################################################
 --  5. CURSOR, IDENTIDADE E CERTIFICADO
 --  Os tres filtram tambem por created_by = 'CADASTRO DFE': so o que o
---  02_01_empresa_30_dbeaver.sql criou e removido. Se alguem cadastrou a empresa 30
+--  30_01_empresa_30_dbeaver.sql criou e removido. Se alguem cadastrou a empresa 30
 --  por outro caminho, a linha dele fica.
 --
 --  Esse filtro so passou a funcionar em 09/09/2026. Antes a empresa 30 nascia

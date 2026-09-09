@@ -1,22 +1,31 @@
-# Os dois CNPJs onde é possível testar
+# Os CNPJs onde é possível testar
 
 Nos 27 CNPJs da DPC **não** é possível drenar a SEFAZ enquanto a Qive estiver
 ativa: duas aplicações consultando o mesmo CNPJ é causa documentada de `cStat
-656`. Só dois CNPJs escapam disso, e é por isso que toda medição do motor saiu
-deles.
+656`. Eram **dois** os que escapavam disso, e é de onde saiu toda a medição do
+motor. Em **09/09/2026 virou três**: a Qive foi removida também da empresa 29.
 
-| | **ALL CARS (900)** | **Empresa 30 — DPC MS** |
-|---|---|---|
-| CNPJ | `45.694.407/0001-02` | `66.471.517/0030-01` |
-| Raiz | `45694407` — **própria** | `66471517` — **a mesma da matriz** |
-| Certificado | próprio, exclusivo, válido até 11/03/2027 | **compartilhado** com as empresas 1, 3 e 8 |
-| Raio de um `656` | só ela | **o grupo inteiro por 1 hora** |
-| Qive atende? | não | não (confirmado 18/08/2026) |
-| Serve para produção? | **não** — cadastro descartável de `tst` | sim, é filial real |
-| Movimento | pouco (`ultNSU` 87, imóvel) | real: ~847 NF-e + ~375 CT-e/dia |
-| Scripts | **removidos em 09/09/2026** — a ALL CARS saiu do repositório por ser descartável; o certificado dela vive em `itens/`, fora de versionamento. Recuperáveis no histórico do git | [`ddl/02_01_empresa_30`](../scripts/ddl/02_01_empresa_30_dbeaver.sql) e [`ddl/02_99_rollback`](../scripts/ddl/02_99_rollback_empresa_30_dbeaver.sql) |
+| | **ALL CARS (900)** | **Empresa 30 — DPC MS** | **Empresa 29 — DPC DF** |
+|---|---|---|---|
+| CNPJ | `45.694.407/0001-02` | `66.471.517/0030-01` | `66.471.517/0029-78` |
+| Raiz | `45694407` — **própria** | `66471517` — **a mesma da matriz** | `66471517` — **a mesma da matriz** |
+| Certificado | próprio, exclusivo, válido até 11/03/2027 | **compartilhado** com 1, 3, 8 e 29 | **compartilhado** com 1, 3, 8 e 30 |
+| Raio de um `656` | só ela | **o grupo inteiro por 1 hora** | **o grupo inteiro por 1 hora** |
+| Qive atende? | não | não (confirmado 18/08/2026) | não (removida em 09/09/2026) |
+| Serve para produção? | **não** — cadastro descartável de `tst` | sim, é filial real | sim, é filial real |
+| Movimento | pouco (`ultNSU` 87, imóvel) | real: ~847 NF-e + ~375 CT-e/dia | a medir |
+| Scripts | **removidos em 09/09/2026** — a ALL CARS saiu do repositório por ser descartável; o certificado dela vive em `itens/`, fora de versionamento. Recuperáveis no histórico do git | [`empresas/30_01`](../scripts/ddl/empresas/30_01_empresa_30_dbeaver.sql) e [`30_99`](../scripts/ddl/empresas/30_99_rollback_empresa_30_dbeaver.sql) | [`empresas/29_01`](../scripts/ddl/empresas/29_01_empresa_29_dbeaver.sql) e [`29_99`](../scripts/ddl/empresas/29_99_rollback_empresa_29_dbeaver.sql) |
 
-Ambos **somente `tst`**: as tabelas `dpc_dfe_*` não existem em produção.
+O certificado compartilhado é a armadilha das duas filiais reais, e ela deixou
+de ser teórica em **09/09/2026**: o fluxo NF-e da empresa 30 tomou `cStat 656`
+ao drenar o acervo — 2.350 documentos em duas execuções — e o bloqueio de 1 hora
+vale para o **certificado**, não para o CNPJ. Ativar as duas ao mesmo tempo é
+disputar a mesma cota.
+
+**O módulo vive só em `tst`, por decisão de 09/09/2026** — produção serve
+apenas para o `dfe:conciliar` **ler** a Consinco. As tabelas `dpc_dfe_*`
+*existem* em prd desde 25/08/2026, mas estão órfãs e defasadas; ver o
+[07_ddl-instalacao.md](07_ddl-instalacao.md).
 
 ---
 

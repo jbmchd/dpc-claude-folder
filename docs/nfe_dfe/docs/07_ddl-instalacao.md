@@ -19,8 +19,8 @@ arquivos de **`scripts/ddl/`**, em três blocos.
 
 | | |
 |---|---|
-| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, e depois `02_01` e `03_01` |
-| **Desfazer** | `03_99` → `02_99` → `01_99`, do bloco mais específico para o motor |
+| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/` |
+| **Desfazer** | os `_99` de `empresas/` → `03_99` → `01_99`, do mais específico para o motor |
 
 O primeiro número é o bloco, o segundo é a ordem dentro dele. O `_99` de cada
 bloco é o rollback daquele bloco.
@@ -57,7 +57,7 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 
 | Bloco | Arquivo | O que faz |
 |---|---|---|
-| 02 | `02_01_empresa_30` | a filial MS: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1 |
+| `empresas/` | `29_01_empresa_29` · `30_01_empresa_30` | um par por estabelecimento trazido depois da carga geral: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1. O número do arquivo é o número da empresa |
 | 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
 
 Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha
@@ -226,8 +226,21 @@ junto com estes quatro.
 > registrava, então quando a base foi refeita ele sumiu sem deixar rastro e não
 > havia de onde recriá-lo.
 
-Tudo já aplicado em **tst**; em **prd** nada disto rodou (as tabelas `dpc_dfe_*`
-não existem lá).
+Tudo já aplicado em **tst**. Em **prd** nada disto rodou — mas a afirmação que
+estava aqui, de que as tabelas não existem em produção, **era falsa desde
+25/08/2026**: alguém rodou o instalador e a carga inicial lá naquele dia.
+
+Medido em 09/09/2026: prd tem 12 tabelas (falta a `DPC_DFE_CTE_EVENTO`),
+`DPC_DFE_NOTA` com **26 colunas** contra 37 em tst — nenhuma da v12/v13 —, os 13
+estabelecimentos, os 52 fluxos pausados, 0 documento e **0 parâmetro**. É o mesmo
+estado de 27/08 em que homologação foi encontrada naquele dia.
+
+Por decisão de 09/09/2026, **o motor vive só na base de teste**, e produção serve
+exclusivamente para o `dfe:conciliar` **ler** a Consinco. Aquelas 12 tabelas,
+portanto, não são usadas por ninguém. Removê-las é o
+`01_99_rollback_motor_dbeaver.sql` rodado em prd — ele é guardado por existência,
+lida com a 13ª ausente, e **não toca** nas três tabelas de tela, que em prd
+guardam 45 e 16 linhas de permissão de usuário.
 
 **A ordem interna não pode ser mexida**: a seção 3 usa na conferência a coluna
 que a 1 introduz.

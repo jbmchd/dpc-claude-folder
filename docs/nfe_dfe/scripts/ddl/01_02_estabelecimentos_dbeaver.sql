@@ -9,7 +9,7 @@
 --   GERAL x ESPECIFICO
 --  ==========================================================================
 --  Este arquivo nao conhece empresa especifica. A empresa 30 (filial MS) NAO
---  esta aqui: ela tem arquivo proprio, o 02_01_empresa_30_dbeaver.sql, porque
+--  esta aqui: ela tem par proprio em empresas/30_01_empresa_30_dbeaver.sql, porque
 --  precisa tambem do certificado - que mora em tabela do ERP, e nao do modulo.
 --  Por isso o loop de fluxos desta secao 2 exclui a 30: os 4 fluxos dela sao
 --  criados la, com o motivo de pausa que e dela.
@@ -66,7 +66,7 @@
 
 
 -- ###########################################################################
---  1. ESTABELECIMENTOS  (12 linhas; a 30 esta no 02_01)
+--  1. ESTABELECIMENTOS  (12 linhas; a 30 e a 29 estao em empresas/)
 -- ###########################################################################
 
 declare
@@ -327,7 +327,7 @@ commit;
 --  ESPERADO: 12 gerais, 48 fluxos gerais, todos pausados, 0 nao pausado.
 --
 --  A contagem e POR CNPJ, e nao um count(*) da tabela, de proposito: assim o
---  veredito e o mesmo antes ou depois de rodar o 02_01 (empresa 30). O total da
+--  veredito e o mesmo antes ou depois de rodar os pares de empresas/. O total da
 --  base vem ao lado, como informacao.
 with gerais as (
   select cod_dfe_empresa from poseidon.dpc_dfe_empresa

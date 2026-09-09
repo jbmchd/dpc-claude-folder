@@ -1,7 +1,7 @@
 -- ============================================================================
---  MODULO DFe - EMPRESA 30, FILIAL MS (ARQUIVO 02_01)
+--  MODULO DFe - EMPRESA 29, FILIAL DF (ARQUIVO empresas/29_01)
 -- ============================================================================
---  CNPJ 66.471.517/0030-01. Raiz 66471517, a mesma da matriz.
+--  CNPJ 66.471.517/0029-78. Raiz 66471517, a mesma da matriz.
 --
 --  Rodar DEPOIS de todo o bloco 01 (01_01, 01_02, 01_03 e a conferencia do
 --  01_04), como
@@ -12,21 +12,22 @@
 --  se nao teve de onde copiar o certificado, e esse aviso e o unico sinal.
 --
 --  ==========================================================================
---   POR QUE ESTA EMPRESA TEM ARQUIVO PROPRIO
+--   POR QUE EXISTE UM PAR DE ARQUIVOS POR EMPRESA
 --  ==========================================================================
---  Nao e caso especial de negocio: e o unico estabelecimento que precisa de
---  algo FORA das tabelas do modulo. O certificado dela mora em
---  poseidon.dpc_conta_certif_digital_emp, que e tabela do ERP.
+--  A pasta empresas/ guarda os estabelecimentos trazidos ao modulo DEPOIS da
+--  carga geral do 01_02, um par por empresa: o que cadastra e o que desfaz.
 --
---  Isso tem tres consequencias, e as tres justificam a separacao:
+--  Eles nao entram no 01_02 porque precisam de algo FORA das tabelas do
+--  modulo - o certificado, que mora em poseidon.dpc_conta_certif_digital_emp,
+--  tabela do ERP. Isso tem duas consequencias:
 --
---   1. o 01_02 nao pode criar os fluxos dela, senao criaria fluxo para uma
---      empresa que ainda nao tem como capturar nada;
---   2. o 99_rollback derruba as 13 tabelas dpc_dfe_* e NAO alcanca o
---      certificado - por isso existe o 02_99_rollback_empresa_30_dbeaver.sql;
---   3. e a empresa em que a validacao em producao acontece, junto com um
---      cadastro de teste: sao os dois unicos CNPJs que a Qive nao atende
---      (confirmado em 20/08/2026). Mexer nela nao e mexer no acervo geral.
+--   1. o 01_02 nao pode criar os fluxos, senao criaria fluxo para empresa que
+--      ainda nao tem como capturar nada;
+--   2. o 01_99_rollback_motor derruba as 13 tabelas dpc_dfe_* e NAO alcanca o
+--      certificado - por isso cada empresa tem o seu _99 aqui.
+--
+--  O numero do arquivo E o numero da empresa. Trazer a proxima filial e
+--  acrescentar um par, sem escolher numero de bloco nem mexer em nada existente.
 --
 --  ==========================================================================
 --   O MARCADOR 'CADASTRO DFE'
@@ -34,23 +35,29 @@
 --  Tudo que este arquivo grava leva created_by = 'CADASTRO DFE', e o
 --  98_rollback apaga POR ESSE MARCADOR. Os dois tem de concordar.
 --
---  Ate 09/09/2026 nao concordavam: a empresa 30 nascia no 02_carga_inicial com
+--  Ate 09/09/2026 nao concordavam: a empresa 29 nascia no 02_carga_inicial com
 --  'CARGA INICIAL', e o rollback dela filtrava por 'CADASTRO DFE' - ou seja,
 --  nao apagava nada e a conferencia acusava contagem diferente de zero sem
 --  explicar por que. Com a empresa nascendo em UM lugar so, o filtro sempre
 --  casa.
 --
 --  ==========================================================================
---   NASCE PAUSADA, E ISSO E DELIBERADO
+--   NASCE PAUSADA, MESMO SEM A QIVE NO CAMINHO
 --  ==========================================================================
---  Esta empresa usa o e-CNPJ da MATRIZ, compartilhado com as empresas 1, 3 e 8
---  (e com a Qive). O consumo da SEFAZ e contabilizado por CERTIFICADO e por IP,
---  nao por CNPJ - medido em campo: a empresa 8 tomou cStat 656 na PRIMEIRA
---  consulta dela, minutos depois do bloqueio da matriz.
+--  A Qive foi REMOVIDA deste CNPJ - informado em 09/09/2026. Ou seja, a
+--  condicao que trava a ativacao das outras filiais aqui ja esta satisfeita:
+--  nao ha segundo consumidor na sequencia de NSU desta empresa.
 --
---  Consequencia: um 656 aqui bloqueia o certificado do GRUPO por 1 hora.
---  Ativar exige saber a data e hora em que a Qive para de consultar este CNPJ.
---  Ver a secao 5.
+--  Ainda assim o cadastro nasce PAUSADO, e por um motivo que continua valendo:
+--  esta empresa usa o e-CNPJ da MATRIZ, compartilhado com as empresas 1, 3, 8 e
+--  30. O consumo da SEFAZ e contabilizado por CERTIFICADO e por IP, nao por
+--  CNPJ - medido em campo: a empresa 8 tomou cStat 656 na PRIMEIRA consulta
+--  dela, minutos depois do bloqueio da matriz.
+--
+--  Consequencia: um 656 aqui bloqueia o certificado do GRUPO por 1 hora, e
+--  atinge quem estiver drenando naquele momento. Ativar e ato deliberado, pelo
+--  command da secao 5, que aplica o cooldown de 3 min antes da primeira
+--  consulta - e nao por UPDATE direto.
 -- ============================================================================
 
 
@@ -65,18 +72,18 @@
 insert into poseidon.dpc_dfe_empresa
   (nro_empresa, num_cnpj, dsc_razao_social, sig_uf, num_inscr_estadual,
    status_manifestar, created_at, created_by)
-select 30,
-       '66471517003001',
+select 29,
+       '66471517002978',
        'DPC DISTRIBUIDOR ATACADISTA S/A',
-       'MS',
-       '500041350',
+       'DF',
+       '0828723000183',
        'N',                     -- manifestar e ato fiscal: nao ligar aqui
        sysdate,
        'CADASTRO DFE'
   from dual
  where not exists (select 1
                      from poseidon.dpc_dfe_empresa
-                    where num_cnpj = '66471517003001');
+                    where num_cnpj = '66471517002978');
 
 commit;
 
@@ -107,7 +114,7 @@ select e.cod_dfe_empresa,
        0,                       -- estiver na janela de retencao de 90 dias
        3,
        60,
-       'fluxo criado pausado: certificado compartilhado com a matriz, ativar exige a janela de corte da Qive',
+       'fluxo criado pausado: Qive removida deste CNPJ em 09/09/2026; certificado compartilhado com a matriz',
        sysdate,
        'CADASTRO DFE'
   from poseidon.dpc_dfe_empresa e
@@ -115,7 +122,7 @@ select e.cod_dfe_empresa,
              select 'CTE'         from dual union all
              select 'MDFE'        from dual union all
              select 'NFSE'        from dual) t
- where e.nro_empresa = 30
+ where e.nro_empresa = 29
    and not exists (select 1
                      from poseidon.dpc_dfe_cursor c
                     where c.cod_dfe_empresa = e.cod_dfe_empresa
@@ -145,11 +152,11 @@ commit;
 --  Duas armadilhas silenciosas do insert original:
 --
 --   1. se a empresa 1 nao tiver linha ATIVA, o INSERT ... SELECT insere ZERO
---      linhas e nao da erro nenhum. A empresa 30 fica sem certificado, o motor
+--      linhas e nao da erro nenhum. A empresa 29 fica sem certificado, o motor
 --      nao captura nada por ela, e ninguem soube. Aqui isso vira aviso.
 --   2. se a empresa 1 tiver MAIS DE UMA linha ativa, o NOT EXISTS e avaliado
 --      contra o estado do inicio do statement e as duas seriam copiadas - duas
---      linhas de certificado para a 30. O rownum = 1 fecha isso.
+--      linhas de certificado para a 29. O rownum = 1 fecha isso.
 declare
   qtd_origem number;
   qtd_ins    number;
@@ -161,13 +168,13 @@ begin
 
   if qtd_origem = 0 then
     dbms_output.put_line('AVISO: a empresa 1 nao tem certificado ATIVO - nada foi copiado.');
-    dbms_output.put_line('       A empresa 30 fica SEM certificado; o dfe:monitorar vai');
+    dbms_output.put_line('       A empresa 29 fica SEM certificado; o dfe:monitorar vai');
     dbms_output.put_line('       acusar "SEM CERT" e nenhum fluxo dela tem como capturar.');
   else
     insert into poseidon.dpc_conta_certif_digital_emp
       (cod_empresa, emitir_cte, consultar_distri_dfe, nome_arquivo,
        certificado, tamanho, senha_certificado, status, created_at, created_by)
-    select 30,
+    select 29,
            0,
            1,                   -- consultar_distri_dfe: participa da captura
            c.nome_arquivo,
@@ -183,15 +190,15 @@ begin
        and rownum = 1           -- no maximo UMA linha, ainda que a 1 tenha duas
        and not exists (select 1
                          from poseidon.dpc_conta_certif_digital_emp
-                        where cod_empresa = 30
+                        where cod_empresa = 29
                           and status = 1);
 
     qtd_ins := sql%rowcount;
 
     if qtd_ins = 0 then
-      dbms_output.put_line('certificado da empresa 30 ja existia - nada a fazer.');
+      dbms_output.put_line('certificado da empresa 29 ja existia - nada a fazer.');
     else
-      dbms_output.put_line('certificado copiado da empresa 1 para a 30.');
+      dbms_output.put_line('certificado copiado da empresa 1 para a 29.');
     end if;
   end if;
 end;
@@ -212,7 +219,7 @@ select nro_empresa,
        status_manifestar,
        created_by
   from poseidon.dpc_dfe_empresa
- where num_cnpj = '66471517003001';
+ where num_cnpj = '66471517002978';
 
 --  4b. Fluxos. ESPERADO: 4 linhas - NFE, CTE, MDFE, NFSE - todas P e com 0/0.
 select c.cod_tipo_dfe,
@@ -224,7 +231,7 @@ select c.cod_tipo_dfe,
        c.created_by
   from poseidon.dpc_dfe_cursor  c
   join poseidon.dpc_dfe_empresa e on e.cod_dfe_empresa = c.cod_dfe_empresa
- where e.nro_empresa = 30
+ where e.nro_empresa = 29
  order by c.cod_tipo_dfe;
 
 --  4c. Certificado. ESPERADO: 2 linhas, com tamanho e senha_lida IDENTICOS.
@@ -238,11 +245,11 @@ select cod_certi_digital,
        status,
        created_by
   from poseidon.dpc_conta_certif_digital_emp
- where cod_empresa in (1, 30)
+ where cod_empresa in (1, 29)
    and status = 1
  order by cod_empresa;
 
---  4d. Panorama: onde a 30 entra no conjunto. Ativos primeiro.
+--  4d. Panorama: onde a 29 entra no conjunto. Ativos primeiro.
 select e.nro_empresa,
        e.num_cnpj,
        e.sig_uf,
@@ -256,19 +263,25 @@ select e.nro_empresa,
 
 
 -- ###########################################################################
---  5. ATIVAR  -  somente depois da decisao sobre a Qive
+--  5. ATIVAR  -  a Qive ja saiu deste CNPJ
 -- ###########################################################################
 --  NAO por UPDATE direto: use o command, que aplica o cooldown de 3 min antes
 --  da primeira consulta. Reposicionar e consultar na sequencia reenvia a MESMA
 --  requisicao, e e assim que se toma 656.
 --
---      dfe:ingerir --empresa=30 --tipo=NFE --reposicionar-cursor=0 --confirmar
+--      dfe:ingerir --empresa=29 --tipo=NFE --reposicionar-cursor=0 --confirmar
 --
 --  E confira antes, sem consumir cota nenhuma:
 --
---      dfe:ingerir --dry-run --empresa=30
+--      dfe:ingerir --dry-run --empresa=29
+--
+--  ATENCAO: com o agendador ligado (RUN_SCHEDULE=1) o command RECUSA rodar a
+--  mao, e a mensagem lista as saidas. A preferivel e desligar o agendador,
+--  ativar, e religar - foi assim que a empresa 30 foi ativada em 09/09/2026,
+--  com o agendador fora por 22 segundos. O --forcar existe, mas assume o risco
+--  de dois processos no mesmo fluxo.
 --
 --  Para desfazer SO esta empresa, inclusive o certificado:
 --
---      02_99_rollback_empresa_30_dbeaver.sql
+--      29_99_rollback_empresa_29_dbeaver.sql
 -- ============================================================================

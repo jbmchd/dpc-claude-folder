@@ -172,8 +172,8 @@ ocorrência.
 
 | Item | Estado |
 |---|---|
-| v12 — 6 colunas + 2 constraints | ✅ **executado no DBeaver** em tst · prd: as tabelas do módulo não existem lá ainda. O script avulso foi absorvido pelo [`ddl/01_01_estrutura`](../scripts/ddl/01_01_estrutura_dbeaver.sql) em 09/09/2026 |
-| v13 — 4 colunas + 1 índice | ✅ **executado no DBeaver** em tst · prd: idem. Absorvido pelo mesmo `ddl/01_01_estrutura` |
+| v12 — 6 colunas + 2 constraints | ✅ **executado no DBeaver** em tst. Em prd as tabelas do módulo existem desde 25/08/2026, mas **sem** as colunas da v12 — e não precisam delas: por decisão de 09/09/2026 o motor vive só em tst, e prd é apenas fonte de leitura da Consinco. O script avulso foi absorvido pelo [`ddl/01_01_estrutura`](../scripts/ddl/01_01_estrutura_dbeaver.sql) |
+| v13 — 4 colunas + 1 índice | ✅ **executado no DBeaver** em tst · em prd, idem ao v12: as colunas não estão lá e não precisam estar. Absorvido pelo mesmo `ddl/01_01_estrutura` |
 | Parâmetro `dfe_conexao_erp` = `oracle` (produção) | ✅ tst |
 | `DfeConciliacaoRepository` — três famílias, conexão parametrizável, cadência | ✅ |
 | `dfe:conciliar` — quatro estados e regressão | ✅ rodado: **784 escrituradas, 30 aguardando, 1 em digitação, 0 regressões** |

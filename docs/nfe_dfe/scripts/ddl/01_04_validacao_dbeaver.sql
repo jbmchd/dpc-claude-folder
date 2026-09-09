@@ -9,9 +9,9 @@
 --  ==========================================================================
 --   ESTE ARQUIVO VALIDA O GERAL, E E AGNOSTICO A EMPRESA ESPECIFICA
 --  ==========================================================================
---  Ele roda ANTES do 02_01_empresa_30_dbeaver.sql, e por isso a secao 6 exige os
+--  Ele roda ANTES dos pares de empresas/, e por isso a secao 6 exige os
 --  12 CNPJs do bloco geral e trata qualquer estabelecimento adicional como
---  INFORMACAO, nao como erro. O veredito e o mesmo antes ou depois do 02_01 - o
+--  INFORMACAO, nao como erro. O veredito e o mesmo antes ou depois deles - o
 --  que permite rodar este arquivo a qualquer momento, inclusive meses depois,
 --  sem ter de lembrar o que mais foi instalado.
 --
@@ -320,7 +320,7 @@ end;
 --  ESPERADO: 12 estabelecimentos gerais, 48 fluxos, todos pausados, 0 ativo.
 --
 --  A contagem e POR CNPJ, de proposito: assim o veredito nao muda quando um
---  estabelecimento especifico for instalado depois (o 02_01, por exemplo). O total
+--  estabelecimento for instalado depois (um par de empresas/). O total
 --  da base vem ao lado como informacao.
 with gerais as (
   select cod_dfe_empresa from poseidon.dpc_dfe_empresa
@@ -365,7 +365,7 @@ select cnpj as cnpj_geral_ausente
                     where e.num_cnpj = l.cnpj);
 
 --  ESTABELECIMENTO ESPECIFICO, fora da carga geral. E INFORMACAO, nao erro:
---  depois de rodar o 02_01 aqui aparece a empresa 30, com 4 fluxos pausados.
+--  depois de rodar os pares de empresas/ aqui aparecem a 29 e a 30, pausadas.
 select e.nro_empresa,
        e.num_cnpj,
        e.sig_uf,

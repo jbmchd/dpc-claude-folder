@@ -17,8 +17,11 @@ nfe_dfe/scripts/
     ├── 01_03_parametros                 │ as 13 tabelas de captura
     ├── 01_04_validacao                  │
     ├── 01_99_rollback_motor             ┘
-    ├── 02_01_empresa_30                 ┐ BLOCO 02 - a filial MS, o unico
-    ├── 02_99_rollback_empresa_30        ┘ estabelecimento com arquivo proprio
+    ├── empresas/                        ┐ UM PAR POR EMPRESA trazida depois
+    │   ├── 29_01_empresa_29             │ da carga geral. O numero do arquivo
+    │   ├── 29_99_rollback_empresa_29    │ E o numero da empresa.
+    │   ├── 30_01_empresa_30             │
+    │   └── 30_99_rollback_empresa_30    ┘
     ├── 03_01_parametrizacao_telas       ┐ BLOCO 03 - permissao de acesso aos
     └── 03_99_rollback_telas             ┘ paineis e limiar de alerta
 ```
@@ -28,8 +31,8 @@ cada bloco é o rollback daquele bloco — quem desfaz mora ao lado de quem faz.
 
 | | |
 |---|---|
-| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, e depois `02_01` e `03_01` |
-| **Desfazer** | `03_99` → `02_99` → `01_99`, do bloco mais específico para o motor |
+| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/` |
+| **Desfazer** | os `_99` de `empresas/` → `03_99` → `01_99`, do mais específico para o motor |
 
 **Só `.sql` para rodar no DBeaver.** Nenhum `README` dentro das pastas de
 script: a explicação de cada grupo está em documento próprio do hub, e este
@@ -131,7 +134,7 @@ fluxos pausados e a cópia do certificado da empresa 1. É um dos dois CNPJs
 livres da Qive, e onde o volume real foi medido —
 [10_cadastros-de-teste.md](10_cadastros-de-teste.md).
 
-O `02_99_rollback_empresa_30` apaga o que o `02_01` criou, filtrando por
+O `30_99_rollback_empresa_30` apaga o que o `30_01` criou, filtrando por
 `created_by = 'CADASTRO DFE'`. Esse filtro só passou a funcionar em 09/09/2026:
 antes a empresa 30 nascia na carga inicial com `'CARGA INICIAL'` e o rollback
 procurava `'CADASTRO DFE'` — não apagava nada, e a conferência acusava sem
@@ -180,7 +183,7 @@ sorte: o snapshot restaurado era de 27/08, dois dias depois de elas existirem.
 |---|---|---|
 | `01_estrutura` · `02_carga_inicial` · `03_validacao` · `04_parametros` · `99_rollback` da raiz | absorvidos pelo `ddl/`, com os defeitos corrigidos | git do `.claude`, branch `main` |
 | `alteracoes/atualizacao_v7_a_v10` · `v12` · `v13` | os objetos dos três estão no `01_01`, e o raciocínio deles foi para os comentários de coluna | idem |
-| `alteracoes/empresa-30-ms/` | fundido no `02_01` e no `02_99` | idem |
+| `alteracoes/empresa-30-ms/` | fundido no par `empresas/30_01` e `30_99` | idem |
 | `alteracoes/teste-all-cars/` (7 arquivos) | a ALL CARS é cadastro **descartável**, e ficou deliberadamente fora do `ddl/` | idem |
 | `alteracoes/teste-all-cars/02_certificado_tst.sql` | **movido**, não apagado: foi para `itens/02_certificado_all_cars_tst.sql`, ao lado do `.pfx` de onde ele sai | está no disco; **não** tem cópia no git, e é o único lugar onde a senha daquele certificado existe |
 

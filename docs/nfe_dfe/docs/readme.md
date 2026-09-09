@@ -143,8 +143,9 @@ workspace/
             ├── 01_03_parametros             │ 13 tabelas de captura
             ├── 01_04_validacao              │
             ├── 01_99_rollback_motor         ┘
-            ├── 02_01_empresa_30             ┐ BLOCO 02 - a filial MS,
-            ├── 02_99_rollback_empresa_30    ┘ que precisa de certificado
+            ├── empresas/                    ┐ UM PAR POR EMPRESA:
+            │   ├── 29_01 · 29_99_rollback   │ a 29 (DF) e a 30 (MS),
+            │   └── 30_01 · 30_99_rollback   ┘ que precisam de certificado
             ├── 03_01_parametrizacao_telas   ┐ BLOCO 03 - permissao e
             └── 03_99_rollback_telas         ┘ limiar dos paineis
 ```
@@ -159,7 +160,7 @@ Arquitetura da ApiNFE como um todo (não só o DFe):
 | Base normalizada | **18.757 documentos**, todos concluídos — 0 pendente, 0 erro, 0 ignorado |
 | Fluxos ativos | **2 de 56** (só NFS-e da 30 e da 900) |
 | Ambiente | roda em `dkalpha00`, cron ativo, base **homolog**, SEFAZ **real** |
-| Produção | as tabelas `dpc_dfe_*` **não** existem em prd, e os 5 parâmetros em `DPC_PARAMETRO` também não foram carregados lá |
+| Produção | **o motor não vive lá, por decisão de 09/09/2026.** prd serve só para o `dfe:conciliar` **ler** a Consinco e confirmar o que o ERP recebeu. As tabelas `dpc_dfe_*` **existem** em prd desde 25/08/2026 — 12 delas, com `dpc_dfe_nota` em 26 colunas contra 37 em tst — mas estão **órfãs**: ninguém as usa. Os 5 parâmetros realmente não foram carregados lá |
 | CNPJs livres da Qive | apenas **900** (ALL CARS) e **30** (DPC MS) — os outros 12 seguem com a Qive, e o NSU é compartilhado |
 | `dfe:manifestar` | desligado, aguardando a contabilidade |
 | Teste de volume (empresa 30) | **adiado, sem data.** Fluxos `NFE` e `CTE` pausados e acumulando atraso de propósito — ver [03_conhecimento-motor.md](03_conhecimento-motor.md) |

@@ -8,13 +8,13 @@
 --   RODE OS OUTROS DOIS ANTES
 --  ==========================================================================
 --      03_99_rollback_telas_dbeaver.sql        as telas
---      02_99_rollback_empresa_30_dbeaver.sql   a empresa 30
+--      empresas/*_99_rollback_empresa_*.sql    cada empresa
 --      01_99_rollback_motor_dbeaver.sql        <- este, por ultimo
 --
 --  Este arquivo NAO alcanca o certificado da empresa 30: ele mora em
 --  poseidon.dpc_conta_certif_digital_emp, que e tabela do ERP e nao do modulo.
 --  Rodar so este deixaria uma linha de certificado apontando para uma empresa
---  que nao existe mais aqui. Quem apaga essa linha e o 02_99.
+--  que nao existe mais aqui. Quem apaga essa linha e o _99 da empresa, em empresas/.
 --
 --  ==========================================================================
 --   LEIA ISTO ANTES
@@ -441,7 +441,8 @@ select table_name, 'de pe' as situacao
  order by table_name;
 
 --  Certificado da empresa 30: NAO e apagado por este arquivo (tabela do ERP).
---  ESPERADO 0 se o 02_99 rodou antes; 1 se nao rodou - e nesse caso rode o 02_99.
+--  ESPERADO 0 se os _99 de empresas/ rodaram antes; diferente de 0 significa
+--  certificado orfao - rode o _99 da empresa correspondente.
 select count(*) as certificado_emp30_orfao
   from poseidon.dpc_conta_certif_digital_emp
  where cod_empresa = 30;

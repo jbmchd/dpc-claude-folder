@@ -28,7 +28,7 @@
 --   ORDEM ENTRE OS ROLLBACKS
 --  ==========================================================================
 --      03_99_rollback_telas_dbeaver.sql        <- este, o bloco de telas
---      02_99_rollback_empresa_30_dbeaver.sql   a empresa 30
+--      empresas/*_99_rollback_empresa_*.sql    cada empresa
 --      01_99_rollback_motor_dbeaver.sql        o motor
 --
 --  Entre os tres nao ha dependencia de FK: as tres tabelas daqui referenciam

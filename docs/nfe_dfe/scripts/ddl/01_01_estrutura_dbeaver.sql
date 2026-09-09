@@ -34,7 +34,7 @@
 --  ==========================================================================
 --   O QUE ESTE SCRIPT NAO FAZ
 --  ==========================================================================
---   - nao cadastra empresa nem cria fluxo: e o 01_02 e o 02_01 (empresa 30)
+--   - nao cadastra empresa nem cria fluxo: e o 01_02 e a pasta empresas/
 --   - nao carrega parametro: e o 01_03
 --   - nao mexe em nada fora do schema POSEIDON
 --   - nao le nem altera nada do ERP. O motor foi desacoplado dele; a unica
@@ -58,12 +58,16 @@
 --     01_04_validacao_dbeaver.sql             confere o motor e as telas
 --     01_99_rollback_motor_dbeaver.sql        desfaz o bloco 01
 --
---   BLOCO 02 - EMPRESA 30, filial MS
---   o unico estabelecimento com arquivo proprio, porque e o unico que precisa
---   de algo FORA das tabelas do modulo: o certificado, que mora no ERP.
+--   PASTA empresas/ - UM PAR POR ESTABELECIMENTO
+--   trazido ao modulo depois da carga geral do 01_02. Eles nao entram lá
+--   porque precisam de algo FORA das tabelas do modulo: o certificado, que
+--   mora no ERP. O NUMERO DO ARQUIVO E O NUMERO DA EMPRESA, entao trazer a
+--   proxima filial e acrescentar um par, sem escolher numero de bloco.
 --
---     02_01_empresa_30_dbeaver.sql            identidade, 4 fluxos, certificado
---     02_99_rollback_empresa_30_dbeaver.sql   desfaz o bloco 02
+--     empresas/29_01_empresa_29_dbeaver.sql   a filial DF (Brasilia)
+--     empresas/29_99_rollback_empresa_29_dbeaver.sql
+--     empresas/30_01_empresa_30_dbeaver.sql   a filial MS (Campo Grande)
+--     empresas/30_99_rollback_empresa_30_dbeaver.sql
 --
 --   BLOCO 03 - TELAS
 --   permissao de acesso aos paineis e o limiar de alerta que eles usam para
@@ -74,8 +78,8 @@
 --                                             dpc_dfe_painel_alerta
 --     03_99_rollback_telas_dbeaver.sql        desfaz o bloco 03
 --
---   INSTALAR   01_01, 01_02, 01_03, 01_04, e depois 02_01 e 03_01
---   DESFAZER   03_99, 02_99, 01_99 - do bloco mais especifico para o motor
+--   INSTALAR   01_01, 01_02, 01_03, 01_04, depois 03_01 e os pares de empresas/
+--   DESFAZER   os _99 de empresas/, depois 03_99, e o 01_99 por ultimo
 --
 --  ==========================================================================
 --   O QUE HAVIA ANTES
