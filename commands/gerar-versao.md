@@ -208,6 +208,30 @@ Imprimir, em sucesso:
 
 ## Caminho OTA (sem bump de versão)
 
+### O0) Montar a mensagem do `eas update`
+
+A mensagem aparece no dashboard do EAS e é o que identifica o update depois. `branch@hash` sozinho não diz **o que** mudou, então ela leva também um resumo do conteúdo.
+
+```bash
+LIMITE=3
+ITENS=$(git log ${LAST_TAG:+$LAST_TAG..HEAD} --no-merges --reverse --format=%s \
+  | grep -E '^(feat|fix)(\([^)]*\))?!?:' \
+  | sed -E 's/^(feat|fix)\(([^)]*)\)!?: */\2: /; s/^(feat|fix)!?: *//')
+TOTAL=$(printf '%s\n' "$ITENS" | grep -c .)
+RESUMO=$(printf '%s\n' "$ITENS" | head -$LIMITE | paste -sd '~' - | sed 's/~/; /g')
+[ "$TOTAL" -gt "$LIMITE" ] && RESUMO="$RESUMO (+$((TOTAL-LIMITE)) outras)"
+```
+
+Regras:
+
+- **Sem merges** (`--no-merges`): "Merge pull request #61" não informa nada.
+- **Só `feat:`/`fix:`**: `chore:`/`docs:` não interessam a quem vai testar.
+- **Mantém o escopo como rótulo**: `fix(gestao): X` → `gestao: X`.
+- **Ordem cronológica** (`--reverse`), itens unidos por `; `.
+- **Teto de 3 itens**, com `(+N outras)` no fim — senão uma release com 15 `fix:` gera mensagem gigante.
+- Se `RESUMO` sair **vazio** (nenhum `feat`/`fix` no intervalo), usar só `branch@hash` / a tag, sem o ` — `.
+- **Nada de `$0`..`$9` nos blocos deste arquivo**: o carregador de slash command substitui esses placeholders pelos argumentos da invocação. Um `awk '{... $0 ...}'` aqui chega ao agente já corrompido (com `/gerar-versao ota produção`, o `$0` virou `ota`). Por isso a junção usa `paste`/`sed`, que dispensa `$0`.
+
 ### O1) Guarda de mudança nativa
 
 Reclassifique os arquivos modificados **desde o último build** (tag de versão, ignorando tags `-ota`):
@@ -242,7 +266,8 @@ Commits desde LAST_TAG: N
 
 3. **Em `--dry-run`, pare aqui** com "[dry-run] nenhuma alteração feita". Fora dele, imprimir a saída final:
    - `[OK] OTA preview validado na branch $BRANCH_ATUAL — nada foi commitado/tagueado.`
-   - Próximo passo (rodar manualmente): `npx eas update --branch preview --platform android --message "preview $BRANCH_ATUAL@<hash-curto-do-HEAD>"`
+   - Próximo passo (rodar manualmente), com o `$RESUMO` do passo O0: `npx eas update --branch preview --platform android --message "preview $BRANCH_ATUAL@<hash-curto-do-HEAD> — $RESUMO"`
+     - Ex.: `--message "preview main@3544adc — gestao: exibir a mensagem da API no estado vazio da lista; login: web usa a API de autenticacao oficial"`
    - Lembrete: só aparelhos com build do canal **preview** e `runtimeVersion` X.Y.Z recebem; o canal `production` não é afetado.
 
 **Fim do caminho OTA preview.** Os passos O2→O6 abaixo valem só para o canal `production`.
@@ -306,7 +331,8 @@ Imprimir, em sucesso:
 
 - `[OK] OTA $OTA_TAG preparado — versão $CURRENT_VERSION mantida.`
 - Se houve troca de branch: `NOTA: você começou em "$ORIGINAL_BRANCH", agora está em main. Pra voltar: git checkout $ORIGINAL_BRANCH`.
-- Próximo passo (publicar o OTA): `npx eas update --branch production --platform android --message "$OTA_TAG"`
+- Próximo passo (publicar o OTA), com o `$RESUMO` do passo O0: `npx eas update --branch production --platform android --message "$OTA_TAG — $RESUMO"`
+  - Ex.: `--message "v1.21.1-ota.7 — gestao: exibir a mensagem da API no estado vazio da lista"`
 - Lembrete: a "Versão $CURRENT_VERSION" exibida no app **não muda**; nos aparelhos que baixarem o OTA, só o campo `OTA <id> (data)` será atualizado.
 
 ## Resultado
