@@ -31,7 +31,7 @@ pulado quando a tabela existe — era exatamente por isso que uma base parcial
 precisava de um segundo conjunto de arquivos, que fazia por `ALTER` o que o
 instalador fazia por `CREATE`.
 
-> **Por que o `01_03` existe separado.** Ele carrega os 5 parâmetros em
+> **Por que o `01_03` existe separado.** Ele carrega os 6 parâmetros em
 > `POSEIDON.DPC_PARAMETRO`, que é tabela **compartilhada do ecossistema**: já
 > existe, não pertence ao módulo, e por isso nunca entrou no `01_01`.
 >
@@ -49,9 +49,9 @@ instalador fazia por `CREATE`.
 |---|---|---|---|
 | 1 | `01_01_estrutura` | 13 tabelas, 13 sequences, 13 triggers, 54 constraints, 24 índices, 286 comentários — e a seção 3, que reconcilia as 273 colunas | sim (DDL) |
 | 2 | `01_02_estabelecimentos` | 12 CNPJs e 48 fluxos, **todos pausados** | sim (DML) |
-| 3 | `01_03_parametros` | os 5 parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
+| 3 | `01_03_parametros` | os 6 parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
 | 4 | `01_04_validacao` | confere motor e telas; a seção 5 faz insert + `rollback` | praticamente não |
-| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 5 parâmetros | sim |
+| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 6 parâmetros | sim |
 
 Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 

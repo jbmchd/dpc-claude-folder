@@ -115,11 +115,38 @@ select 'dfe_max_bloqueios_dia', '10',
     || 'min dentro dessa janela, todos os dias - e este freio e a unica protecao '
     || 'que NAO depende de aritmetica de tempo estar correta, porque so conta '
     || 'linhas em dpc_dfe_execucao. ESTA 10 e nao 5 porque 5 ficava abaixo do '
-    || 'ruido medido. Lido tambem pela ApiDPC, na tela do Monitor DFe. Faixa '
-    || 'aceita: 1 a 20.'
+    || 'ruido medido. DESDE 14/09/2026 NAO E MAIS O FREIO PRINCIPAL: quem age '
+    || 'primeiro e o dfe_max_bloqueios_cnpj, que tira de campo so o CNPJ doente. '
+    || 'Este sobrou para o defeito SISTEMICO, que nenhum teto individual contem. '
+    || 'ATENCAO ao calibrar: com N CNPJs ativos o teto individual permite ate N x '
+    || 'aquele valor antes deste disparar - com 2 CNPJs sao 12, e este em 10 '
+    || 'ainda morde primeiro. Lido tambem pela ApiDPC, na tela do Monitor DFe. '
+    || 'Faixa aceita: 1 a 20.'
   from dual
  where not exists (select 1 from poseidon.dpc_parametro
                     where lower(nome) = 'dfe_max_bloqueios_dia');
+
+-- ---------------------------------------------------------------------------
+-- dfe_max_bloqueios_cnpj = 6   (faixa 1 a 20)
+-- o freio que age PRIMEIRO; o de cima virou ultima barreira
+-- ---------------------------------------------------------------------------
+insert into poseidon.dpc_parametro (nome, valor, explicacao)
+select 'dfe_max_bloqueios_cnpj', '6',
+       'Modulo DFe (ApiNFE) - teto de bloqueios por consumo indevido (cStat 656) em '
+    || '24h de UM CNPJ. Ao atingir, aquele CNPJ fica de fora dos ciclos ate os '
+    || 'bloqueios envelhecerem; os demais seguem normalmente. Age ANTES do '
+    || 'dfe_max_bloqueios_dia, que virou ultima barreira para defeito sistemico. '
+    || 'Criado em 14/09/2026 depois de um quase-acidente: com a espera do 656 ja '
+    || 'por CNPJ, a empresa 30 sozinha fez 8 bloqueios em 14 execucoes numa noite, '
+    || 'capturando ZERO documento, e levou o contador global a 9 de 10 - o decimo '
+    || 'teria parado a captura da empresa 29, que na mesma noite fez 15 execucoes '
+    || 'sem um unico bloqueio. ESTA 6 porque a 30, ja com qtd_min_em_dia de 180 '
+    || 'min, deve produzir cerca de 4 por dia: 6 deixa folga para o normal e pega '
+    || 'a degradacao. ATENCAO: com N CNPJs ativos o global precisa ser maior que '
+    || 'N x este valor, senao volta a parar tudo. Faixa aceita: 1 a 20.'
+  from dual
+ where not exists (select 1 from poseidon.dpc_parametro
+                    where lower(nome) = 'dfe_max_bloqueios_cnpj');
 
 -- ---------------------------------------------------------------------------
 -- dfe_max_consultas = 200   (faixa 1 a 5000)
@@ -155,15 +182,18 @@ select 'dfe_pausa_seg', '30',
 -- ---------------------------------------------------------------------------
 insert into poseidon.dpc_parametro (nome, valor, explicacao)
 select 'dfe_min_backoff_656', '60',
-       'Modulo DFe (ApiNFE) - minutos de espera aplicados a TODOS os fluxos do '
-    || 'dominio quando a fonte devolve bloqueio por consumo indevido (cStat 656 na '
-    || 'SEFAZ). O PISO DE 60 E EXIGENCIA DA NT 2014.002, nao preferencia: '
-    || 'consultar antes de vencer a hora ZERA o tempo e reinicia a contagem, e o '
-    || 'fluxo nunca sai do laco sozinho. Espalhar a espera por TODO o dominio e '
-    || 'mais largo do que a NT exige (la o bloqueio e do CNPJ de 14 digitos), e '
-    || 'esta assim enquanto a anomalia da empresa 30 nao for explicada - ver '
-    || '02_conhecimento-sefaz.md secao 5.1. Valor abaixo de 60 e recusado pelo '
-    || 'codigo e substituido por 60. Faixa aceita: 60 a 1440.'
+       'Modulo DFe (ApiNFE) - minutos de espera aplicados aos fluxos do CNPJ '
+    || 'bloqueado, dentro do dominio afetado, quando a fonte devolve consumo '
+    || 'indevido (cStat 656 na SEFAZ). Ate 13/09/2026 a espera ia para TODOS os '
+    || 'fluxos do dominio - 42, porque as 14 empresas dividem a mesma raiz de '
+    || 'CNPJ - e foi estreitada quando ficou provado que a cota e do CNPJ de 14 '
+    || 'digitos: em 12/09 a empresa 29 consultou DENTRO da janela de bloqueio da '
+    || 'empresa 30, no mesmo certificado, e recebeu cStat 137. O PISO DE 60 E '
+    || 'EXIGENCIA DA NT 2014.002, nao preferencia: consultar antes de vencer a '
+    || 'hora ZERA o tempo e reinicia a contagem, e o fluxo nunca sai do laco '
+    || 'sozinho. Os outros TIPOS do mesmo CNPJ pausam junto - em 01/09/2026 o '
+    || 'CT-e e o NF-e da mesma empresa 30, a 30 segundos, deram 656. Valor abaixo '
+    || 'de 60 e recusado pelo codigo e substituido por 60. Faixa: 60 a 1440.'
   from dual
  where not exists (select 1 from poseidon.dpc_parametro
                     where lower(nome) = 'dfe_min_backoff_656');
@@ -205,7 +235,7 @@ commit;
 
 
 -- ============================================================================
---  CONFERENCIA - deve devolver as 5 linhas, uma vez cada
+--  CONFERENCIA - deve devolver as 6 linhas, uma vez cada
 -- ============================================================================
 select nome, valor, length(explicacao) as tam_explicacao, count(*) over () as total
   from poseidon.dpc_parametro

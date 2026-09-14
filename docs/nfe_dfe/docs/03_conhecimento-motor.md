@@ -66,10 +66,10 @@ CNPJ consultado. É o que permite o e-CNPJ da matriz atender as 14 filiais.
 O cron dispara `dfe:ingerir --agendado` **a cada 15 minutos**.
 
 ```
-1. FREIO GLOBAL
+1. FREIO GLOBAL — última barreira
    ≥ dfe_max_bloqueios_dia (10) bloqueios em 24h no sistema todo
    → não consulta nada, sai com código 0
-   Existe para conter DEFEITO NOSSO, não por regra da SEFAZ — ver §2.5
+   Pega o defeito SISTEMICO, que nenhum teto individual contém — ver §2.5
 
 2. ELEGÍVEIS
    status operável  E  systimestamp >= dta_liberado_em
@@ -79,6 +79,8 @@ O cron dispara `dfe:ingerir --agendado` **a cada 15 minutos**.
    ├ orçamento global esgotado? .......... ORCAMENTO, encerra o ciclo
    ├ mesma RAIZ de certificado já usada
    │   neste ciclo? ...................... adia para o próximo    ⚠ ver §2.4
+   ├ FREIO DO CNPJ: ≥ dfe_max_bloqueios_cnpj (6)
+   │   bloqueios em 24h DESTE CNPJ? ...... pula este CNPJ, segue nos outros
    ├ pausa de dfe_pausa_seg (30s) desde o fluxo anterior
    ├ monta o Tools UMA VEZ por empresa (1 readPfx, não 1 por chamada)
    ├ abre DPC_DFE_EXECUCAO
@@ -156,8 +158,33 @@ a contagem**. Toda outra camada depende de aritmética de tempo estar correta.
 Esta não: ela conta linhas em `DPC_DFE_EXECUCAO`. Foi exatamente uma aritmética
 de tempo que falhou.
 
-Por isso o freio é **global** mesmo sabendo que a cota é por CNPJ: um defeito
-nosso não respeita fronteira de CNPJ.
+Por isso ele é **global** mesmo sabendo que a cota é por CNPJ: um defeito nosso
+não respeita fronteira de CNPJ.
+
+### 2.6 O freio por CNPJ, e por que os dois existem
+
+Criado em **14/09/2026**, depois de um quase-acidente.
+
+A espera do 656 já era por CNPJ desde 13/09, e funcionou — a empresa 29 atravessou
+8 bloqueios da 30 sem perder um ciclo. Mas o *freio* continuava global: a empresa
+30 sozinha, capturando **zero documento** em 14 execuções, levou o contador a
+**9 de 10**. O décimo teria parado a captura da 29, que na mesma noite fez 15
+execuções sem um único bloqueio. Um CNPJ doente ainda derrubava todos — só que
+por outra porta.
+
+| | Freio por CNPJ | Freio global |
+|---|---|---|
+| Parâmetro | `dfe_max_bloqueios_cnpj` = 6 | `dfe_max_bloqueios_dia` = 10 |
+| Quando age | **primeiro**, dentro do laço | última barreira, antes do laço |
+| O que pega | o CNPJ que gasta cota sem trazer documento | o defeito sistêmico, que atinge todos de uma vez |
+| Efeito | pula **aquele** CNPJ; os outros seguem | para a rotina inteira |
+
+**Calibração — a armadilha.** Com N CNPJs ativos, o teto individual permite até
+`N × 6` bloqueios antes de o global disparar. Com 2 CNPJs são 12, e o global em
+10 ainda é o que morde primeiro. **Antes do corte da Qive o global precisa
+subir**, senão volta a parar tudo por causa de poucos CNPJs doentes — e o código
+aceita no máximo 20, o que com 14 CNPJs não fecha. Recalibrar os dois juntos, com
+a taxa-base já medida.
 
 ## 3. As 13 tabelas, em uma linha cada
 
@@ -199,7 +226,8 @@ Vivem em **`POSEIDON.DPC_PARAMETRO`** desde 02/09/2026 (`3c20e65`).
 |---|---|---|---|
 | `dfe_max_consultas` | 200 | 1–5000 | orçamento de `distNSU` por ciclo |
 | `dfe_pausa_seg` | 30 | 0–600 | segundos entre chamadas |
-| `dfe_max_bloqueios_dia` | 10 | 1–20 | freio de emergência |
+| `dfe_max_bloqueios_cnpj` | 6 | 1–20 | **freio por CNPJ** — age primeiro, tira de campo só o CNPJ doente |
+| `dfe_max_bloqueios_dia` | 10 | 1–20 | freio **global** — última barreira, para defeito sistemico |
 | `dfe_min_backoff_656` | 60 | 60–1440 | espera após bloqueio; piso normativo |
 
 **O motivo da mudança:** `dfe_max_bloqueios_dia` é lido por **dois projetos** — o
@@ -318,7 +346,7 @@ permanente volta para cá.
 | **MDF-e** | `procEvMDF` nunca ativado; 14 fluxos pausados |
 | **`dfe:manifestar`** | desligado, aguardando a contabilidade |
 | **Corte da Qive** | livres hoje: **30** (MS) e **29** (DF, saiu da Qive em 09/09/2026), as duas ativas. Os outros 12 CNPJs seguem atendidos pela Qive e o NSU é compartilhado. Cada novo CNPJ ativado mede a taxa-base do fenômeno da empresa 30 |
-| **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 5 linhas. Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
+| **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 6 linhas. Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
 
 ### O teste de volume, quando voltar

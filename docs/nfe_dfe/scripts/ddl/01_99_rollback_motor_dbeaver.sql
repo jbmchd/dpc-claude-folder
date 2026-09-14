@@ -381,12 +381,13 @@ end;
 --  modulo que por azar comece com essas tres letras.
 --
 --  POR QUE ISTO PRECISA ESTAR AQUI. Ate 09/09/2026 o rollback nao tocava nesta
---  tabela, e "apagar e recriar" deixava as 5 linhas vivas. Reinstalar depois
+--  tabela, e "apagar e recriar" deixava as linhas vivas. Reinstalar depois
 --  NAO as corrige, porque o 03_parametros e guardado por WHERE NOT EXISTS de
 --  proposito - para nao sobrescrever valor que o operador ajustou a mao. O
 --  resultado era uma base "nova" carregando parametro velho.
 delete from poseidon.dpc_parametro
  where lower(nome) in ('dfe_max_bloqueios_dia',
+                       'dfe_max_bloqueios_cnpj',
                        'dfe_max_consultas',
                        'dfe_pausa_seg',
                        'dfe_min_backoff_656',

@@ -71,7 +71,7 @@ flowchart TD
         CUR[("DPC_DFE_CURSOR<br/>posição de leitura")]
         DOC[("DPC_DFE_DOCUMENTO<br/>XML bruto = a fila")]
         NRM[("NOTA · ITEM · CTE<br/>NFSE · EVENTO · EMITENTE")]
-        PAR[("DPC_PARAMETRO<br/>os 5 parâmetros")]
+        PAR[("DPC_PARAMETRO<br/>os 6 parâmetros")]
     end
 
     subgraph TELA["Monitor DFe"]
@@ -161,7 +161,7 @@ Arquitetura da ApiNFE como um todo (não só o DFe):
 | Base normalizada | **18.757 documentos**, todos concluídos — 0 pendente, 0 erro, 0 ignorado |
 | Fluxos ativos | **2 de 56** (só NFS-e da 30 e da 900) |
 | Ambiente | roda em `dkalpha00`, cron ativo, base **homolog**, SEFAZ **real** |
-| Produção | **o motor não vive lá, por decisão de 09/09/2026.** prd serve só para o `dfe:conciliar` **ler** a Consinco e confirmar o que o ERP recebeu. As tabelas `dpc_dfe_*` **existem** em prd desde 25/08/2026 — 12 delas, com `dpc_dfe_nota` em 26 colunas contra 37 em tst — mas estão **órfãs**: ninguém as usa. Os 5 parâmetros realmente não foram carregados lá |
+| Produção | **o motor não vive lá, por decisão de 09/09/2026.** prd serve só para o `dfe:conciliar` **ler** a Consinco e confirmar o que o ERP recebeu. As tabelas `dpc_dfe_*` **existem** em prd desde 25/08/2026 — 12 delas, com `dpc_dfe_nota` em 26 colunas contra 37 em tst — mas estão **órfãs**: ninguém as usa. Os 6 parâmetros realmente não foram carregados lá |
 | CNPJs livres da Qive | apenas **900** (ALL CARS) e **30** (DPC MS) — os outros 12 seguem com a Qive, e o NSU é compartilhado |
 | `dfe:manifestar` | desligado, aguardando a contabilidade |
 | Teste de volume (empresa 30) | **adiado, sem data.** Fluxos `NFE` e `CTE` pausados e acumulando atraso de propósito — ver [03_conhecimento-motor.md](03_conhecimento-motor.md) |

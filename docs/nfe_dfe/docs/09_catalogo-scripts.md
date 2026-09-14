@@ -104,10 +104,10 @@ Como rodar, o que conferir antes e o que a instalação **não** liga:
 | 2 | `01_02_estabelecimentos` | 12 CNPJs e 48 fluxos, **todos pausados** | sim (DML) |
 | 3 | `01_03_parametros` | os **5** parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
 | 4 | `01_04_validacao` | confere motor e telas; a seção 5 faz insert + `rollback` | praticamente não |
-| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 5 parâmetros | sim |
+| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 6 parâmetros | sim |
 
 ⚠️ **O `01_03` tem ordem obrigatória: antes do deploy do código.** Ele carrega os
-5 parâmetros em `DPC_PARAMETRO` — tabela compartilhada do ecossistema, que por
+6 parâmetros em `DPC_PARAMETRO` — tabela compartilhada do ecossistema, que por
 isso não vem no `01_01`. Dois desses defaults **mudam comportamento em
 silêncio** se a linha faltar: o freio de consumo indevido cai para 5, fica
 abaixo do ruído normal do sistema e o motor se recusa a consultar; e o
