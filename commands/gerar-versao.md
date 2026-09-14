@@ -21,6 +21,20 @@ Caminho do projeto: `d:/Joabe/Documents/dev/projetos/dpc/workspace/Faisao`
 - **OTA** publica só o bundle JS sobre o build atual. **Não** bumpa `version` nem `runtimeVersion` — senão o OTA mudaria o `runtimeVersion` e **não chegaria** aos aparelhos já instalados. A "Versão X.Y.Z" exibida no app fica intacta; só o campo `OTA <id> (data)` (via `expo-updates`) é atualizado nos aparelhos que baixam. Mudanças nativas **não** vão por OTA.
 - **Build** gera nova versão nativa (Play Store), bumpando `version` + `runtimeVersion` + `versionCode`.
 
+
+> **Duas flags obrigatórias em todo comando `eas` impresso aqui:**
+>
+> - `--platform android` — **não há versão iOS do Faisão**. Sem a flag, o `-p` do `eas` usa
+>   `[default: all]`, o export inclui iOS e **falha**: o `app.json` não declara `jsEngine` (o Expo
+>   assume hermes) enquanto o `ios/Podfile.properties.json` está em `jsc`. O update nem chega a
+>   publicar. Não "consertar" essa divergência: `ios/` é pasta sensível e `expo prebuild` é proibido.
+>   Quando existir versão iOS, rever esta regra.
+> - `--environment` — só no `eas update`, e **obrigatório a partir do Expo SDK 55** (o Faisão está
+>   no 56). Sem ela o comando para num prompt interativo pedindo o ambiente. Não confundir com
+>   `--branch`: `--branch` escolhe quem recebe o update; `--environment` escolhe o conjunto de
+>   variáveis de ambiente do EAS usado durante o export. O `eas build` e o `eas submit` **não têm**
+>   essa flag — tiram o ambiente do profile no `eas.json`.
+
 ## Pré-condições
 
 Sempre `cd d:/Joabe/Documents/dev/projetos/dpc/workspace/Faisao` antes de qualquer comando.
@@ -266,7 +280,7 @@ Commits desde LAST_TAG: N
 
 3. **Em `--dry-run`, pare aqui** com "[dry-run] nenhuma alteração feita". Fora dele, imprimir a saída final:
    - `[OK] OTA preview validado na branch $BRANCH_ATUAL — nada foi commitado/tagueado.`
-   - Próximo passo (rodar manualmente), com o `$RESUMO` do passo O0: `npx eas update --branch preview --platform android --message "preview $BRANCH_ATUAL@<hash-curto-do-HEAD> — $RESUMO"`
+   - Próximo passo (rodar manualmente), com o `$RESUMO` do passo O0: `npx eas update --branch preview --environment preview --platform android --message "preview $BRANCH_ATUAL@<hash-curto-do-HEAD> — $RESUMO"`
      - Ex.: `--message "preview main@3544adc — gestao: exibir a mensagem da API no estado vazio da lista; login: web usa a API de autenticacao oficial"`
    - Lembrete: só aparelhos com build do canal **preview** e `runtimeVersion` X.Y.Z recebem; o canal `production` não é afetado.
 
@@ -331,7 +345,7 @@ Imprimir, em sucesso:
 
 - `[OK] OTA $OTA_TAG preparado — versão $CURRENT_VERSION mantida.`
 - Se houve troca de branch: `NOTA: você começou em "$ORIGINAL_BRANCH", agora está em main. Pra voltar: git checkout $ORIGINAL_BRANCH`.
-- Próximo passo (publicar o OTA), com o `$RESUMO` do passo O0: `npx eas update --branch production --platform android --message "$OTA_TAG — $RESUMO"`
+- Próximo passo (publicar o OTA), com o `$RESUMO` do passo O0: `npx eas update --branch production --environment production --platform android --message "$OTA_TAG — $RESUMO"`
   - Ex.: `--message "v1.21.1-ota.7 — gestao: exibir a mensagem da API no estado vazio da lista"`
 - Lembrete: a "Versão $CURRENT_VERSION" exibida no app **não muda**; nos aparelhos que baixarem o OTA, só o campo `OTA <id> (data)` será atualizado.
 
