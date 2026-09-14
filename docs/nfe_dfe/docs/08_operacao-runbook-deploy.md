@@ -17,7 +17,7 @@ if (env('RUN_SCHEDULE') == 1) {
 
 O servidor de homologação **já roda o scheduler** — é o que dispara `senig:averbar` e o `schedule-test:tick`. Ou seja: se `RUN_SCHEDULE` já estiver `1` lá, **o simples merge deste código começa a consultar a SEFAZ a cada 15 minutos, sem ninguém apertar nada.**
 
-Combinado com `TIPO_AMBIENTE=1`, isso significa consultar os CNPJs da DPC na SEFAZ **de produção** enquanto a Qive está ativa — que é a causa documentada de consumo indevido (`cStat 656`). E 50 bloqueios consecutivos podem virar bloqueio **permanente** do certificado, afetando todas as filiais, que compartilham o e-CNPJ da matriz.
+Combinado com `TIPO_AMBIENTE=1`, isso significa consultar os CNPJs da DPC na SEFAZ **de produção** enquanto a Qive está ativa — que é a causa documentada de consumo indevido (`cStat 656`). Cada bloqueio dura 1 hora, e consultar dentro dele **zera o tempo e reinicia** — um agendador de 15 min entra nesse laço e não sai sozinho.
 
 **Antes do merge, garantir uma das duas:** `RUN_SCHEDULE=0`, ou as empresas da DPC pausadas em `dpc_dfe_empresa` (`status_sincronismo = 'P'`).
 

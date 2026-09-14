@@ -25,9 +25,9 @@
 --  A posicao de leitura (NSU) e UMA POR CNPJ e COMPARTILHADA entre quem
 --  consulta. Hoje quem consulta os CNPJs da DPC e a Qive. Dois consumidores no
 --  mesmo CNPJ e causa DOCUMENTADA de consumo indevido (cStat 656), que bloqueia
---  o CNPJ por 1 hora - e o consumo e contabilizado por CERTIFICADO e por IP,
---  entao um bloqueio atinge todas as filiais que compartilham o e-CNPJ da
---  matriz.
+--  esse CNPJ por 1 hora (NT 2014.002 item 3.11.4.1). O corte com a Qive tem de
+--  ser seco por causa da SEQUENCIA DE NSU disputada no mesmo CNPJ, e nao por
+--  causa do certificado.
 --
 --  Portanto: criar as linhas aqui NAO liga nada. Ativar um fluxo exige,
 --  primeiro, saber a data e hora em que a Qive para de consultar aquele CNPJ.

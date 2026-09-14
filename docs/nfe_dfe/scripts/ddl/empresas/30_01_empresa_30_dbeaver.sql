@@ -45,9 +45,10 @@
 --   NASCE PAUSADA, E ISSO E DELIBERADO
 --  ==========================================================================
 --  Esta empresa usa o e-CNPJ da MATRIZ, compartilhado com as empresas 1, 3 e 8
---  (e com a Qive). O consumo da SEFAZ e contabilizado por CERTIFICADO e por IP,
---  nao por CNPJ - medido em campo: a empresa 8 tomou cStat 656 na PRIMEIRA
---  consulta dela, minutos depois do bloqueio da matriz.
+--  (e com a Qive). A NT 2014.002 diz que o bloqueio por cStat 656 e do CNPJ de
+--  14 digitos, nao do certificado - mas ESTA empresa produziu 9 bloqueios em
+--  11/09/2026 enquanto a 29, no mesmo certificado e no mesmo regime, fez 19
+--  execucoes sem nenhum. A diferenca nao esta explicada.
 --
 --  Consequencia: um 656 aqui bloqueia o certificado do GRUPO por 1 hora.
 --  Ativar exige saber a data e hora em que a Qive para de consultar este CNPJ.
@@ -94,8 +95,27 @@ commit;
 --  parar por privilegio que ninguem lembrou de conceder.
 --
 --  qtd_min_em_dia = 60 e o minimo exigido pela NT 2014.002 depois de um cStat
---  137. Em 01/09/2026 os fluxos de SEFAZ em tst foram para 120 - se quiser o
---  mesmo aqui, ajuste depois de ativar, nao agora.
+--  137, e vale para CTE, MDFE e NFSE.
+--
+--  O NFE DESTA EMPRESA NASCE COM 180, e nao com 60. Nao e preferencia: este
+--  CNPJ devolve cStat 656 numa fracao alta das consultas que voltam vazias,
+--  onde a empresa 29 - mesmo certificado, mesma configuracao - nunca devolveu.
+--  Medido de 12 a 14/09/2026:
+--
+--      empresa 29   20 consultas vazias ->  0 bloqueios
+--      empresa 30   16 consultas vazias ->  6 bloqueios
+--      empresa 30   nas 18h seguintes   ->  8 bloqueios em 14 execucoes
+--
+--  A causa nao esta caracterizada: o cursor confere com o ultNSU que a propria
+--  rejeicao devolve, e o intervalo de 1 hora e respeitado. O que se sabe e que
+--  consultar menos gera menos bloqueio, na proporcao - e em 14/09 os bloqueios
+--  DELA sozinhos levaram o freio global a 9 de 10, prestes a parar a captura de
+--  todos os CNPJs. Com 180 min a contagem dela cai para cerca de um terco.
+--
+--  Custo: ate 3h de latencia nas notas deste CNPJ. A nota leva dias para ser
+--  lancada no ERP, entao nao muda nada na pratica.
+--
+--  Revisar quando a causa aparecer. Ver 03_conhecimento-motor.md secao 2.
 insert into poseidon.dpc_dfe_cursor
   (cod_dfe_empresa, cod_tipo_dfe, status_sincronismo,
    nro_ultimo_nsu, nro_maximo_nsu,
@@ -107,7 +127,7 @@ select e.cod_dfe_empresa,
        0,                       -- cursor novo: a SEFAZ entrega o que ainda
        0,                       -- estiver na janela de retencao de 90 dias
        3,
-       60,
+       case when t.tipo = 'NFE' then 180 else 60 end,
        'fluxo criado pausado: certificado compartilhado com a matriz, ativar exige a janela de corte da Qive',
        sysdate,
        'CADASTRO DFE'

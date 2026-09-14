@@ -23,6 +23,7 @@ e NFS-e de entrada direto da SEFAZ (`DistDFe`) e do ADN Nacional, dentro da
 |---|---|
 | **Entender o comportamento da SEFAZ** — cStat, 656, cota, NSU, schemas, eventos | [02_conhecimento-sefaz.md](02_conhecimento-sefaz.md) 🔄 |
 | **Entender o motor** — desenho, parâmetros, defeitos já vividos, medições | [03_conhecimento-motor.md](03_conhecimento-motor.md) 🔄 |
+| **Quando o motor consulta a SEFAZ** — a regra de negócio inteira, num lugar só | [03_conhecimento-motor.md §2](03_conhecimento-motor.md) |
 | **Rodar / operar** os comandos | [06_operacao-comandos.md](06_operacao-comandos.md) |
 | **Subir em um ambiente** | [08_operacao-runbook-deploy.md](08_operacao-runbook-deploy.md) |
 | Saber **o que cada tabela** guarda | [04_dados-tabelas.md](04_dados-tabelas.md) |
@@ -96,8 +97,8 @@ flowchart TD
    por ~90 dias, e antes a perda era definitiva.
 
 2. Nada automático consulta a SEFAZ depois de um bloqueio.
-   Consultar antes de vencer a hora REINICIA o cronômetro, e 50 bloqueios
-   consecutivos podem tornar o bloqueio do certificado PERMANENTE.
+   Consultar antes de vencer a hora ZERA o tempo e reinicia a contagem, e o
+   fluxo nunca sai do laço sozinho - sem nenhum sinal de erro.
 ```
 
 ## Onde as coisas moram

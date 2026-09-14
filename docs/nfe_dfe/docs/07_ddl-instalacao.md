@@ -103,8 +103,9 @@ primeiro ano.
 Não é cautela genérica. A posição de leitura (o NSU) é **uma por CNPJ e
 compartilhada entre quem consulta**, e hoje quem consulta os CNPJs da DPC é a
 **Qive**. Dois consumidores no mesmo CNPJ é causa documentada de `cStat 656`, que
-bloqueia por 1 hora — e o consumo é contado por **certificado e IP**, então o
-bloqueio atinge todas as filiais que compartilham o e-CNPJ da matriz.
+bloqueia **aquele CNPJ** por 1 hora (NT 2014.002 item 3.11.4.1). O corte com a
+Qive continua tendo de ser seco: o problema é a sequência de NSU disputada, não
+o certificado.
 
 Ativar um fluxo exige antes saber **a data e hora em que a Qive para de consultar
 aquele CNPJ**. As duas exceções conhecidas são a empresa **900** (que não vai

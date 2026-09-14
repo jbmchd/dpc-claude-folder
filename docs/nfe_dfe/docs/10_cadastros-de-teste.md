@@ -180,9 +180,11 @@ Envelope: `tpAmb 1`, `cStat 138`, `ultNSU 4155`, **`maxNSU 16525`** — backlog 
 > - a empresa 900 passou 7 minutos depois de uma rajada de 11 chamadas da
 >   empresa 30 — **certificados diferentes**, zero interferência.
 >
-> A cota é do **certificado e do IP**. O corte com a Qive continua sendo seco
-> para os CNPJs que compartilham o e-CNPJ da matriz. Consolidado atual:
-> [02_conhecimento-sefaz.md §5](02_conhecimento-sefaz.md).
+> **Revisto em 12/09/2026:** a cota é do **CNPJ de 14 dígitos** (NT 2014.002
+> item 3.11.4.1), e não do certificado — a observação acima é compatível com as
+> duas leituras e não discrimina. O corte com a Qive continua sendo seco, mas
+> pelo motivo certo: dois consumidores na mesma sequência de NSU do mesmo CNPJ.
+> Consolidado atual: [02_conhecimento-sefaz.md §5](02_conhecimento-sefaz.md).
 
 ### O que este CNPJ fechou de verdade
 

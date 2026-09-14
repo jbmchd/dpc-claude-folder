@@ -74,7 +74,7 @@ Consulta bem-sucedida devolve o fluxo para `A`. Então:
 | Estado | Por que não se cura sozinho | Como sair |
 |---|---|---|
 | `P` cursor travado | **não há saída automática conhecida.** Se o cursor aponta para faixa expurgada e a fonte não avança, insistir leva a `656`; reposicionar para valor arbitrário também. O procedimento correto precisa ser perguntado à SEFAZ | `--reposicionar-cursor` **somente** para um `ultNSU` já recebido |
-| freio acionado | ao atingir `dfe_max_bloqueios_dia` (hoje **10**, em `DPC_PARAMETRO`) o command para de consultar. 50 bloqueios consecutivos podem virar bloqueio **permanente**, e consultar antes do prazo reinicia o cronômetro — uma rotina automática não pode ser capaz de caminhar para isso sozinha | investigar `dpc_dfe_execucao` e, se for deliberado, `--ignorar-freio` |
+| freio acionado | ao atingir `dfe_max_bloqueios_dia` (hoje **10**, em `DPC_PARAMETRO`) o command para de consultar. O porquê está em [03_conhecimento-motor.md §2.5](03_conhecimento-motor.md): contém defeito nosso, não a regra dos "50 bloqueios" | investigar `dpc_dfe_execucao` e, se for deliberado, `--ignorar-freio` |
 
 Nos dois casos, insistir automaticamente é pior que parar.
 
@@ -102,7 +102,7 @@ Isso é o comportamento correto — retentar em loop um documento que falha por 
 
 **Não, e são duas travas que se sustentam:** `RUN_SCHEDULE=0` **e** todos os fluxos pausados.
 
-Ligar o agendador sem antes ter a janela de corte da Qive faria os CNPJs dela serem consultados a cada 15 min — dois consumidores na mesma sequência de NSU é causa documentada de `656`, que conta por certificado e IP e atinge todas as filiais que compartilham o e-CNPJ da matriz.
+Ligar o agendador sem antes ter a janela de corte da Qive faria os CNPJs dela serem consultados a cada 15 min — dois consumidores na mesma sequência de NSU é causa documentada de `656` (NT 2014.002 item 3.11.4.1), que bloqueia **aquele CNPJ** por 1 hora.
 
 ### Configuração
 
@@ -380,7 +380,7 @@ E a consequência mais séria: nem a SEFAZ nem o ADN guardam a posição de leit
 
 | Domínio | Fluxos | Regra |
 |---|---|---|
-| `SEFAZ` | `NFE` `CTE` `MDFE` | cota do **certificado e do IP**; `consNSU`/`consChNFe` somados: 20/hora |
+| `SEFAZ` | `NFE` `CTE` `MDFE` | cota do **CNPJ de 14 dígitos** (NT 2014.002 item 3.11.4.1); `consNSU`/`consChNFe` somados: 20/hora |
 | `ADN` | `NFSE` | sem limite publicado |
 
 Isso importa na prática: um bloqueio da SEFAZ aplica espera a **todos** os fluxos do domínio SEFAZ — porque todas as filiais usam o e-CNPJ da matriz e saem do mesmo IP — mas **não** pausa a captura de NFS-e, e vice-versa.

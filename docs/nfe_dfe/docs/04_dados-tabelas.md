@@ -113,7 +113,7 @@ Acumula dois papéis de propósito:
 | `CONSUMO_INDEVIDO` | `cStat 656` |
 | `ERRO_SEFAZ` · `ERRO_BD` · `CERT_INVALIDO` | ver `dsc_resultado` |
 
-**Por que não é só log em arquivo:** o freio de emergência **consulta esta tabela**. Ele conta bloqueios por consumo indevido nas últimas 24h e para a rotina em 5 — porque 50 bloqueios consecutivos podem virar bloqueio permanente. Log em arquivo não serve de base para uma decisão automática.
+**Por que não é só log em arquivo:** o freio de emergência **consulta esta tabela**. Ele conta bloqueios por consumo indevido nas últimas 24h e para a rotina ao atingir `dfe_max_bloqueios_dia` (hoje **10**) — não pela regra dos "50 bloqueios", que **não está na NT** ([§3.1](02_conhecimento-sefaz.md)), e sim para conter defeito nosso: em 28–31/08/2026 um bug de fuso fez o motor consultar dentro da hora de bloqueio, todos os dias. Log em arquivo não serve de base para uma decisão automática.
 
 **Escala:** ~96 linhas/dia com 52 fluxos ativos a cada 15 min. Vale política de expurgo depois de alguns meses.
 

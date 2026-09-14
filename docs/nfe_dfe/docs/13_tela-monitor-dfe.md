@@ -327,10 +327,11 @@ mexer neles à mão atropela o backoff e pode gerar bloqueio de certificado.
 ### 5.3 Nunca, em nenhuma hipótese
 
 - **Não** escrever em `nro_ultimo_nsu`. O NSU é um token que a SEFAZ só aceita
-  continuar. Valor arbitrário → `cStat 656` → **certificado bloqueado por 1 hora**;
-  e consultar dentro dessa hora **reinicia o relógio**. Cinquenta bloqueios
-  consecutivos podem virar bloqueio permanente. Reposicionar cursor é operação de
-  CLI (`dfe:ingerir --reposicionar-cursor`), supervisionada, nunca de tela.
+  continuar. Valor arbitrário → `cStat 656` → **CNPJ bloqueado por 1 hora**; e
+  consultar dentro dessa hora **zera o tempo e reinicia**. Reposicionar cursor é
+  operação de CLI (`dfe:ingerir --reposicionar-cursor`), supervisionada, nunca de
+  tela — e a própria rejeição 656 devolve o `ultNSU` correto, então quase nunca é
+  preciso adivinhar o número.
 - **Não** criar botão que dispare `dfe:ingerir` ou qualquer chamada à SEFAZ. O
   consumo é limitado e medido: **~11 chamadas `distNSU` consecutivas já disparam
   656** (medido em produção em 28/08/2026), e `consChNFe` tem cota de 20/hora

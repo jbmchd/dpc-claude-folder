@@ -50,9 +50,10 @@
 --
 --  Ainda assim o cadastro nasce PAUSADO, e por um motivo que continua valendo:
 --  esta empresa usa o e-CNPJ da MATRIZ, compartilhado com as empresas 1, 3, 8 e
---  30. O consumo da SEFAZ e contabilizado por CERTIFICADO e por IP, nao por
---  CNPJ - medido em campo: a empresa 8 tomou cStat 656 na PRIMEIRA consulta
---  dela, minutos depois do bloqueio da matriz.
+--  30. A NT 2014.002 diz que o bloqueio por cStat 656 e do CNPJ de 14 digitos,
+--  nao do certificado - mas dois CNPJs do MESMO certificado ja se comportaram
+--  de forma muito diferente (a empresa 30 com 9 bloqueios em 11/09/2026, esta
+--  com zero em 19 execucoes no mesmo regime), e isso nao esta explicado.
 --
 --  Consequencia: um 656 aqui bloqueia o certificado do GRUPO por 1 hora, e
 --  atinge quem estiver drenando naquele momento. Ativar e ato deliberado, pelo

@@ -106,15 +106,17 @@ insert into poseidon.dpc_parametro (nome, valor, explicacao)
 select 'dfe_max_bloqueios_dia', '10',
        'Modulo DFe (ApiNFE) - freio de emergencia: acima deste numero de bloqueios '
     || 'por consumo indevido (cStat 656) em 24h, o dfe:ingerir para de consultar a '
-    || 'SEFAZ. Existe porque 50 bloqueios consecutivos de 60min podem virar '
-    || 'bloqueio PERMANENTE do certificado. ESTA 10 e nao 5 porque 5 ficava abaixo '
-    || 'do ruido do sistema: medido de 28 a 31/08/2026, foram 5 bloqueios/dia '
-    || 'todos os dias com apenas 2 fluxos de NF-e ativos (~2,5 por fluxo), sem '
-    || 'defeito nenhum - e o 656 que a SEFAZ devolve a consulta de NF-e em fim de '
-    || 'fila. ATENCAO: nao escala. Com 13 CNPJs (apos o corte da Qive) a taxa '
-    || 'normal vai a ~32/dia e este numero corta o motor todo dia. A saida e '
-    || 'contar bloqueio POR FLUXO. Lido tambem pela ApiDPC, na tela do Monitor '
-    || 'DFe. Faixa aceita: 1 a 20.'
+    || 'SEFAZ. NAO existe pela regra dos 50 bloqueios consecutivos: essa nao esta '
+    || 'na NT 2014.002 v.1.40 - a palavra PERMANENTE nao aparece nas 18 paginas, e '
+    || 'a unica fonte era pagina de provedor de 2018 sobre o servico de '
+    || 'AUTORIZACAO, nao sobre o distDFe. Existe para conter DEFEITO NOSSO. O que '
+    || 'a NT diz, e basta: consultar dentro do bloqueio ZERA o tempo e reinicia a '
+    || 'hora. Em 28-31/08/2026 um bug de fuso fez o motor consultar de 15 em 15 '
+    || 'min dentro dessa janela, todos os dias - e este freio e a unica protecao '
+    || 'que NAO depende de aritmetica de tempo estar correta, porque so conta '
+    || 'linhas em dpc_dfe_execucao. ESTA 10 e nao 5 porque 5 ficava abaixo do '
+    || 'ruido medido. Lido tambem pela ApiDPC, na tela do Monitor DFe. Faixa '
+    || 'aceita: 1 a 20.'
   from dual
  where not exists (select 1 from poseidon.dpc_parametro
                     where lower(nome) = 'dfe_max_bloqueios_dia');
@@ -156,10 +158,12 @@ select 'dfe_min_backoff_656', '60',
        'Modulo DFe (ApiNFE) - minutos de espera aplicados a TODOS os fluxos do '
     || 'dominio quando a fonte devolve bloqueio por consumo indevido (cStat 656 na '
     || 'SEFAZ). O PISO DE 60 E EXIGENCIA DA NT 2014.002, nao preferencia: '
-    || 'consultar antes de vencer a hora reinicia o cronometro do bloqueio, e 50 '
-    || 'bloqueios consecutivos podem virar bloqueio PERMANENTE do certificado. '
-    || 'Valor abaixo de 60 e recusado pelo codigo e substituido por 60. Faixa '
-    || 'aceita: 60 a 1440.'
+    || 'consultar antes de vencer a hora ZERA o tempo e reinicia a contagem, e o '
+    || 'fluxo nunca sai do laco sozinho. Espalhar a espera por TODO o dominio e '
+    || 'mais largo do que a NT exige (la o bloqueio e do CNPJ de 14 digitos), e '
+    || 'esta assim enquanto a anomalia da empresa 30 nao for explicada - ver '
+    || '02_conhecimento-sefaz.md secao 5.1. Valor abaixo de 60 e recusado pelo '
+    || 'codigo e substituido por 60. Faixa aceita: 60 a 1440.'
   from dual
  where not exists (select 1 from poseidon.dpc_parametro
                     where lower(nome) = 'dfe_min_backoff_656');

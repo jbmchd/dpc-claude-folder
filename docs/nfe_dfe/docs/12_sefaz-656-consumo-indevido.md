@@ -64,15 +64,37 @@ A chamada #6 usou o `ultNSU` correto e funcionou de primeira, após 4 rejeiçõe
 ### Por que cada uma falhou
 
 - **#2** — o cursor tinha sido reposicionado manualmente para `0`, numa tentativa de recuperar documentos de um lote que falhou ao gravar no banco local (bug nosso, `ORA-01465`, já corrigido). O valor correto era `10258514`.
-- **#3 e #4** — primeiras consultas daqueles CNPJs, com `ultNSU=0`, que seria legítimo. Rejeitadas mesmo assim. **Isso indica que o controle é por certificado, não por CNPJ**: as três filiais usam o e-CNPJ da matriz, e como o certificado já havia recebido um `ultNSU`, qualquer `0` subsequente foi tratado como indevido.
+- **#3 e #4** — consultas com `ultNSU=0` naqueles CNPJs. Rejeitadas. Ver a retratação logo abaixo: a leitura original disse que isto provava cota por certificado, e não prova.
 - **#5** — usou um NSU real, mas obtido por `consChNFe`. Não era o `ultNSU` do fluxo. Rejeitada.
+
+> ### 🔴 RETRATAÇÃO — 12/09/2026: #3 e #4 não provam cota por certificado
+>
+> O texto anterior dizia: *"primeiras consultas daqueles CNPJs, com `ultNSU=0`,
+> que seria legítimo. Rejeitadas mesmo assim. **Isso indica que o controle é por
+> certificado, não por CNPJ**"*.
+>
+> **Não eram primeiras consultas.** Os CNPJs `0008-43` e `0003-39` estão entre os
+> 12 atendidos pela **Qive**, que já vinha consultando o `DistDFe` deles havia
+> meses. O cursor deles **na SEFAZ** estava muito além de zero. Mandar `0` ali
+> não é começo legítimo: é *consultar fora da sequência*, que é a segunda causa
+> de 656 da NT 2014.002, item 3.11.4.1.
+>
+> A explicação estava neste mesmo documento, na Conclusão principal: "as duas
+> consultam o mesmo `NFeDistribuicaoDFe` dos mesmos CNPJs, cada uma com seu
+> próprio cursor". O documento se contradizia e ninguém notou por um mês.
+>
+> A NT é explícita no sentido oposto ao que foi concluído: *"o **CNPJ** é
+> bloqueado por 1 hora"*, e *"para o mesmo **CNPJ (14 dígitos – informado na
+> requisição xml)**"*. A palavra `IP` **não aparece nas 18 páginas**.
+>
+> Consolidado em [02_conhecimento-sefaz.md §5](02_conhecimento-sefaz.md).
 
 ### Hipóteses testadas e descartadas
 
 | Hipótese | Como foi descartada |
 |---|---|
 | Frequência excessiva | intervalos de 6 a 20 h entre tentativas, 1 chamada cada |
-| Cota por CNPJ | 3 CNPJs distintos, todos rejeitados |
+| ~~Cota por CNPJ~~ | ~~3 CNPJs distintos, todos rejeitados~~ — **descarte inválido**, ver a retratação acima: os três tinham cursor avançado pela Qive, então `0` era fora de sequência em todos. A NT diz que a cota **é** por CNPJ |
 | Repetição de requisição idêntica | #5 usou faixa nunca solicitada e ainda assim falhou |
 | Cursor em zero especificamente | #5 usou valor alto e falhou; #1 usou zero e funcionou |
 | Certificado vencido | vigente até 20/10/2026 |
@@ -87,7 +109,7 @@ A chamada #6 usou o `ultNSU` correto e funcionou de primeira, após 4 rejeiçõe
 | `--reposicionar-cursor` recusa valor diferente do `ultNSU` recebido; exige `--confirmar` para forçar | `DfeIngerir::modoReposicionarCursor()` |
 | Referência do último `ultNSU` obtida da trilha de execuções | `DfeExecucaoRepository::ultimoNsuRecebido()` |
 | `CURSOR_TRAVADO` deixou de sugerir reposicionamento manual — não há saída conhecida | `DfeIngerir::drenaEmpresa()` |
-| `cStat 656` aplica espera a **todas** as empresas (cota é do certificado/IP) | `DfeEmpresaRepository::agendaEsperaGlobal()` |
+| `cStat 656` aplica espera a **todas** as empresas do domínio — mais largo do que a NT exige (lá o bloqueio é do CNPJ), mantido enquanto a anomalia da empresa 30 não for explicada | `DfeCursorRepository::agendaEsperaGlobal()` |
 | Freio de emergência: recusa consultar acima de N bloqueios em 24 h | `dfe_max_bloqueios_dia`, em `POSEIDON.DPC_PARAMETRO` |
 
 ---
@@ -193,11 +215,16 @@ Certificados: **3 de 12** utilizáveis (7 expirados em 13/11/2025, 2 com senha i
 > - o eixo do gatilho é o **serviço**: em 02/09, dos 33 bloqueios da base,
 >   **33 são NFE e 0 são CTE** — e o CT-e teve 32 execuções e 5.031 documentos
 >   no mesmo período;
-> - o eixo da cota é o **certificado + IP**;
-> - **CNPJ ocioso devolve 656 com espera respeitada**: a empresa 900
->   (`ultNSU = 87`, imóvel) bloqueou 5× em 01/09 com intervalos de 150–181 min,
->   já depois da correção. Este é o resíduo genuíno, e é por isso que ela está
->   pausada.
+> - ~~o eixo da cota é o **certificado + IP**~~ — **caiu em 12/09/2026**: a NT
+>   2014.002 v.1.40 diz **CNPJ de 14 dígitos**, e "IP" não aparece no documento.
+>   Ver a retratação da seção 2;
+> - ~~**CNPJ ocioso devolve 656 com espera respeitada**~~ — **enfraquecido em
+>   12/09/2026.** Continua verdade para a empresa 900 e para a 30, mas **não é
+>   geral**: a empresa 29, em dia e com o mesmo certificado, fez **19 execuções
+>   sem um bloqueio** entre 11 e 12/09, sete delas voltando vazias com `cStat
+>   137` — a resposta normativa. O fenômeno existe, mas é de **alguns** CNPJs, e
+>   a causa não está caracterizada. Ver
+>   [02_conhecimento-sefaz.md §5.1](02_conhecimento-sefaz.md).
 >
 > O restante da seção fica como estava, **para registro do raciocínio** — inclusive
 > porque a medição de 8 pontos consecutivos de 01/09 continua válida como
@@ -306,7 +333,8 @@ nossa — não há fonte.
 ### Por que custa caro, mesmo sendo "benigno"
 
 1. **Trava CNPJ saudável.** O 656 aplica espera de 1 hora a *todos* os fluxos do
-   domínio SEFAZ (a cota é por certificado e por IP). Medido: o 656 da ALL CARS
+   domínio SEFAZ — decisão nossa, mais larga do que a NT exige, que bloqueia
+   apenas o CNPJ consultado. Medido: o 656 da ALL CARS
    às 16:30 pôs NF-e e CT-e da empresa 30 em espera até 17:30, sem que ela
    tivesse feito nada errado.
 2. **Queima o freio de emergência.** Dos 6 bloqueios na janela de 24h em
