@@ -37,6 +37,26 @@ falha diferentes não têm nenhum canal de aviso:
 3. **Fluxo parado** — `DPC_DFE_CURSOR.status_sincronismo`. `B` (bloqueado) e `C`
    (cert. inválido) se autocuram quando a condição passa; **`P` (pausado) não se
    cura sozinho** — exige ação humana.
+> **Atualizado em 15/09/2026.** A tela passou a refletir duas mudanças do motor
+> feitas em 14/09: o **freio por CNPJ**, que age antes do global, e a **janela
+> noturna**. As duas tinham o mesmo risco — a tela contar uma história diferente
+> da do motor:
+>
+> | O que mudou no motor | O que a tela fazia | O que faz agora |
+> |---|---|---|
+> | Freio por CNPJ (`dfe_max_bloqueios_cnpj` = 6) | mostrava só o total: podia marcar "3 / 20", parecendo folgado, com um CNPJ inteiro fora de operação | alerta próprio dizendo **quais** CNPJs estão no teto, e o subtexto do cartão avisa |
+> | Janela noturna (22h–06h) | acusaria **"motor possivelmente parado" todas as madrugadas** | reconhece o silêncio deliberado, igual já fazia com o freio |
+>
+> A segunda era a mais grave: alarme que grita no comportamento correto treina o
+> time a ignorar o alarme. Já tinha acontecido em 28/08/2026, com o freio — dois
+> alertas vizinhos se contradiziam. O `motorPossivelmenteParado` agora tem as
+> duas exceções, e só suprime a noturna quando **nenhum** fluxo ativo tem
+> trabalho: se houver um drenando, a madrugada tem execução sim, e a ausência
+> dela volta a ser sintoma.
+>
+> As constantes `JANELA_NOTURNA_INICIO/FIM` espelham as da ApiNFE. Se mudarem
+> lá, mudam aqui — e o sintoma de esquecer é a tela ficar vermelha de madrugada.
+
 4. **Freio de consumo indevido** — o motor conta bloqueios `CONSUMO_INDEVIDO` das
    últimas 24h e, ao atingir `dfe_max_bloqueios_dia` (hoje 10, em `DPC_PARAMETRO` — era `DFE_MAX_BLOQUEIOS_DIA` no `.env` quando isto foi escrito), **para de
    consultar a SEFAZ**. Chegar a esse limite é uma parada total, silenciosa.
