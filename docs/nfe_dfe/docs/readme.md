@@ -50,6 +50,42 @@ cair. Os dois carregam marcas de confiança (🟢 normativo · 🔵 medido ·
 🟡 hipótese · 🔴 derrubado), porque foi confundir hipótese com fato que custou
 os diagnósticos mais longos.
 
+## Onde o código vive
+
+> Convenção fixada em **15/09/2026**.
+
+Todo o trabalho do módulo — motor, Monitor, dashboards e relatórios — vai para
+uma branch única, com o **mesmo nome nos três repositórios**, e **um PR por
+repositório** contra `master`:
+
+```
+feature/dfe-documentos-fiscais
+```
+
+Isto **substitui a branch por card** neste módulo, e só neste. Fora do DFe, vale
+a regra geral de [git-workflow-branches.md](../../regras/gerenciar-regras/git-workflow-branches.md).
+
+**Por quê.** A frente é contínua e atravessa os três projetos: o mesmo assunto
+rende commit na ApiNFE, na ApiDPC e no DPC, às vezes no mesmo dia. Com branch por
+card, o resultado foi branch virando cópia de branch — em 15/09/2026 a
+`feature/3280-sefaz-nfe` da ApiDPC era, commit a commit, a mesma da
+`feature/dfe-monitor-documentos-fiscais`, e um commit novo não conseguiu ter PR
+próprio sem duplicar dez commits já em revisão. No DPC a mesma frente vivia em
+duas branches ao mesmo tempo, com dois PRs abertos.
+
+**PRs da consolidação** — ApiNFE#14 · ApiDPC#1016 · DPC#1234.
+
+**Substituíram** ApiNFE#13, ApiDPC#1010, DPC#1198 e DPC#1233. Eles fecharam
+porque o GitHub **não troca o head ref de um PR existente**: mover a branch
+obriga a recriar o PR, com número novo. Foi o que já tinha acontecido antes em
+ApiNFE#12→#13 e ApiDPC#1005→#1010. Contar com isso ao planejar qualquer mudança
+de branch daqui pra frente.
+
+**Branches antigas mantidas no remoto** como rede de segurança, nenhuma
+deletada: `feature/dfe-motor-captura-entrada` (ApiNFE),
+`feature/dfe-monitor-documentos-fiscais` e `feature/3280-sefaz-nfe` (ApiDPC),
+`feature/monitor-dfe` e `feature/3280-sefaz-nfe` (DPC).
+
 ## O sistema em um diagrama
 
 ```mermaid
