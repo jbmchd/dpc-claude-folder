@@ -99,11 +99,11 @@
 
 
 -- ---------------------------------------------------------------------------
--- dfe_max_bloqueios_dia = 10   (faixa 1 a 20)
+-- dfe_max_bloqueios_dia = 20   (faixa 1 a 20 - no teto)
 -- o freio; sem esta linha o codigo usa 5 e o motor se trava todo dia
 -- ---------------------------------------------------------------------------
 insert into poseidon.dpc_parametro (nome, valor, explicacao)
-select 'dfe_max_bloqueios_dia', '10',
+select 'dfe_max_bloqueios_dia', '20',
        'Modulo DFe (ApiNFE) - freio de emergencia: acima deste numero de bloqueios '
     || 'por consumo indevido (cStat 656) em 24h, o dfe:ingerir para de consultar a '
     || 'SEFAZ. NAO existe pela regra dos 50 bloqueios consecutivos: essa nao esta '
@@ -114,8 +114,12 @@ select 'dfe_max_bloqueios_dia', '10',
     || 'hora. Em 28-31/08/2026 um bug de fuso fez o motor consultar de 15 em 15 '
     || 'min dentro dessa janela, todos os dias - e este freio e a unica protecao '
     || 'que NAO depende de aritmetica de tempo estar correta, porque so conta '
-    || 'linhas em dpc_dfe_execucao. ESTA 10 e nao 5 porque 5 ficava abaixo do '
-    || 'ruido medido. DESDE 14/09/2026 NAO E MAIS O FREIO PRINCIPAL: quem age '
+    || 'linhas em dpc_dfe_execucao. ESTA 20, e nao 10, desde 14/09/2026: com 4 '
+    || 'CNPJs ativos e teto individual de 6, o individual permite ate 24 antes '
+    || 'deste disparar - em 10 este voltaria a ser o que morde primeiro, '
+    || 'anulando o freio por CNPJ. 20 e o MAXIMO que a faixa do codigo aceita; '
+    || 'com mais CNPJs a faixa precisa mudar, nao so o valor. '
+    || 'NAO E MAIS O FREIO PRINCIPAL: quem age '
     || 'primeiro e o dfe_max_bloqueios_cnpj, que tira de campo so o CNPJ doente. '
     || 'Este sobrou para o defeito SISTEMICO, que nenhum teto individual contem. '
     || 'ATENCAO ao calibrar: com N CNPJs ativos o teto individual permite ate N x '

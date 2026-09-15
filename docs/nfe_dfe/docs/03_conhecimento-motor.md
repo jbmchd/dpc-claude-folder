@@ -77,10 +77,11 @@ O cron dispara `dfe:ingerir --agendado` **a cada 15 minutos**.
 
 3. PARA CADA FLUXO ELEGÍVEL
    ├ orçamento global esgotado? .......... ORCAMENTO, encerra o ciclo
-   ├ mesma RAIZ de certificado já usada
-   │   neste ciclo? ...................... adia para o próximo    ⚠ ver §2.4
+   ├ mesmo CNPJ já consultado neste ciclo? adia para o próximo ciclo
    ├ FREIO DO CNPJ: ≥ dfe_max_bloqueios_cnpj (6)
    │   bloqueios em 24h DESTE CNPJ? ...... pula este CNPJ, segue nos outros
+   ├ JANELA NOTURNA: em dia E entre 22h e 06h?
+   │   (exige já ter consultado alguma vez) pula, fica para as 06h
    ├ pausa de dfe_pausa_seg (30s) desde o fluxo anterior
    ├ monta o Tools UMA VEZ por empresa (1 readPfx, não 1 por chamada)
    ├ abre DPC_DFE_EXECUCAO
@@ -111,7 +112,7 @@ O cron dispara `dfe:ingerir --agendado` **a cada 15 minutos**.
 | NFS-e do mesmo CNPJ | segue livre: é domínio ADN, cota própria |
 | Outros tipos do mesmo CNPJ (CT-e, MDF-e) | pausam junto — em 01/09/2026 o CT-e e o NF-e da mesma empresa 30, a 30s, deram 656 |
 | O `ultNSU` que a rejeição devolve | **sempre registrado** em `dsc_ultimo_motivo`: confere, diverge, ou não veio |
-| O ciclo | **aborta** ⚠ ver §2.4 |
+| O ciclo | **segue nos outros CNPJs** — desde 14/09/2026 |
 | Aviso no terminal | a partir de **3 bloqueios seguidos** sem sucesso no meio |
 
 Estados terminais: `EM_DIA` · `ORCAMENTO` · `AGUARDANDO` · `CURSOR_TRAVADO` ·
@@ -122,29 +123,50 @@ Estados terminais: `EM_DIA` · `ORCAMENTO` · `AGUARDANDO` · `CURSOR_TRAVADO` �
 `CONSUMO_INDEVIDO` — insistir neles reinicia a hora de bloqueio a cada
 tentativa, e o fluxo nunca sai sozinho.
 
-### 2.4 ⚠ As duas travas que sobraram, e o que as segura
+### 2.4 ✅ As travas foram estreitadas em 14/09/2026
 
-As duas nasceram da hipótese — **derrubada em 12/09/2026** — de que a cota era do
-certificado:
+Até então sobravam duas, herdadas da hipótese — derrubada em 12/09 — de que a
+cota era do certificado:
 
-| Trava | Custo hoje |
-|---|---|
-| **Um fluxo por raiz de certificado por ciclo** | as 14 empresas dividem a raiz `66471517`, então é **um CNPJ a cada 15 min**: cada filial consultada a cada ~3h15 |
-| **Um `656` aborta o ciclo inteiro** | os CNPJs seguintes ficam sem consulta mesmo estando liberados |
+| Trava | O que custava | Situação |
+|---|---|---|
+| Um fluxo por **raiz de certificado** por ciclo | as 15 empresas dividem a raiz `66471517`, então era **um CNPJ a cada 15 min**: cada filial atendida a cada ~3h45 | ✅ agrupa pelo **CNPJ de 14 dígitos** |
+| Um `656` **abortava o ciclo** | os CNPJs seguintes ficavam sem consulta mesmo liberados | ✅ pula só aquele CNPJ |
 
-Quando forem estreitadas, entra junto uma terceira regra:
+**O que destravou:** o freio por CNPJ (§2.6), criado no mesmo dia. Sem ele,
+estreitar o escopo só espalharia o problema — era a objeção que segurava a
+mudança desde 12/09.
 
-**Janela noturna** — não consultar fluxo **que já está em dia** entre 22h e 06h.
-Medido em regime permanente: a madrugada é **30% das execuções e 0,8% dos
-documentos** (18 execuções, 2 documentos). Fluxo *drenando atraso* continua
-rodando à noite — a drenagem da empresa 29 fez 114 consultas seguidas sem um
-único 656. A hora seria parâmetro, não constante no código.
+**O que forçou a hora:** as empresas 17 (PE) e 20 (GO) saíram da Qive com 29.252
+e 12.413 notas de entrada em 90 dias, contra 892 da empresa 29. Com a
+serialização por certificado e a ordenação por atraso decrescente, o fluxo em
+drenagem venceria **todos** os ciclos, e as empresas 29 e 30 ficariam sem
+consultar por dias.
 
-**O que segura as três não é técnico, é falta de dado.** Não se sabe quantos dos
-14 CNPJs se comportam como a empresa 30 (§7). Consultar todos por ciclo
-multiplica a exposição por um número que ainda é chute. Isso se resolve sozinho
-conforme os CNPJs forem ativados depois do corte da Qive: com quatro ou cinco
-medidos, a decisão deixa de ser aposta.
+### 2.4.1 A janela noturna
+
+Entrou junto: **fluxo que já está em dia não consulta entre 22h e 06h.**
+
+Medido em regime permanente, de 11 a 13/09/2026:
+
+| Faixa | Execuções | Documentos | Bloqueios |
+|---|---|---|---|
+| Dia · 06h–22h | 42 | **240** | 5 |
+| Madrugada · 22h–06h | 18 | **2** | 1 |
+
+Trinta por cento das execuções para 0,8% dos documentos. **Não é para reduzir
+656** — eles se espalham pelo dia, 5 contra 1 no mesmo período. É para cortar
+desperdício, e o ganho cresce com o número de CNPJs.
+
+Duas condições, e a segunda não é óbvia: `qtd_atraso` zero **e já ter consultado
+alguma vez**. Fluxo recém-cadastrado tem máximo e cursor em zero, então parece em
+dia — sem a segunda condição, uma empresa cadastrada à noite só começaria a
+drenar às 06h. Fluxo com atraso continua drenando de madrugada: quando vem
+documento a SEFAZ não devolve 656.
+
+A regra vale também no `--dry-run`, ao contrário dos freios. Eles são travas de
+segurança e faz sentido o dry-run ignorá-las; esta é agendamento, e escondê-la
+faria o dry-run mentir sobre o horário.
 
 ### 2.5 Por que o freio global existe
 
@@ -180,11 +202,14 @@ por outra porta.
 | Efeito | pula **aquele** CNPJ; os outros seguem | para a rotina inteira |
 
 **Calibração — a armadilha.** Com N CNPJs ativos, o teto individual permite até
-`N × 6` bloqueios antes de o global disparar. Com 2 CNPJs são 12, e o global em
-10 ainda é o que morde primeiro. **Antes do corte da Qive o global precisa
-subir**, senão volta a parar tudo por causa de poucos CNPJs doentes — e o código
-aceita no máximo 20, o que com 14 CNPJs não fecha. Recalibrar os dois juntos, com
-a taxa-base já medida.
+`N × 6` bloqueios antes de o global disparar. Em 14/09/2026 o global subiu de 10
+para **20** por causa disso: com 4 CNPJs são 24 possíveis, e em 10 o global
+voltaria a ser o que morde primeiro, anulando o freio por CNPJ.
+
+**20 é o máximo que a faixa do código aceita.** Com 14 CNPJs o teto individual
+permitiria 84, então antes do corte da Qive **a faixa precisa mudar, não só o
+valor** — ou o global vira de novo o gargalo. Recalibrar com a taxa-base medida,
+que cada CNPJ ativado ajuda a estimar.
 
 ## 3. As 13 tabelas, em uma linha cada
 
@@ -227,7 +252,7 @@ Vivem em **`POSEIDON.DPC_PARAMETRO`** desde 02/09/2026 (`3c20e65`).
 | `dfe_max_consultas` | 200 | 1–5000 | orçamento de `distNSU` por ciclo |
 | `dfe_pausa_seg` | 30 | 0–600 | segundos entre chamadas |
 | `dfe_max_bloqueios_cnpj` | 6 | 1–20 | **freio por CNPJ** — age primeiro, tira de campo só o CNPJ doente |
-| `dfe_max_bloqueios_dia` | 10 | 1–20 | freio **global** — última barreira, para defeito sistemico |
+| `dfe_max_bloqueios_dia` | **20** | 1–20 | freio **global** — última barreira. No teto da faixa: com mais CNPJs a faixa precisa mudar, não só o valor |
 | `dfe_min_backoff_656` | 60 | 60–1440 | espera após bloqueio; piso normativo |
 
 **O motivo da mudança:** `dfe_max_bloqueios_dia` é lido por **dois projetos** — o
@@ -337,15 +362,16 @@ permanente volta para cá.
 |---|---|
 | **Teste de volume da empresa 30** | **adiado em 02/09/2026, sem data.** Os fluxos NFE e CTE seguem pausados e acumulando atraso, o que *preserva* o cenário — retomar não custa preparo. Detalhe abaixo |
 | ~~Freio por fluxo × global~~ | ✅ **decidido em 12-13/09/2026.** O freio global **fica**, com a justificativa corrigida ([§2.5](#25-por-que-o-freio-global-existe)): contém defeito nosso, não a regra dos "50 bloqueios" — que não está na NT. Ganhou um contador de **consecutivos** como indicador, avisando a partir de 3 |
-| **Estreitar `chaveDeCota` e o `break` do 656** | 🔶 **liberado tecnicamente, segurado por falta de dado.** A cota é do CNPJ (provado nos dois eixos), mas não se sabe quantos dos 14 CNPJs se comportam como a empresa 30. Ver [§2.4](#24--as-duas-travas-que-sobraram-e-o-que-as-segura) |
-| **Janela noturna** | 🔶 medida (30% das execuções, 0,8% dos documentos) e desenhada, entra junto com a anterior |
+| ~~Estreitar `chaveDeCota` e o `break` do 656~~ | ✅ **feito em 14/09/2026.** O freio por CNPJ removeu a objeção, e as empresas 17 e 20 — 33× e 14× maiores que as anteriores — tornaram a starvation concreta. Ver [§2.4](#24--as-travas-foram-estreitadas-em-14092026) |
+| ~~Janela noturna~~ | ✅ **feita junto**, com a ressalva de exigir que o fluxo já tenha consultado alguma vez |
+| **Faixa do `dfe_max_bloqueios_dia`** | 🔶 o global está em 20, o teto da faixa. Com 14 CNPJs e teto individual de 6, não fecha — a faixa do código precisa subir antes do corte da Qive |
 | **Por que a empresa 30 bloqueia** | ⬜ **o item aberto principal, e sem candidato.** Em 12–14/09/2026 somou **14 bloqueios em 30 consultas vazias**, onde a empresa 29 — mesmo certificado, mesma configuração — está em **0 de 34**. Não é dessincronia de NSU (o `ultNSU` da rejeição confere com o cursor), não é o intervalo (os dois usavam 60 min). Contido em 14/09 subindo o `qtd_min_em_dia` dela para 180; a causa continua aberta |
 | **Freio global × cota por CNPJ** | 🔶 **inconsistência exposta em 14/09.** O cooldown virou por CNPJ, mas o freio segue global — então um CNPJ doente ainda derruba todos, por outra porta. A 30 sozinha levou o freio a 9 de 10. Um freio por CNPJ com um teto global mais alto por cima resolveria; decidir junto com a [§2.4](#24--as-duas-travas-que-sobraram-e-o-que-as-segura) |
 | ~~Chave de NFS-e truncada~~ | ✅ **fechado.** Conferido em 03/09/2026: `DPC_DFE_DOCUMENTO.CHAVE_NF` e `DPC_DFE_NFSE.CHAVE_NFSE` são `VARCHAR2(50)`, e as 37 NFS-e têm chave de 50 caracteres. As colunas de 44 que restam guardam chave de NF-e e CT-e, que têm 44 mesmo |
 | **CNPJs ociosos** | ~~empresa 900~~ saiu da base com a limpeza da ALL CARS. O fenômeno persiste na **empresa 30** — ver a linha acima |
 | **MDF-e** | `procEvMDF` nunca ativado; 14 fluxos pausados |
 | **`dfe:manifestar`** | desligado, aguardando a contabilidade |
-| **Corte da Qive** | livres hoje: **30** (MS) e **29** (DF, saiu da Qive em 09/09/2026), as duas ativas. Os outros 12 CNPJs seguem atendidos pela Qive e o NSU é compartilhado. Cada novo CNPJ ativado mede a taxa-base do fenômeno da empresa 30 |
+| **Corte da Qive** | livres: **29** (DF) e **30** (MS), ativas desde 09–11/09; **17** (PE) e **20** (GO), liberadas em 14/09/2026 e ainda pausadas. A 20 foi cadastrada nesse dia (`empresas/20_01`); a 17 já vinha da carga geral e tem certificado próprio — só falta ativar. **As duas são de outra ordem de grandeza:** 29.252 e 12.413 notas em 90 dias contra 892 da 29, projetando ~207.000 e ~88.000 documentos. Ativar **uma de cada vez**, a 20 primeiro. Cada CNPJ ativado mede a taxa-base do fenômeno da empresa 30 |
 | **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 6 linhas. Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
 

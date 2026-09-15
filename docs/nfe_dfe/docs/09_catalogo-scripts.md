@@ -18,7 +18,9 @@ nfe_dfe/scripts/
     ├── 01_04_validacao                  │
     ├── 01_99_rollback_motor             ┘
     ├── empresas/                        ┐ UM PAR POR EMPRESA trazida depois
-    │   ├── 29_01_empresa_29             │ da carga geral. O numero do arquivo
+    │   ├── 20_01_empresa_20             │ da carga geral. O numero do arquivo
+    │   ├── 20_99_rollback_empresa_20    │ E o numero da empresa.
+    │   ├── 29_01_empresa_29             │
     │   ├── 29_99_rollback_empresa_29    │ E o numero da empresa.
     │   ├── 30_01_empresa_30             │
     │   └── 30_99_rollback_empresa_30    ┘

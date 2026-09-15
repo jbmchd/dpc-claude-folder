@@ -57,7 +57,7 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 
 | Bloco | Arquivo | O que faz |
 |---|---|---|
-| `empresas/` | `29_01_empresa_29` · `30_01_empresa_30` | um par por estabelecimento trazido depois da carga geral: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1. O número do arquivo é o número da empresa |
+| `empresas/` | `20_01_empresa_20` · `29_01_empresa_29` · `30_01_empresa_30` | um par por estabelecimento trazido depois da carga geral: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1. O número do arquivo é o número da empresa. A **17** não tem par: veio na carga geral e já tinha certificado próprio no ERP — só precisa ser ativada |
 | 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
 
 Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha

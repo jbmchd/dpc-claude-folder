@@ -144,9 +144,10 @@ workspace/
             ├── 01_03_parametros             │ 13 tabelas de captura
             ├── 01_04_validacao              │
             ├── 01_99_rollback_motor         ┘
-            ├── empresas/                    ┐ UM PAR POR EMPRESA:
-            │   ├── 29_01 · 29_99_rollback   │ a 29 (DF) e a 30 (MS),
-            │   └── 30_01 · 30_99_rollback   ┘ que precisam de certificado
+            ├── empresas/                    ┐ UM PAR POR EMPRESA
+            │   ├── 20_01 · 20_99_rollback   │ trazida depois da carga
+            │   ├── 29_01 · 29_99_rollback   │ geral. O numero do arquivo
+            │   └── 30_01 · 30_99_rollback   ┘ E o numero da empresa
             ├── 03_01_parametrizacao_telas   ┐ BLOCO 03 - permissao e
             └── 03_99_rollback_telas         ┘ limiar dos paineis
 ```
