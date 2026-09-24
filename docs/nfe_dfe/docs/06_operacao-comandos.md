@@ -1,6 +1,8 @@
 # Comandos do módulo DFe — referência de operação
 
-> **Atualizado em 20/08/2026.** Cobre os 5 commands do `ApiNFE` que operam a captura própria de documento fiscal de entrada — NF-e, CT-e e NFS-e.
+> **Atualizado em 24/09/2026** (seção do `dfe:manifestar` e a tabela de agenda —
+> as demais seções seguem como em 20/08/2026). Cobre os 5 commands do `ApiNFE`
+> que operam a captura própria de documento fiscal de entrada — NF-e, CT-e e NFS-e.
 
 Todos rodam pelo `dev.cmd` (que existe porque o `php` do PATH é 7.2 e o projeto exige 8.1+, e porque o certificado A1 precisa de duas variáveis de OpenSSL legacy):
 
@@ -45,15 +47,24 @@ Por isso a ingestão grava o `docZip` como veio e só depois alguém interpreta.
 
 **Sim, por desenho.** As opções que este documento descreve são para diagnóstico e exceção — no dia a dia ninguém digita nada.
 
-O cron do container roda `schedule:run` a cada minuto (`docker-compose/cron/schedule-cron`) e, sob `RUN_SCHEDULE=1`, três commands se sustentam sem ninguém:
+O cron do container roda `schedule:run` a cada minuto (`docker-compose/cron/schedule-cron`) e, sob `RUN_SCHEDULE=1`, cinco linhas se sustentam sem ninguém:
 
 | Comando | Cadência | `withoutOverlapping` | Por que essa cadência |
 |---|---|---|---|
 | `dfe:ingerir` | 15 min | 30 | folgado de propósito: a NT 2014.002 obriga esperar 1h após um `cStat 137`, e o controle é por fluxo via `dta_liberado_em`. A maioria das execuções só confirma que ninguém está liberado e encerra |
+| `dfe:manifestar --evento=210210 --auto --confirmar` | minutos `7,37` de cada hora | 30 | Ciência, desde 24/09/2026. Minuto deliberadamente fora de `:00/:15/:30/:45` (a agenda do `dfe:ingerir`) — os dois falam com a mesma SEFAZ, pelo mesmo certificado por empresa |
+| `dfe:manifestar --evento=210200 --auto --confirmar` | minuto `22` de cada hora | 60 | Confirmação, desde 24/09/2026. TTL maior porque o gatilho (`num_estado_erp_max >= 3`) tende a produzir lotes maiores logo depois do `dfe:conciliar` rodar |
 | `dfe:normalizar` | 10 min | 20 | mais frequente que a ingestão, para a fila de brutos não acumular |
 | `dfe:conciliar` | 30 min | 30 | mais frequente que o fato que observa — a nota chega da SEFAZ na emissão e é lançada no ERP dias depois |
 
-`dfe:manifestar` **não é agendado**. `dfe:monitorar` roda sob demanda.
+`dfe:manifestar` **agendado não é `dfe:manifestar` ativo**: as duas linhas acima
+rodam, chegam em `candidatas()` e saem sem enviar nada enquanto a tranca por
+empresa (`status_manifestar` + a flag do evento) estiver fechada — hoje fechada
+nas 15 empresas. Ver a seção própria mais abaixo. Em `--auto`, o ciclo inteiro
+pula a janela 22h-06h (mais simples que a regra do `dfe:ingerir`, que é por
+empresa: aqui não há "atraso" por empresa para decidir quem drena de madrugada).
+
+`dfe:monitorar` roda sob demanda.
 
 O TTL do `withoutOverlapping` precisa ficar **acima** da duração máxima da execução (200 chamadas × 30s), senão uma queda de processo deixa a rotina travada até o restart.
 
@@ -94,7 +105,12 @@ Isso é o comportamento correto — retentar em loop um documento que falha por 
 
 ### O que nunca vai ser automático
 
-- **`dfe:manifestar`** — ato fiscal com efeito jurídico. Não é agendado, e sem `--confirmar` nada sai. Aguarda validação da contabilidade.
+- **Ligar a tranca por empresa do `dfe:manifestar`** — ato fiscal com efeito
+  jurídico. O comando está agendado desde 24/09/2026, mas `status_manifestar` e
+  as duas flags de automação (`status_manif_auto_ciencia`,
+  `status_manif_auto_confirmacao`) exigem decisão humana por empresa, e a
+  Confirmação automática tem ainda uma terceira trava
+  (`dta_inicio_manif_auto_conf`, para não alcançar o backlog anterior).
 - **Ativar um fluxo** — depende da janela de corte da Qive.
 - **Normalização de MDF-e** — a captura funciona, o parser não existe; cai em `IGNORADO`.
 
@@ -266,19 +282,56 @@ Só vale para **NF-e**. CT-e não entra em `mlf_notafiscal`, e NFS-e recebida n�
 
 ## `dfe:manifestar`
 
-Manifestação do destinatário. **Ato fiscal com efeito jurídico**, e por isso nasce desligado.
+Manifestação do destinatário. **Ato fiscal com efeito jurídico**, gera protocolo
+definitivo na SEFAZ e **não tem desfazer**. Envia em **lote** (`sefazManifestaLote`,
+teto de 20 por requisição — o da NT), nunca unitário.
+
+Reescrito em 23-24/09/2026 (Fases 1 a 3). O que existia antes deste trabalho —
+`candidatas()` lendo `status_manifestacao`, sem sequência, sem lote, sem
+throttling — está descrito só como referência histórica em
+`.claude-work-items/tarefas/manifestacao-destinatario-automatica.md`.
 
 | Opção | Para quê |
 |---|---|
-| `--empresa=` `--chave=` `--limit=20` | alvo |
-| `--evento=210210` | `210200` confirmação · `210220` desconhecimento · `210240` não realizada |
+| `--empresa=` `--chave=` | alvo. Sem os dois, considera todas as empresas com `status_manifestar='S'` |
+| `--evento=210210` (default) | `210200` confirmação · `210220` desconhecimento · `210240` não realizada |
 | `--justificativa=` | **obrigatória** no `210240`, mínimo 15 caracteres |
-| `--confirmar` | **sem esta flag nada é enviado** |
-| `--dry-run` `--debug` | |
+| `--limit=` | teto de notas na execução (default: parâmetro `dfe_manifest_max_ciclo`, hoje 100) |
+| `--auto` | modo agendador: exige também a flag de automação daquele evento na empresa (`status_manif_auto_ciencia`/`status_manif_auto_confirmacao`), pula a janela noturna 22h-06h, e — só na Confirmação — respeita `dta_inicio_manif_auto_conf` |
+| `--confirmar` | **sem esta flag nada é enviado** — só lista as candidatas |
+| `--dry-run` `--debug` | `--debug` salva os envelopes em `storage/logs/dfe-manifestar/` |
 
-Duas barreiras contra manifestar em duplicidade: a flag `--confirmar` e a UK `(cod_dfe_nota, cod_tipo_evento)` no banco. A segunda é a que vale, porque não depende de ninguém lembrar.
+**As trancas, em ordem:**
+1. `status_manifestar='S'` na empresa — chave-mestra, vale para todo evento, manual ou automático.
+2. Só em `--auto`: a flag daquele evento (`status_manif_auto_ciencia`/`_confirmacao`). Permite ligar a Ciência numa filial-piloto sem liberar a Confirmação.
+3. Só na Confirmação automática: `dta_inicio_manif_auto_conf` preenchida, e a nota precisa ter `dta_entrada_erp` posterior a essa data — decisão de 24/09/2026 de não drenar o backlog de notas já escrituradas quando a flag for ligada.
+4. `--confirmar` na chamada.
+5. A UK `(cod_dfe_nota, cod_tipo_evento, nro_seq_evento)` no banco — a única que não depende de ninguém lembrar de checar antes.
 
-**Não é agendado**, por decisão — aguarda validação da contabilidade em poucas notas antes de qualquer automação.
+**Gatilhos:** Ciência (`210210`) — a nota só tem resumo (`resNFe`), ainda não
+tem `procNF` para a chave. Confirmação (`210200`) — `sig_papel_empresa='DEST'`
+e `num_estado_erp_max >= 3` (ESCRITURADA; usa o MAX porque `dfe:conciliar` pode
+regredir `num_estado_erp`, e Confirmação é irreversível — não pode depender de
+coluna que volta). As duas respeitam o prazo legal da NT 2020.001 v1.60, contado
+de `dta_recibo` (autorização), não `dta_emissao`: **10 dias** para Ciência,
+**90 dias** para as três conclusivas. Fora do prazo a SEFAZ devolve `cStat 596`
+(medido em 24/09/2026). Desconhecimento e Operação não Realizada não têm gatilho
+automático — só saem por `--chave`, decisão caso a caso.
+
+**Freio e cooldown:** conta `656` atribuídos à manifestação nas últimas 24h,
+global (`dfe_max_bloqueios_manifest`, hoje 6) e por CNPJ; acima do teto, pausa
+sem erro. Também respeita e escreve o MESMO cooldown da captura
+(`dpc_dfe_cursor.dta_liberado_em`) — não manifesta CNPJ em espera de 656, e um
+656 na manifestação aciona a mesma espera. Não há medição confirmando se o
+`NFeRecepcaoEvento` tem cota separada do `NFeDistribuicaoDFe`; por isso os dois
+andam juntos enquanto essa dúvida não fechar (experimento em andamento, ver
+`.claude-work-items/tarefas/manifestacao-destinatario-automatica.md`).
+
+**Ação manual (Fase 4):** o mesmo núcleo de envio (`DfeManifestacaoEnvioRepository`)
+também atende `POST dfe/manifestar`, chamado pelo botão "Manifestar" do Monitor
+NF-e (DPC). Exige a permissão `MANIFESTAR` (`poseidon.dpc_dfe_usuario_permissao`,
+concedida em Sefaz → Parâmetros na ApiDPC) e valida cada chave antes de enviar
+(empresa, prazo, sequência) — teto de 20 chaves por chamada, o mesmo da NT.
 
 ---
 

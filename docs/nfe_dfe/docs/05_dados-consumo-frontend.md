@@ -63,7 +63,7 @@ Uma linha por **empresa + chave**. É **somente NF-e** (e NFC-e, que compartilha
 | `nro_protocolo` | VARCHAR2(20) | protocolo de autorização |
 | `cod_situacao` | NUMBER | 1 autorizada · 2 denegada · 3 cancelada |
 | `dsc_situacao` | VARCHAR2(20) | texto pronto para exibir |
-| `status_manifestacao` | VARCHAR2(1) | `N` não · `C` ciência · `X` erro |
+| `status_manifestacao` | VARCHAR2(1) | ⚠️ **congelada desde 23/09/2026** — `dfe:manifestar` parou de ler e escrever esta coluna (domínio `N/C/X` não comporta os 4 eventos nem sequência). O sinal real de manifestação agora é derivado na leitura, combinando `DPC_DFE_MANIFESTACAO` (o que nós enviamos) + `DPC_DFE_EVENTO` por `chave_nf` (transferência entre filiais) + chegada do `procNF` (a SEFAZ não devolve ao destinatário o evento da própria manifestação — NT 2014.002). Ver `SefazNfeRepository::subqueryManifestacao()`/`subqueryDocCompleto()` na ApiDPC |
 | **`status_recebimento`** | VARCHAR2(1) | **`N`** não entrou no ERP · **`S`** já entrou |
 | **`seq_nf_erp`** | NUMBER | `mlf_notafiscal.SEQNF` — referência para localizar no ERP |
 | **`dta_entrada_erp`** | DATE | quando entrou no ERP; `dta_entrada_erp - dta_emissao` = **atraso de lançamento** |
@@ -79,7 +79,9 @@ UK `(cod_dfe_empresa, chave_nf)`.
 | `nro_empresa` | identificador do cofre de certificados. **Não** é chave para o Consinco |
 | `num_cnpj` | 14 dígitos, sem máscara, UK |
 | `dsc_razao_social` / `sig_uf` / `num_inscr_estadual` | os campos do configJson do sped |
-| `status_manifestar` | `N`/`S` — manifestação só existe para NF-e |
+| `status_manifestar` | `N`/`S` — chave-mestra: sem `S` a empresa não manifesta de jeito nenhum, nem pela tela manual. Manifestação só existe para NF-e |
+| `status_manif_auto_ciencia` / `status_manif_auto_confirmacao` | `N`/`S`, novas em 23/09/2026 — habilitam SÓ a automação de cada evento (agendador `--auto`); exigem `status_manifestar='S'` junto |
+| `dta_inicio_manif_auto_conf` | DATE, nova em 24/09/2026 — segunda trava da Confirmação automática: com a flag em `S` mas esta data nula, a automação não roda. Preenchida, só pega nota com `dta_entrada_erp` posterior à data (decisão de não drenar o backlog anterior por automação) |
 
 ### `DPC_DFE_CURSOR` — estado de leitura (tela de monitoramento)
 
@@ -203,7 +205,9 @@ UK **`(cod_dfe_cursor, nro_nsu)`** — o NSU é sequencial **por fluxo**, não p
 
 ```sql
 select n.cod_dfe_nota, n.chave_nf, n.nro_nf, n.nro_serie, n.dta_emissao,
-       n.vlr_nota, n.dsc_situacao, n.dsc_tipo_doc, n.status_manifestacao,
+       n.vlr_nota, n.dsc_situacao, n.dsc_tipo_doc,
+       -- manifestacao NAO se le de n.status_manifestacao (congelada desde 23/09/2026) -
+       -- ver SefazNfeRepository::subqueryManifestacao()/subqueryDocCompleto() para o OUTER APPLY real
        n.status_recebimento, n.seq_nf_erp, n.dta_entrada_erp, n.dta_conciliacao,
        em.num_cnpj_cpf, em.dsc_razao_social,
        e.nro_empresa,

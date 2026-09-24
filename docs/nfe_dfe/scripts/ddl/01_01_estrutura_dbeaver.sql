@@ -817,6 +817,7 @@ begin
     select 'status_manifestar'         , 'VARCHAR2(1) default ''N'' not null'        from dual union all
     select 'status_manif_auto_ciencia' , 'VARCHAR2(1) default ''N'' not null'        from dual union all
     select 'status_manif_auto_confirmacao','VARCHAR2(1) default ''N'' not null'      from dual union all
+    select 'dta_inicio_manif_auto_conf', 'DATE'                                      from dual union all
     select 'dsc_razao_social'          , 'VARCHAR2(120) not null'                    from dual union all
     select 'sig_uf'                    , 'VARCHAR2(2) not null'                      from dual union all
     select 'num_inscr_estadual'        , 'VARCHAR2(20)'                              from dual union all
@@ -2475,6 +2476,8 @@ comment on column poseidon.dpc_dfe_empresa.status_manif_auto_ciencia is
   'N-Nao | S-Sim. Habilita a Ciencia da Operacao (210210) AUTOMATICA. Exige status_manifestar = S junto: aquele e a chave-mestra, este governa so a automacao. Default N.';
 comment on column poseidon.dpc_dfe_empresa.status_manif_auto_confirmacao is
   'N-Nao | S-Sim. Habilita a Confirmacao da Operacao (210200) AUTOMATICA, disparada quando a nota chega a ESCRITURADA no ERP. Exige status_manifestar = S junto. Default N, e so depois da Ciencia estar estavel na filial piloto: a Confirmacao tem peso declaratorio maior.';
+comment on column poseidon.dpc_dfe_empresa.dta_inicio_manif_auto_conf is
+  'Data a partir da qual a Confirmacao automatica passa a considerar as notas desta empresa. NULL = a automacao nao roda, mesmo com status_manif_auto_confirmacao=S (segunda trava). Decisao de 24/09/2026: nao drenar backlog anterior por automacao, so por acao manual na tela.';
 comment on column poseidon.dpc_dfe_empresa.dsc_razao_social is
   'Razao social usada no configJson do sped. FONTE UNICA - o modulo nao le cadastro de empresa do ERP.';
 comment on column poseidon.dpc_dfe_empresa.sig_uf is

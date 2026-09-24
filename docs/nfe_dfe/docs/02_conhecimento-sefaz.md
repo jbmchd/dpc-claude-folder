@@ -396,6 +396,56 @@ cancelados totalizando R$ 26.796,56** que até então passavam por válidos, e 9
 comprovantes de entrega — todos com data, mas só 225 com nome de recebedor
 utilizável.
 
+### Eventos de manifestação do destinatário (NF-e)
+
+| Código | Evento | Prazo (da autorização) | Máx. por nota |
+|---|---|---|---|
+| `210210` | Ciência da Operação | **10 dias** | 1 |
+| `210200` | Confirmação da Operação | **90 dias** | 2 |
+| `210220` | Desconhecimento da Operação | **90 dias** | 2 |
+| `210240` | Operação não Realizada | **90 dias** | 2 |
+
+🟢 NT 2020.001 v1.60 (abril/2026), item 4, Ajuste SINIEF 44/20: os prazos são
+contados da **autorização da NF-e** (`dhRecbto`, não `dhEmi`) e fora deles a
+SEFAZ devolve `cStat 596`. O teto de 2 manifestações conclusivas por nota é o
+Ajuste SINIEF 43/23 — não é sequência aberta, e a última vale. A v1.60
+**reduziu** o prazo conclusivo de 180 para 90 dias (Ajuste SINIEF 14/2026);
+qualquer material que ainda fale em 180 está desatualizado.
+
+🔵 Medido em 24/09/2026: a diferença entre `dhEmi` e `dhRecbto` tem média de
+1,9h, mas chegou a **24 dias** numa nota real — usar a emissão em vez da
+autorização só erra nesses casos de borda, que são justamente os únicos em que
+o filtro de prazo decide algo. A primeira nota manifestada fora do prazo (13
+dias contados da emissão, mas ainda dentro contando da autorização) confirmou a
+âncora certa na prática, não só na norma.
+
+🟢 **A SEFAZ nunca devolve ao destinatário o evento da própria manifestação.**
+NT 2014.002 v1.40 (julho/2026, conferida também contra a v1.02d de março/2021 —
+idêntica nos dois pontos abaixo), seção "A distribuição ocorrerá para os
+atores…, tabela de distribuição:
+
+> Eventos de Manifestação do Destinatário — Emitente: **Sim** · Destinatário:
+> **Não** · Transportador: Não · Terceiros: Sim
+
+E o fluxo do modelo, mesma NT, é a citação que fecha o mecanismo:
+
+> 5. O Ambiente Nacional gera um NSU do evento gerado pelo destinatário **para o
+>    emitente**...
+> 6. Caso seja um evento de manifestação do destinatário **diferente do tipo
+>    "desconhecimento da operação"**, o Ambiente Nacional gera um NSU para o
+>    destinatário com a NF-e (liberação do download)...
+
+Consequência prática: **qualquer desenho que dependa de `dpc_dfe_evento` para
+confirmar que UMA manifestação nossa foi aceita está errado por construção** —
+essa tabela só recebe o evento quando somos o EMITENTE (nota emitida por nós e
+manifestada por um cliente, ou transferência entre filiais nossas). A
+confirmação do nosso próprio envio vem só do retorno síncrono do
+`NFeRecepcaoEvento`, gravado em `poseidon.dpc_dfe_manifestacao`. E o sinal
+observável de que uma nota de terceiro FOI manifestada — por nós ou por
+qualquer processo, quando não temos o evento em mãos — é a chegada do XML
+completo (`procNFe`): antes da manifestação, o destinatário só recebe o resumo
+(`resNFe`, nota de rodapé 1 da mesma tabela).
+
 ## 9. Particularidades de layout que já custaram diagnóstico
 
 | Achado | Detalhe | Grau |

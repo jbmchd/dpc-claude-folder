@@ -19,8 +19,17 @@ arquivos de **`scripts/ddl/`**, em três blocos.
 
 | | |
 |---|---|
-| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/` |
-| **Desfazer** | os `_99` de `empresas/` → `03_99` → `01_99`, do mais específico para o motor |
+| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/`, depois `04_01` → `04_02` |
+| **Desfazer** | os `_99` de `empresas/` → `03_99` → `04_98` → `04_99` → `01_99`, do mais específico para o motor |
+
+> **`04_01`/`04_02` não estavam nesta lista até 24/09/2026** — a manifestação
+> nasceu depois deste documento e ficou fora do caminho de instalação por 1 dia.
+> Sem eles, um ambiente novo sobe sem a fundação da manifestação (fila por
+> evento, prazos, trancas) e sem a permissão de tela da Fase 4. As colunas de
+> `dpc_dfe_empresa` que o `04_02` acrescenta também foram espelhadas no `01_01`
+> como reforço (mesmo motivo do `04_01` — ver seu próprio cabeçalho), mas
+> `dpc_dfe_usuario_permissao` (tabela nova, sem histórico de legado como
+> `dpc_dfe_usuario_aba`) só nasce pelo `04_02` — rodar este bloco não é opcional.
 
 O primeiro número é o bloco, o segundo é a ordem dentro dele. O `_99` de cada
 bloco é o rollback daquele bloco.
@@ -59,6 +68,8 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 |---|---|---|
 | `empresas/` | `20_01_empresa_20` · `29_01_empresa_29` · `30_01_empresa_30` | um par por estabelecimento trazido depois da carga geral: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1. O número do arquivo é o número da empresa. A **17** não tem par: veio na carga geral e já tinha certificado próprio no ERP — só precisa ser ativada |
 | 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
+| 04 | `04_01_manifestacao` | fundação da manifestação (23/09/2026): 6 colunas novas em `dpc_dfe_manifestacao`, UK com sequência, 2 trancas de automação em `dpc_dfe_empresa`, 4 parâmetros. Rollback: `04_99` |
+| 04 | `04_02_manifestacao_fases_2a4` | Fases 2-4 (24/09/2026): corte de data da Confirmação automática (`dta_inicio_manif_auto_conf`) e a tabela `dpc_dfe_usuario_permissao` (permissão da tela manual). Rollback: `04_98` |
 
 Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha
 inserida só se ainda não existir, coluna acrescentada só se faltar. Falha no

@@ -33,7 +33,7 @@ flowchart LR
     D --> N["dfe:normalizar<br/>NUNCA fala com a SEFAZ"]
     N --> T[("NOTA · ITEM · CTE · NFSE<br/>EMITENTE · EVENTO")]
     T --> K["dfe:conciliar"]
-    T --> M["dfe:manifestar<br/>desligado"]
+    T --> M["dfe:manifestar<br/>agendado --auto (24/09/2026); trancas por empresa fechadas hoje"]
     T --> V["dfe:monitorar"]
     V -.->|"lê"| TELA["Monitor DFe<br/>ApiDPC + DPC"]
 ```
@@ -240,7 +240,7 @@ frontend: [05_dados-consumo-frontend.md](05_dados-consumo-frontend.md).
 | `DPC_DFE_EVENTO.cod_dfe_nota` **nullable** | evento cuja nota ainda não chegou era **descartado em silêncio** e o NSU avançava: perda definitiva. Agora fica órfão e é religado |
 | `dta_liberado_em` como coluna | o cooldown era 60 min hardcoded dentro do SQL, com a política duplicada entre PHP e uma function não versionada |
 | `dsc_tipo_doc` na nota | permite promoção resumo → completo; antes a nota ficava eternamente com os dados do resumo |
-| UK `(cod_dfe_nota, cod_tipo_evento)` na manifestação | impede manifestar em duplicidade, que é o risco **jurídico** |
+| UK `(cod_dfe_nota, cod_tipo_evento, nro_seq_evento)` na manifestação | impede manifestar em duplicidade, que é o risco **jurídico**. Ganhou `nro_seq_evento` em 23/09/2026 (`04_01`): sem ela, as conclusivas (que admitem 2 manifestações por nota) não tinham como coexistir com a Ciência na mesma UK |
 | BLOB gzip em vez de NCLOB | ~2,3 GB/ano contra ~15 GB/ano (NCLOB usa 2 bytes/caractere) |
 
 ## 4. Os parâmetros, e por que saíram do `.env`
@@ -295,7 +295,7 @@ Quem usa cada um, e quando: [§2](#2-a-regra-de-quando-consultar-a-sefaz).
 | Container alpha | `apinfe-app` em `dkalpha00`, cron por supervisor, `RUN_SCHEDULE=1` |
 | Base do container | `oracle_tst` → `homolog` / `operconsinco-dpc-bdhomolog01` |
 | Ambiente | `TIPO_AMBIENTE=1` com base de teste: fala com a **SEFAZ real**, grava na base de **teste** |
-| `dfe:manifestar` | **não** é agendado — ato fiscal, aguarda validação da contabilidade |
+| `dfe:manifestar` | **agendado desde 24/09/2026** (`--evento=210210 --auto --confirmar` nos minutos `7,37`; `--evento=210200 --auto --confirmar` no minuto `22`), sempre com `--auto` e a janela noturna 22h-06h. É agendamento, não automação ligada: as 15 empresas estão com `status_manifestar='N'` e as duas flags de automação (`status_manif_auto_ciencia`, `status_manif_auto_confirmacao`) em `'N'` — o comando roda, encontra zero candidatas e sai |
 
 ## 6. Defeitos que já aconteceram — leia antes de diagnosticar
 
@@ -370,8 +370,8 @@ permanente volta para cá.
 | ~~Chave de NFS-e truncada~~ | ✅ **fechado.** Conferido em 03/09/2026: `DPC_DFE_DOCUMENTO.CHAVE_NF` e `DPC_DFE_NFSE.CHAVE_NFSE` são `VARCHAR2(50)`, e as 37 NFS-e têm chave de 50 caracteres. As colunas de 44 que restam guardam chave de NF-e e CT-e, que têm 44 mesmo |
 | **CNPJs ociosos** | ~~empresa 900~~ saiu da base com a limpeza da ALL CARS. O fenômeno persiste na **empresa 30** — ver a linha acima |
 | **MDF-e** | `procEvMDF` nunca ativado; 14 fluxos pausados |
-| **`dfe:manifestar`** | desligado, aguardando a contabilidade |
-| **Corte da Qive** | livres: **29** (DF) e **30** (MS), ativas desde 09–11/09; **17** (PE) e **20** (GO), liberadas em 14/09/2026 e ainda pausadas. A 20 foi cadastrada nesse dia (`empresas/20_01`); a 17 já vinha da carga geral e tem certificado próprio — só falta ativar. **As duas são de outra ordem de grandeza:** 29.252 e 12.413 notas em 90 dias contra 892 da 29, projetando ~207.000 e ~88.000 documentos. Ativar **uma de cada vez**, a 20 primeiro. Cada CNPJ ativado mede a taxa-base do fenômeno da empresa 30 |
+| **`dfe:manifestar`** | ✅ **agendado desde 24/09/2026** (Fases 2 e 3 da manifestação automática) e com endpoint manual (Fase 4). Trancas por empresa fechadas — nada manifesta sozinho hoje. Ver [06_operacao-comandos.md](06_operacao-comandos.md) |
+| **Corte da Qive** | 🔴 **a linha anterior desta tabela estava errada — corrigido em 23/09/2026.** Nenhum dos quatro CNPJs (17, 20, 29, 30) é livre da Qive; só a empresa **900** (ALL CARS, nem cadastrada na Qive) está fora. 17/20/29/30 seguem todos na Qive hoje, e um 656 neles é **consumo em paralelo esperado**, não anomalia — o NSU é por CNPJ e compartilhado entre quem consulta. A migração real exige um corte seco por CNPJ (parar a Qive naquele CNPJ, então ativar o motor), não convivência. Ver `12_sefaz-656-consumo-indevido.md` |
 | **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 6 linhas. Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
 

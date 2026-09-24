@@ -25,7 +25,11 @@ nfe_dfe/scripts/
     │   ├── 30_01_empresa_30             │
     │   └── 30_99_rollback_empresa_30    ┘
     ├── 03_01_parametrizacao_telas       ┐ BLOCO 03 - permissao de acesso aos
-    └── 03_99_rollback_telas             ┘ paineis e limiar de alerta
+    ├── 03_99_rollback_telas             ┘ paineis e limiar de alerta
+    ├── 04_01_manifestacao               ┐ BLOCO 04 - manifestacao do
+    ├── 04_99_rollback_manifestacao      │ destinatario: fundacao (23/09) e
+    ├── 04_02_manifestacao_fases_2a4     │ Fases 2-4 (24/09) - ato fiscal,
+    └── 04_98_rollback_manifestacao_...  ┘ trancas fechadas por padrao
 ```
 
 O primeiro número é o **bloco**, o segundo é a ordem **dentro** dele. O `_99` de
@@ -33,8 +37,8 @@ cada bloco é o rollback daquele bloco — quem desfaz mora ao lado de quem faz.
 
 | | |
 |---|---|
-| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/` |
-| **Desfazer** | os `_99` de `empresas/` → `03_99` → `01_99`, do mais específico para o motor |
+| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/`, depois `04_01` → `04_02` |
+| **Desfazer** | os `_99` de `empresas/` → `03_99` → `04_98` → `04_99` → `01_99`, do mais específico para o motor |
 
 **Só `.sql` para rodar no DBeaver.** Nenhum `README` dentro das pastas de
 script: a explicação de cada grupo está em documento próprio do hub, e este
@@ -170,6 +174,32 @@ Essas três nasceram no card #3235, pelo lado do front, e ficaram **fora de
 qualquer script** até 09/09/2026 — foram criadas à mão em 25/08/2026, e nenhum
 `.sql` do workspace as criava. Sobreviveram ao refresh da base de teste por
 sorte: o snapshot restaurado era de 27/08, dois dias depois de elas existirem.
+
+## 4b. O bloco 04 — manifestação
+
+Dois arquivos, um por leva de trabalho — não um por evento nem por fase:
+
+| # | Arquivo | O que faz | Destrutivo |
+|---|---|---|---|
+| 1 | `04_01_manifestacao` (23/09/2026) | fundação: 6 colunas novas em `dpc_dfe_manifestacao` (`nro_seq_evento`, `dsc_justificativa`, `dta_registro_evento`, `cod_dfe_empresa`, `dsc_id_lote`, `dta_proxima_tentativa`); UK passa a incluir `nro_seq_evento`; 2 colunas de tranca de automação em `dpc_dfe_empresa`; 4 parâmetros em `DPC_PARAMETRO` | não (só ALTER ADD + INSERT condicional) |
+| — | `04_99_rollback_manifestacao` | reverte o `04_01` — **recusa** reverter a UK se já existir mais de uma sequência por `(nota, evento)`, porque a UK antiga não comporta esse dado | sim, com essa guarda |
+| 2 | `04_02_manifestacao_fases_2a4` (24/09/2026) | Fases 2-4: `dta_inicio_manif_auto_conf` em `dpc_dfe_empresa` (corte de data da Confirmação automática); tabela nova `dpc_dfe_usuario_permissao` (permissão da tela manual, mesmo padrão de `dpc_dfe_usuario_aba`) | não |
+| — | `04_98_rollback_manifestacao_fases_2a4` | reverte o `04_02` — apaga a tabela de permissão inteira, então mede antes (o cabeçalho do script traz o `SELECT` de conferência) | sim |
+
+Por que dois arquivos e não um só cobrindo tudo: o `04_01` já estava aplicado e
+testado quando as Fases 2-4 ganharam forma um dia depois, e reabrir um script
+já rodado em homolog para acrescentar objetos teria exigido reconferir tudo de
+novo. O padrão do módulo é bloco por leva de trabalho, não por fase de negócio —
+o mesmo raciocínio do bloco 02 ter nascido separado do 01.
+
+⚠️ **Diferente dos blocos 01 e 03, o 04 não tem tudo espelhado em outro
+arquivo.** As colunas de `dpc_dfe_empresa` dos dois arquivos foram copiadas para
+o `01_01` (mesmo motivo do `01_03`: um rebuild não pode recriar a base sem
+elas), mas `dpc_dfe_usuario_permissao` só existe pelo `04_02` — não há cópia no
+`03_01`, porque aquele arquivo narra uma migração histórica de 3 tabelas
+específicas (`dpc_sefaz_*` → `dpc_dfe_*`) e esta tabela nunca teve nome antigo.
+Pular o `04_02` numa instalação nova deixa a Fase 4 sem permissão para
+conceder — ver [07_ddl-instalacao.md](07_ddl-instalacao.md).
 
 ## 5. Scripts pontuais
 

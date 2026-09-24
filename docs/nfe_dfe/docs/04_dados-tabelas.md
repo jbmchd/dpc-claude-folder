@@ -270,9 +270,9 @@ O cancelamento (`110111`) escreve `cod_situacao = 3` na `DPC_DFE_CTE`, com
 
 **Uma linha por (nota, tipo de evento).** Registra o envio, o retorno, o protocolo, as tentativas e o XML de resposta.
 
-**A UK `(cod_dfe_nota, cod_tipo_evento)` é a razão principal da tabela existir separada:** ela **impede manifestar em duplicidade**. Manifestação é ato fiscal com efeito jurídico, e o banco é a última barreira — a primeira é a flag `--confirmar`, que depende de alguém lembrar. A UK não depende de ninguém.
+**A UK `(cod_dfe_nota, cod_tipo_evento, nro_seq_evento)` é a razão principal da tabela existir separada:** ela **impede manifestar em duplicidade**. Manifestação é ato fiscal com efeito jurídico, e o banco é a última barreira — a primeira é a flag `--confirmar`, que depende de alguém lembrar. A UK não depende de ninguém. `nro_seq_evento` entrou na UK em 23/09/2026 (`04_01`): sem ela, uma nota não podia ter Ciência (seq 1) e depois Confirmação (também seq 1, tabela separada por tipo) nem duas conclusivas do mesmo tipo (a NT admite até 2).
 
-Nasce vazia e **continua vazia** até a contabilidade validar: o `dfe:manifestar` não é agendado e sem `--confirmar` nada é enviado.
+Deixou de estar vazia em 21/09/2026 (Fase 0: 10 Ciências reais, empresa 29). Desde 24/09/2026 o `dfe:manifestar` está **agendado** (`--auto`, Ciência e Confirmação), mas as trancas por empresa (`status_manifestar` e as duas flags de automação) estão todas em `'N'` — nada novo é gravado sozinho. Colunas novas da Fase 1 (`nro_seq_evento`, `dsc_justificativa`, `dta_registro_evento`, `cod_dfe_empresa`, `dsc_id_lote`, `dta_proxima_tentativa`) e da Fase 2-4 (nenhuma nesta tabela) — ver `04_01`/`04_02` em `scripts/ddl/`.
 
 ---
 

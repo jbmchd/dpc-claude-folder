@@ -10,10 +10,19 @@ O agendamento está dentro do guard que já existe:
 
 ```php
 if (env('RUN_SCHEDULE') == 1) {
-    $schedule->command('dfe:ingerir')->everyFifteenMinutes()->withoutOverlapping(30);
+    $schedule->command('dfe:ingerir --agendado')->everyFifteenMinutes()->withoutOverlapping(30);
+    $schedule->command('dfe:manifestar', ['--evento' => '210210', '--auto', '--confirmar'])
+        ->cron('7,37 * * * *')->withoutOverlapping(30);
+    $schedule->command('dfe:manifestar', ['--evento' => '210200', '--auto', '--confirmar'])
+        ->cron('22 * * * *')->withoutOverlapping(60);
     $schedule->command('dfe:normalizar')->everyTenMinutes()->withoutOverlapping(20);
+    $schedule->command('dfe:conciliar')->everyThirtyMinutes()->withoutOverlapping(30);
 }
 ```
+
+Atualizado em 24/09/2026 para refletir o `Kernel.php` real — a versão anterior
+deste bloco já estava incompleta antes da manifestação (faltava o
+`dfe:conciliar`, que existe desde antes desta atualização).
 
 O servidor de homologação **já roda o scheduler** — é o que dispara `senig:averbar` e o `schedule-test:tick`. Ou seja: se `RUN_SCHEDULE` já estiver `1` lá, **o simples merge deste código começa a consultar a SEFAZ a cada 15 minutos, sem ninguém apertar nada.**
 
@@ -130,9 +139,9 @@ Só depois de 1 a 4 e **depois da decisão sobre a Qive**:
 RUN_SCHEDULE=1
 ```
 
-Cadência: `dfe:ingerir` a cada 15 min, `dfe:normalizar` a cada 10. A frequência é folgada de propósito — o controle real é por empresa, via `dpc_dfe_empresa.dta_liberado_em`, então a maioria das execuções só confirma que ninguém está liberado e encerra.
+Cadência: `dfe:ingerir` a cada 15 min, `dfe:normalizar` a cada 10, `dfe:conciliar` a cada 30. A frequência do `dfe:ingerir` é folgada de propósito — o controle real é por empresa, via `dpc_dfe_cursor.dta_liberado_em`, então a maioria das execuções só confirma que ninguém está liberado e encerra.
 
-`dfe:manifestar` **não** é agendado, de propósito. É ato fiscal com protocolo definitivo e sem desfazer.
+`dfe:manifestar` **está agendado desde 24/09/2026** (minutos `7,37` para Ciência, `22` para Confirmação, ambos `--auto --confirmar`), mas isso não liga a manifestação sozinha: é ato fiscal com protocolo definitivo e sem desfazer, e por isso permanece atrás de trancas por empresa (`status_manifestar` + as flags de automação) que nascem fechadas em qualquer ambiente novo. Ligar de verdade é decisão humana, por empresa, depois de aplicar `04_01`/`04_02` — ver [06_operacao-comandos.md](06_operacao-comandos.md).
 
 ## 6. Monitorar depois de ligado
 
