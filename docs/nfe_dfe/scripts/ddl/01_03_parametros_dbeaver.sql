@@ -235,11 +235,70 @@ select 'dfe_conexao_erp', 'oracle',
  where not exists (select 1 from poseidon.dpc_parametro
                     where lower(nome) = 'dfe_conexao_erp');
 
+-- ---------------------------------------------------------------------------
+-- dfe_manifest_max_lote = 20   (faixa 1 a 20)
+-- ---------------------------------------------------------------------------
+insert into poseidon.dpc_parametro (nome, valor, explicacao)
+select 'dfe_manifest_max_lote', '20',
+       'Modulo DFe (ApiNFE) - maximo de eventos de manifestacao por lote enviado ao '
+    || 'NFeRecepcaoEvento. O teto 20 e da NT e a propria sped-nfe recusa acima disso '
+    || '(RuntimeException em sefazManifestaLote). Enviar em lote em vez de unitario '
+    || 'troca 20 requisicoes por 1, o que importa porque a manifestacao usa o mesmo '
+    || 'certificado, CNPJ e IP da captura. Faixa aceita: 1 a 20.'
+  from dual
+ where not exists (select 1 from poseidon.dpc_parametro
+                    where lower(nome) = 'dfe_manifest_max_lote');
+
+-- ---------------------------------------------------------------------------
+-- dfe_manifest_max_ciclo = 100   (faixa 1 a 2000)
+-- ---------------------------------------------------------------------------
+insert into poseidon.dpc_parametro (nome, valor, explicacao)
+select 'dfe_manifest_max_ciclo', '100',
+       'Modulo DFe (ApiNFE) - maximo de eventos de manifestacao por execucao do '
+    || 'dfe:manifestar. Orcamento do ciclo, equivalente ao dfe_max_consultas da '
+    || 'captura. Manifestacao e ato fiscal irreversivel: o teto existe para que um '
+    || 'defeito na fila de candidatas nao vire mil protocolos definitivos antes de '
+    || 'alguem perceber. Faixa aceita: 1 a 2000.'
+  from dual
+ where not exists (select 1 from poseidon.dpc_parametro
+                    where lower(nome) = 'dfe_manifest_max_ciclo');
+
+-- ---------------------------------------------------------------------------
+-- dfe_manifest_pausa_seg = 5   (faixa 0 a 600)
+-- ---------------------------------------------------------------------------
+insert into poseidon.dpc_parametro (nome, valor, explicacao)
+select 'dfe_manifest_pausa_seg', '5',
+       'Modulo DFe (ApiNFE) - pausa em segundos entre lotes de manifestacao. '
+    || 'Prudencia propria, nao exigencia da NT. Antes da Fase 1 o dfe:manifestar nao '
+    || 'tinha pausa nenhuma e mandava os eventos em rajada. Faixa aceita: 0 a 600.'
+  from dual
+ where not exists (select 1 from poseidon.dpc_parametro
+                    where lower(nome) = 'dfe_manifest_pausa_seg');
+
+-- ---------------------------------------------------------------------------
+-- dfe_max_bloqueios_manifest = 6   (faixa 1 a 20)
+-- ---------------------------------------------------------------------------
+insert into poseidon.dpc_parametro (nome, valor, explicacao)
+select 'dfe_max_bloqueios_manifest', '6',
+       'Modulo DFe (ApiNFE) - freio da manifestacao: acima deste numero de rejeicoes '
+    || '656 atribuidas ao envio de eventos em 24h, o dfe:manifestar para. Existe '
+    || 'porque NAO ha medicao confirmando que o NFeRecepcaoEvento tem cota separada '
+    || 'do NFeDistribuicaoDFe - a afirmacao esta no codigo (DfeSefazRepository) sem '
+    || 'nenhum experimento atras, ao contrario do resto do modulo. O teste de '
+    || '21/09/2026 (10 Ciencias na empresa 29) nao produziu 656 algum, mas foram so '
+    || '7 execucoes de captura depois, N baixo demais para concluir. Enquanto isso '
+    || 'nao fechar, a manifestacao respeita tambem o cooldown da captura, via '
+    || 'dpc_dfe_cursor.dta_liberado_em. Espelha o dfe_max_bloqueios_cnpj. '
+    || 'Faixa aceita: 1 a 20.'
+  from dual
+ where not exists (select 1 from poseidon.dpc_parametro
+                    where lower(nome) = 'dfe_max_bloqueios_manifest');
+
 commit;
 
 
 -- ============================================================================
---  CONFERENCIA - deve devolver as 6 linhas, uma vez cada
+--  CONFERENCIA - deve devolver as 10 linhas, uma vez cada
 -- ============================================================================
 select nome, valor, length(explicacao) as tam_explicacao, count(*) over () as total
   from poseidon.dpc_parametro

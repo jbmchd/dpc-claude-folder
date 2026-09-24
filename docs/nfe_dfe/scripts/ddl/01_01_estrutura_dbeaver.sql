@@ -811,10 +811,12 @@ declare
   qtd number;
 begin
   for c in (
-    select 'cod_dfe_empresa'    as nome, 'NUMBER not null'                    as def from dual union all
+    select 'cod_dfe_empresa'           , 'NUMBER'                                    from dual union all
     select 'nro_empresa'               , 'NUMBER not null'                           from dual union all
     select 'num_cnpj'                  , 'VARCHAR2(14) not null'                     from dual union all
     select 'status_manifestar'         , 'VARCHAR2(1) default ''N'' not null'        from dual union all
+    select 'status_manif_auto_ciencia' , 'VARCHAR2(1) default ''N'' not null'        from dual union all
+    select 'status_manif_auto_confirmacao','VARCHAR2(1) default ''N'' not null'      from dual union all
     select 'dsc_razao_social'          , 'VARCHAR2(120) not null'                    from dual union all
     select 'sig_uf'                    , 'VARCHAR2(2) not null'                      from dual union all
     select 'num_inscr_estadual'        , 'VARCHAR2(20)'                              from dual union all
@@ -846,7 +848,7 @@ declare
 begin
   for c in (
     select 'cod_dfe_cursor'         as nome, 'NUMBER not null'                    as def from dual union all
-    select 'cod_dfe_empresa'               , 'NUMBER not null'                           from dual union all
+    select 'cod_dfe_empresa'               , 'NUMBER'                                    from dual union all
     select 'cod_tipo_dfe'                  , 'VARCHAR2(4) not null'                      from dual union all
     select 'status_sincronismo'            , 'VARCHAR2(1) default ''A'' not null'        from dual union all
     select 'nro_ultimo_nsu'                , 'NUMBER default 0 not null'                 from dual union all
@@ -917,7 +919,7 @@ begin
   for c in (
     select 'cod_dfe_documento' as nome, 'NUMBER not null'                            as def from dual union all
     select 'cod_dfe_cursor'           , 'NUMBER not null'                                   from dual union all
-    select 'cod_dfe_empresa'          , 'NUMBER not null'                                   from dual union all
+    select 'cod_dfe_empresa'          , 'NUMBER'                                            from dual union all
     select 'nro_nsu'                  , 'NUMBER not null'                                   from dual union all
     select 'dsc_schema'               , 'VARCHAR2(60)'                                      from dual union all
     select 'dsc_tipo_doc'             , 'VARCHAR2(10)'                                      from dual union all
@@ -952,7 +954,7 @@ declare
 begin
   for c in (
     select 'cod_dfe_nota'        as nome, 'NUMBER not null'                    as def from dual union all
-    select 'cod_dfe_empresa'            , 'NUMBER not null'                           from dual union all
+    select 'cod_dfe_empresa'            , 'NUMBER'                                    from dual union all
     select 'cod_dfe_emitente'           , 'NUMBER'                                    from dual union all
     select 'chave_nf'                   , 'VARCHAR2(44) not null'                     from dual union all
     select 'nro_nsu'                    , 'NUMBER'                                    from dual union all
@@ -1086,7 +1088,7 @@ declare
 begin
   for c in (
     select 'cod_dfe_evento'  as nome, 'NUMBER not null'           as def from dual union all
-    select 'cod_dfe_empresa'        , 'NUMBER not null'                  from dual union all
+    select 'cod_dfe_empresa'        , 'NUMBER'                           from dual union all
     select 'cod_dfe_nota'           , 'NUMBER'                           from dual union all
     select 'chave_nf'               , 'VARCHAR2(44) not null'            from dual union all
     select 'nro_nsu'                , 'NUMBER'                           from dual union all
@@ -1124,7 +1126,7 @@ begin
   for c in (
     select 'cod_dfe_execucao' as nome, 'NUMBER not null'                            as def from dual union all
     select 'cod_dfe_cursor'          , 'NUMBER not null'                                   from dual union all
-    select 'cod_dfe_empresa'         , 'NUMBER not null'                                   from dual union all
+    select 'cod_dfe_empresa'         , 'NUMBER'                                            from dual union all
     select 'dta_inicio'              , 'TIMESTAMP(6) default systimestamp not null'        from dual union all
     select 'dta_fim'                 , 'TIMESTAMP(6)'                                      from dual union all
     select 'nro_nsu_inicial'         , 'NUMBER'                                            from dual union all
@@ -1172,6 +1174,12 @@ begin
     select 'xml_retorno'                 , 'CLOB'                                      from dual union all
     select 'dta_envio'                   , 'TIMESTAMP(6)'                              from dual union all
     select 'dta_ultima_tentativa'        , 'TIMESTAMP(6)'                              from dual union all
+    select 'nro_seq_evento'              , 'NUMBER default 1 not null'                 from dual union all
+    select 'dsc_justificativa'           , 'VARCHAR2(255)'                             from dual union all
+    select 'dta_registro_evento'         , 'TIMESTAMP(6)'                              from dual union all
+    select 'cod_dfe_empresa'             , 'NUMBER'                                    from dual union all
+    select 'dsc_id_lote'                 , 'VARCHAR2(20)'                              from dual union all
+    select 'dta_proxima_tentativa'       , 'TIMESTAMP(6)'                              from dual union all
     select 'dta_atualizacao'             , 'TIMESTAMP(6)'                              from dual union all
     select 'created_at'                  , 'DATE default sysdate'                      from dual union all
     select 'created_by'                  , 'VARCHAR2(50)'                              from dual
@@ -1199,7 +1207,7 @@ declare
 begin
   for c in (
     select 'cod_dfe_cte'        as nome, 'NUMBER not null'       as def from dual union all
-    select 'cod_dfe_empresa'           , 'NUMBER not null'              from dual union all
+    select 'cod_dfe_empresa'           , 'NUMBER'                       from dual union all
     select 'chave_cte'                 , 'VARCHAR2(44) not null'        from dual union all
     select 'nro_nsu'                   , 'NUMBER'                       from dual union all
     select 'dsc_tipo_doc'              , 'VARCHAR2(10)'                 from dual union all
@@ -1285,7 +1293,7 @@ declare
 begin
   for c in (
     select 'cod_dfe_cte_evento' as nome, 'NUMBER not null'           as def from dual union all
-    select 'cod_dfe_empresa'           , 'NUMBER not null'                  from dual union all
+    select 'cod_dfe_empresa'           , 'NUMBER'                           from dual union all
     select 'cod_dfe_cte'               , 'NUMBER'                           from dual union all
     select 'chave_cte'                 , 'VARCHAR2(44) not null'            from dual union all
     select 'nro_nsu'                   , 'NUMBER'                           from dual union all
@@ -1328,7 +1336,7 @@ declare
 begin
   for c in (
     select 'cod_dfe_nfse'         as nome, 'NUMBER not null'       as def from dual union all
-    select 'cod_dfe_empresa'             , 'NUMBER not null'              from dual union all
+    select 'cod_dfe_empresa'             , 'NUMBER'                       from dual union all
     select 'chave_nfse'                  , 'VARCHAR2(50) not null'        from dual union all
     select 'nro_nsu'                     , 'NUMBER'                       from dual union all
     select 'dsc_tipo_doc'                , 'VARCHAR2(10)'                 from dual union all
@@ -1431,6 +1439,28 @@ begin
 
   if qtd = 0 then
     execute immediate q'[alter table poseidon.dpc_dfe_empresa add constraint DPC_DFE_EMPRESA_CK2 check (status_manifestar in ('N','S'))]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_EMPRESA_CK3';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_empresa add constraint DPC_DFE_EMPRESA_CK3 check (status_manif_auto_ciencia in ('N','S'))]';
+  end if;
+end;
+
+declare
+  qtd number;
+begin
+  select count(*) into qtd from all_constraints
+   where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_EMPRESA_CK4';
+
+  if qtd = 0 then
+    execute immediate q'[alter table poseidon.dpc_dfe_empresa add constraint DPC_DFE_EMPRESA_CK4 check (status_manif_auto_confirmacao in ('N','S'))]';
   end if;
 end;
 
@@ -1804,7 +1834,7 @@ begin
    where owner = 'POSEIDON' and constraint_name = 'DPC_DFE_MANIF_UK1';
 
   if qtd = 0 then
-    execute immediate q'[alter table poseidon.dpc_dfe_manifestacao add constraint DPC_DFE_MANIF_UK1 unique (cod_dfe_nota, cod_tipo_evento) using index tablespace TSD_POSEIDON]';
+    execute immediate q'[alter table poseidon.dpc_dfe_manifestacao add constraint DPC_DFE_MANIF_UK1 unique (cod_dfe_nota, cod_tipo_evento, nro_seq_evento) using index tablespace TSD_POSEIDON]';
   end if;
 end;
 
@@ -2441,6 +2471,10 @@ comment on column poseidon.dpc_dfe_empresa.num_cnpj is
   'CNPJ do estabelecimento sem mascara. E o valor enviado na tag CNPJ do distDFeInt e define de quem sao os documentos retornados';
 comment on column poseidon.dpc_dfe_empresa.status_manifestar is
   'N-Nao manifestar | S-Manifestar automaticamente. Default N: manifestacao e ato fiscal e exige aval da contabilidade';
+comment on column poseidon.dpc_dfe_empresa.status_manif_auto_ciencia is
+  'N-Nao | S-Sim. Habilita a Ciencia da Operacao (210210) AUTOMATICA. Exige status_manifestar = S junto: aquele e a chave-mestra, este governa so a automacao. Default N.';
+comment on column poseidon.dpc_dfe_empresa.status_manif_auto_confirmacao is
+  'N-Nao | S-Sim. Habilita a Confirmacao da Operacao (210200) AUTOMATICA, disparada quando a nota chega a ESCRITURADA no ERP. Exige status_manifestar = S junto. Default N, e so depois da Ciencia estar estavel na filial piloto: a Confirmacao tem peso declaratorio maior.';
 comment on column poseidon.dpc_dfe_empresa.dsc_razao_social is
   'Razao social usada no configJson do sped. FONTE UNICA - o modulo nao le cadastro de empresa do ERP.';
 comment on column poseidon.dpc_dfe_empresa.sig_uf is
@@ -2835,6 +2869,18 @@ comment on column poseidon.dpc_dfe_manifestacao.created_at is
   'Data de inclusao da linha.';
 comment on column poseidon.dpc_dfe_manifestacao.created_by is
   'Rotina que incluiu a linha (DFE INGERIR, DFE NORMALIZAR, DFE CONCILIAR, CARGA INICIAL).';
+comment on column poseidon.dpc_dfe_manifestacao.nro_seq_evento is
+  'Numero de sequencia do evento (nSeqEvento). Ciencia e SEMPRE 1, so pode existir uma por NF-e; os outros tres eventos admitem seq=n. Calculado a partir DESTA tabela, nunca de dpc_dfe_evento: a SEFAZ nao devolve ao destinatario o evento da propria manifestacao (NT 2014.002, tabela de distribuicao).';
+comment on column poseidon.dpc_dfe_manifestacao.dsc_justificativa is
+  'Texto do xJust, obrigatorio no 210240 (Operacao nao Realizada) com no minimo 15 caracteres. E o dado juridicamente relevante daquele evento.';
+comment on column poseidon.dpc_dfe_manifestacao.dta_registro_evento is
+  'dhRegEvento: quando a SEFAZ REGISTROU o evento. Diferente de DTA_ENVIO, que e quando nos enviamos.';
+comment on column poseidon.dpc_dfe_manifestacao.cod_dfe_empresa is
+  'Empresa que manifestou. Denormalizado de dpc_dfe_nota de proposito, para o freio contar bloqueios por CNPJ sem join.';
+comment on column poseidon.dpc_dfe_manifestacao.dsc_id_lote is
+  'idLote do envelope envEvento. Informado explicitamente: o autogerado da sped-nfe colide. Sem ele nao da para reconstituir qual envelope gerou qual retorno.';
+comment on column poseidon.dpc_dfe_manifestacao.dta_proxima_tentativa is
+  'Quando a fila de reenvio pode tentar de novo. Com STATUS_ENVIO e DTA_ULTIMA_TENTATIVA fecha o indice DPC_DFE_MANIF_IX1, que nunca teve consumidor.';
 
 --  ---------- DPC_DFE_CTE ----------
 comment on table poseidon.dpc_dfe_cte is
