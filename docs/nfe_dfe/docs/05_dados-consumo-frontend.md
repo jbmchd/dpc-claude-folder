@@ -61,7 +61,7 @@ Uma linha por **empresa + chave**. É **somente NF-e** (e NFC-e, que compartilha
 | `vlr_nota` | NUMBER | valor total |
 | `dta_emissao` / `dta_recibo` | DATE | sem hora |
 | `nro_protocolo` | VARCHAR2(20) | protocolo de autorização |
-| `cod_situacao` | NUMBER | 1 autorizada · 2 denegada · 3 cancelada |
+| `cod_situacao` | NUMBER | 1 autorizada · 2 denegada · 3 cancelada. **Lê direto, sem olhar evento** — e está certo assim desde 30/09/2026: o cancelamento passou a ser gravado aqui pelo motor, então a tela não precisa derivar nada (ao contrário da manifestação, logo abaixo) |
 | `dsc_situacao` | VARCHAR2(20) | texto pronto para exibir |
 | `status_manifestacao` | VARCHAR2(1) | ⚠️ **congelada desde 23/09/2026** — `dfe:manifestar` parou de ler e escrever esta coluna (domínio `N/C/X` não comporta os 4 eventos nem sequência). O sinal real de manifestação agora é derivado na leitura, combinando `DPC_DFE_MANIFESTACAO` (o que nós enviamos) + `DPC_DFE_EVENTO` por `chave_nf` (transferência entre filiais) + chegada do `procNF` (a SEFAZ não devolve ao destinatário o evento da própria manifestação — NT 2014.002). Ver `SefazNfeRepository::subqueryManifestacao()`/`subqueryDocCompleto()` na ApiDPC |
 | **`status_recebimento`** | VARCHAR2(1) | **`N`** não entrou no ERP · **`S`** já entrou |

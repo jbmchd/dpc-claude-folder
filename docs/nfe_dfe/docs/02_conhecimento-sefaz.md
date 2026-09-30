@@ -370,6 +370,23 @@ flowchart TD
 A **promoção resumo → completo** é proposital: quando o `procNF` chega depois do
 `resNFe` com a mesma chave, a linha é atualizada em vez de ignorada.
 
+🔵 **Mas o completo não é mais rico em tudo — e a situação é a exceção.** O
+`procNFe` é a nota autorizada **mais o protocolo de autorização**, cujo `cStat`
+é sempre 100; ele não carrega cancelamento posterior. Já o `resNFe` tem
+`cSitNFe`, que diz `3` quando cancelada. Ou seja: **no único campo em que o
+resumo sabe mais, a promoção apagava o dado bom.**
+
+Medido em 30/09/2026 — das 133 notas com evento `110111` capturado, a
+correlação foi perfeita:
+
+| Nota estava como | Situação exibida | Qtd |
+|---|---|---|
+| `resNFe` | CANCELADA ✅ | 82 |
+| `procNF` | AUTORIZADA ❌ | 51 |
+
+Corrigido com uma guarda: nota cancelada não volta a autorizada, nem pelo
+completo. Todo o resto do documento continua sendo promovido normalmente.
+
 ## 8. Eventos
 
 ### NF-e e CT-e nomeiam por código; o ADN nomeia por elemento
@@ -379,6 +396,18 @@ A **promoção resumo → completo** é proposital: quando o `procNF` chega depo
 | NF-e | `tpEvento` numérico |
 | CT-e | `tpEvento` numérico |
 | **NFS-e (ADN)** | pelo **elemento de detalhe**, ex. `e101101` = cancelamento. **Não existe `tpEvento`** 🔵 |
+
+### Eventos de NF-e que o motor reconhece (fora os de manifestação)
+
+| Código | Evento | Efeito |
+|---|---|---|
+| `110111` | Cancelamento | marca a nota como cancelada (`cod_situacao = 3`) |
+| `110110` | Carta de correção | registra; a grid mostra pela coluna `tem_cce` |
+
+🔵 O cancelamento **chega normalmente ao destinatário** — isto não tem nada a
+ver com a limitação das manifestações descrita adiante. Medido em 30/09/2026:
+133 eventos `110111` capturados, **zero órfãos**. O dado sempre esteve na base;
+o que faltava era aplicá-lo (ver a ressalva da promoção na seção 7).
 
 ### Eventos de CT-e que o motor reconhece
 

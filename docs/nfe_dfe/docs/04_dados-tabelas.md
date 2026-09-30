@@ -205,6 +205,10 @@ Só serve NF-e. Transportadora e prestador de serviço ficam na própria linha d
 
 > **Órfão não é "aguardando a nota".** O `NFeDistribuicaoDFe` entrega documentos *de interesse*, o que inclui eventos de notas que a **própria empresa emitiu** — essas vivem no ERP e **nunca** vão religar. Verificado em dois CNPJs: todos os 100 eventos capturados tinham o CNPJ da própria empresa dentro da `chave_nf`. Separe por `substr(chave_nf, 7, 14)`.
 
+**O `110111` escreve fora da tabela.** Desde 30/09/2026 o cancelamento marca `DPC_DFE_NOTA.cod_situacao = 3`, como o CT-e já fazia — é a única escrita do repositório de eventos de NF-e fora da própria tabela. Idempotente e só de ida: o `WHERE` exige situação diferente de cancelada, e nada aqui "descancela".
+
+> Religar um órfão **não bastava**. Vincular só preenche `cod_dfe_nota`; se o evento religado for um cancelamento, a situação continua precisando ser aplicada — senão a nota nasce autorizada e fica assim, com o evento ao lado dizendo o contrário. Por isso o religamento chama `aplicaCancelamentoPendente()` em seguida.
+
 ### `DPC_DFE_CTE` — o frete
 
 **Uma linha por (empresa, chave).** O CT-e não tem "emitente e destinatário": tem **cinco papéis** — remetente, expedidor, recebedor, destinatário, emitente — e quem paga é o **tomador**.

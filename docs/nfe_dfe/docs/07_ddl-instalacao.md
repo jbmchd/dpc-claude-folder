@@ -22,6 +22,11 @@ arquivos de **`scripts/ddl/`**, em três blocos.
 | **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/`, depois `04_01` → `04_02` |
 | **Desfazer** | os `_99` de `empresas/` → `03_99` → `04_98` → `04_99` → `01_99`, do mais específico para o motor |
 
+> **O bloco 05 não entra em nenhuma das duas listas, de propósito.** Ele
+> conserta linha, não cria estrutura — numa base recém-criada não há o que
+> consertar. Rodá-lo numa instalação nova é inofensivo (o `WHERE` não casa
+> nada), mas é ruído. Ver [09_catalogo-scripts.md](09_catalogo-scripts.md) §4c.
+
 > **`04_01`/`04_02` não estavam nesta lista até 24/09/2026** — a manifestação
 > nasceu depois deste documento e ficou fora do caminho de instalação por 1 dia.
 > Sem eles, um ambiente novo sobe sem a fundação da manifestação (fila por
@@ -70,6 +75,7 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 | 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
 | 04 | `04_01_manifestacao` | fundação da manifestação (23/09/2026): 6 colunas novas em `dpc_dfe_manifestacao`, UK com sequência, 2 trancas de automação em `dpc_dfe_empresa`, 4 parâmetros. Rollback: `04_99` |
 | 04 | `04_02_manifestacao_fases_2a4` | Fases 2-4 (24/09/2026): corte de data da Confirmação automática (`dta_inicio_manif_auto_conf`) e a tabela `dpc_dfe_usuario_permissao` (permissão da tela manual). Rollback: `04_98` |
+| 05 | `05_01_cancelamento_nfe` | **Correção de dado, não de estrutura** (30/09/2026): põe `cod_situacao = 3` nas notas com evento `110111` que seguiam AUTORIZADA. **Não roda em instalação nova** — base recém-criada não tem o dado torto. Rollback: `05_99` |
 
 Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha
 inserida só se ainda não existir, coluna acrescentada só se faltar. Falha no

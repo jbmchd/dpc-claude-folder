@@ -201,6 +201,31 @@ específicas (`dpc_sefaz_*` → `dpc_dfe_*`) e esta tabela nunca teve nome antig
 Pular o `04_02` numa instalação nova deixa a Fase 4 sem permissão para
 conceder — ver [07_ddl-instalacao.md](07_ddl-instalacao.md).
 
+## 4c. O bloco 05 — correção de dado
+
+Primeiro bloco do módulo que **não cria nem altera estrutura**: só conserta
+linhas.
+
+| # | Arquivo | O que faz | Destrutivo |
+|---|---|---|---|
+| 1 | `05_01_cancelamento_nfe` (30/09/2026) | põe `cod_situacao = 3` nas notas que tinham evento `110111` capturado e seguiam AUTORIZADA. Aplicado em homolog no mesmo dia: **133 CANCELADA, 0 AUTORIZADA, 51 ajustadas** | não (só `UPDATE` de situação, em nota que tem o evento) |
+| — | `05_99_rollback_cancelamento_nfe` | volta as linhas para `1/AUTORIZADA` — **só** as marcadas com `updated_by = 'SCRIPT 05_01'` | sim, com essa guarda |
+
+Duas coisas que valem para qualquer bloco de correção de dado que venha depois:
+
+**O `updated_by` é o que torna o rollback possível.** Sem o carimbo `SCRIPT
+05_01` não haveria como separar "nota que o script mudou" de "nota que já
+estava cancelada pelo caminho normal" — e reverter a segunda seria apagar um
+fato real da SEFAZ. Em compensação, o rollback tem **validade curta por
+desenho**: assim que o motor rodar, o código novo recancela essas notas com
+`updated_by = 'DFE NORMALIZAR'` e elas saem do alcance do `05_99`. Está certo
+assim — a partir dali o cancelamento veio do fluxo, não do acerto pontual.
+
+**O script sozinho não resolveria.** Sem a correção de código que foi junto
+(ApiNFE `07b486e`), o próximo reprocessamento de um `procNF` desfaria o acerto
+nota a nota — foi exatamente esse mecanismo que produziu as 51. Correção de
+dado sem correção de causa é conserto que expira.
+
 ## 5. Scripts pontuais
 
 | Arquivo | O que é | Explicação |
