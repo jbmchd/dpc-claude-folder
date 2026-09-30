@@ -360,59 +360,57 @@ permanente volta para cá.
 
 ## 9. Itens abertos
 
+> **Conferido contra o sistema em 30/09/2026.** Item aberto tem viés de
+> acumulação: quem resolve não volta para marcar. Nesta passada, **3 dos 9
+> abertos estavam desatualizados** — dois deles descreviam o oposto do estado
+> real. As linhas 🔴 abaixo são o que caiu.
+
 | Item | Situação |
 |---|---|
-| **Teste de volume da empresa 30** | **adiado em 02/09/2026, sem data.** Os fluxos NFE e CTE seguem pausados e acumulando atraso, o que *preserva* o cenário — retomar não custa preparo. Detalhe abaixo |
+| **Teste de volume da empresa 30** | 🔴 **a premissa caiu.** O texto anterior dizia que "os fluxos NFE e CTE seguem pausados, o que *preserva* o cenário". Medido em 30/09: os **4 fluxos da 30 estão ATIVOS** (`status_sincronismo = A`), consultando normalmente. O cenário de 02/09 não existe mais — o teste, se voltar, começa de outro ponto de partida. A empresa 30 ficou ativa junto com a 29 desde 12/09 para o experimento do eixo da cota |
 | ~~Freio por fluxo × global~~ | ✅ **decidido em 12-13/09/2026.** O freio global **fica**, com a justificativa corrigida ([§2.5](#25-por-que-o-freio-global-existe)): contém defeito nosso, não a regra dos "50 bloqueios" — que não está na NT. Ganhou um contador de **consecutivos** como indicador, avisando a partir de 3 |
 | ~~Estreitar `chaveDeCota` e o `break` do 656~~ | ✅ **feito em 14/09/2026.** O freio por CNPJ removeu a objeção, e as empresas 17 e 20 — 33× e 14× maiores que as anteriores — tornaram a starvation concreta. Ver [§2.4](#24--as-travas-foram-estreitadas-em-14092026) |
 | ~~Janela noturna~~ | ✅ **feita junto**, com a ressalva de exigir que o fluxo já tenha consultado alguma vez |
 | **Faixa do `dfe_max_bloqueios_dia`** | 🔶 o global está em 20, o teto da faixa. Com 14 CNPJs e teto individual de 6, não fecha — a faixa do código precisa subir antes do corte da Qive |
-| **Por que a empresa 30 bloqueia** | ⬜ **o item aberto principal, e sem candidato.** Em 12–14/09/2026 somou **14 bloqueios em 30 consultas vazias**, onde a empresa 29 — mesmo certificado, mesma configuração — está em **0 de 34**. Não é dessincronia de NSU (o `ultNSU` da rejeição confere com o cursor), não é o intervalo (os dois usavam 60 min). Contido em 14/09 subindo o `qtd_min_em_dia` dela para 180; a causa continua aberta |
+| **Por que a empresa 30 bloqueia** | 🔵 **contido e sem recorrência há 14 dias, mas a causa segue desconhecida.** Em 12–14/09/2026 somou 14 bloqueios em 30 consultas vazias, contra 0 de 34 da empresa 29 — mesmo certificado, mesma configuração. Contido em 14/09 subindo o `qtd_min_em_dia` dela para 180. Medido em 30/09: **0 bloqueios em 284 execuções** nos últimos 14 dias — e 0 também nas outras três (17, 20, 29), somando 1.342 execuções limpas. ⚠️ Isso **não** responde a pergunta: a 30 continua estrangulada em 180 min enquanto as outras estão em 60, então o teste nunca foi pareado. Só soltar o `qtd_min_em_dia` dela decide |
 | **Freio global × cota por CNPJ** | 🔶 **inconsistência exposta em 14/09.** O cooldown virou por CNPJ, mas o freio segue global — então um CNPJ doente ainda derruba todos, por outra porta. A 30 sozinha levou o freio a 9 de 10. Um freio por CNPJ com um teto global mais alto por cima resolveria; decidir junto com a [§2.4](#24--as-duas-travas-que-sobraram-e-o-que-as-segura) |
 | ~~Chave de NFS-e truncada~~ | ✅ **fechado.** Conferido em 03/09/2026: `DPC_DFE_DOCUMENTO.CHAVE_NF` e `DPC_DFE_NFSE.CHAVE_NFSE` são `VARCHAR2(50)`, e as 37 NFS-e têm chave de 50 caracteres. As colunas de 44 que restam guardam chave de NF-e e CT-e, que têm 44 mesmo |
-| **CNPJs ociosos** | ~~empresa 900~~ saiu da base com a limpeza da ALL CARS. O fenômeno persiste na **empresa 30** — ver a linha acima |
-| **MDF-e** | `procEvMDF` nunca ativado; 14 fluxos pausados |
-| **`dfe:manifestar`** | ✅ **agendado desde 24/09/2026** (Fases 2 e 3 da manifestação automática) e com endpoint manual (Fase 4). Trancas por empresa fechadas — nada manifesta sozinho hoje. Ver [06_operacao-comandos.md](06_operacao-comandos.md) |
+| **CNPJs ociosos** | ~~empresa 900~~ saiu da base com a limpeza da ALL CARS. ~~O fenômeno persiste na empresa 30~~ — sem recorrência desde 14/09, ver a linha acima |
+| **MDF-e** | ⬜ o parser **continua não existindo**, mas o resto da linha caiu: não são "14 fluxos pausados" e sim **11 pausados / 4 ativos** (17, 20, 29, 30). Os 4 ativos capturam normalmente e o material se acumula sem leitura — medido em 30/09: **3.405 `procEvMDF` + 3.402 `procMDFe`, todos `status_process = I`** (ignorado, sem parser), com entrada até o dia de hoje. É o maior acervo parado do módulo |
+| **`dfe:manifestar`** | 🔴 **"nada manifesta sozinho hoje" está errado desde 21/09/2026.** A Ciência automática está **ligada nas 4 empresas** (`status_manif_auto_ciencia = 'S'`) e o motor enviou **401 manifestações em 14 dias** — 387 Ciências aceitas (cStat 135), 11 duplicadas (573) e 3 Confirmações aceitas; a última hoje às 18:07. São atos fiscais reais e irreversíveis. O que **de fato** segue fechado é só a **Confirmação automática**: `status_manif_auto_confirmacao = 'N'` nas 4 e `dta_inicio_manif_auto_conf` nulo (dupla trava) — as 3 Confirmações enviadas foram manuais. Ver [06_operacao-comandos.md](06_operacao-comandos.md) |
 | **Corte da Qive** | 🔴 **a linha anterior desta tabela estava errada — corrigido em 23/09/2026.** Nenhum dos quatro CNPJs (17, 20, 29, 30) é livre da Qive; só a empresa **900** (ALL CARS, nem cadastrada na Qive) está fora. 17/20/29/30 seguem todos na Qive hoje, e um 656 neles é **consumo em paralelo esperado**, não anomalia — o NSU é por CNPJ e compartilhado entre quem consulta. A migração real exige um corte seco por CNPJ (parar a Qive naquele CNPJ, então ativar o motor), não convivência. Ver `12_sefaz-656-consumo-indevido.md` |
-| **Parâmetros em produção** | `POSEIDON.DPC_PARAMETRO` de prd **não tem** as 6 linhas. Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
+| **Parâmetros em produção** | ✔️ **confirmado em 30/09/2026, e já não são 6.** `POSEIDON.DPC_PARAMETRO` de prd (`dpcdb2`) segue com **0** parâmetros `dfe_*`; homolog hoje tem **10** — a manifestação acrescentou 4 (`dfe_manifest_max_ciclo`, `dfe_manifest_max_lote`, `dfe_manifest_pausa_seg`, `dfe_max_bloqueios_manifest`). Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
 
-### O teste de volume, quando voltar
+### O teste de volume — o cenário se desfez sozinho
 
-**Não está agendado.** Foi adiado em 02/09/2026 para dar lugar a outra frente, e
-volta depois. Nada precisa ser desfeito: os dois fluxos continuam pausados e o
-atraso continua crescendo, que é exatamente o cenário que o teste quer medir.
+🔴 **Esta seção descrevia um cenário que não existe mais.** Ela dizia que "os
+dois fluxos continuam pausados e o atraso continua crescendo, que é exatamente
+o cenário que o teste quer medir". Conferido em 30/09/2026: os fluxos foram
+**reativados** (junto com a empresa 29, para o experimento do eixo da cota, a
+partir de 12/09) e **o atraso foi drenado até zero**.
 
-| | |
-|---|---|
-| Fluxos | empresa **30**, `NFE` e `CTE` |
-| Cursores parados em | **18.698** e **7.150** |
-| Pausados desde | 02/09/2026 10:45 |
-| O que se quer medir | se a pausa de 30 s aguenta drenar ~850 NF-e + ~375 CT-e de atraso de uma vez, sem 656 |
+| Fluxo da empresa 30 | Parado em 02/09 | Hoje (30/09) | Atraso |
+|---|---|---|---|
+| `NFE` | 18.698 | 23.582 | **0** |
+| `CTE` | 7.150 | 9.033 | **0** |
 
-**Há um relógio correndo, e ele não é do teste.** A SEFAZ retém por ~90 dias: o
-que entrou na fila em 02/09 começa a sair da janela por volta de **01/12/2026**.
-Retomar depois disso não invalida o teste, mas **perde documento** — e a empresa
-30 é um dos dois CNPJs que podemos consultar, com movimento real.
+Os dois estão `A` (ativos), consultando normalmente — o `NFE` às 16:00 e o
+`CTE` às 19:01 de hoje.
 
-Ao retomar, primeiro ajustar o motivo gravado no banco, que hoje ainda descreve
-o teste como iminente:
+**O relógio dos 90 dias deixou de correr**, que era o risco real registrado
+aqui: nada saiu da janela de retenção da SEFAZ por abandono.
 
-```sql
-update poseidon.dpc_dfe_cursor c
-   set c.dsc_ultimo_motivo = 'pausado: teste de volume adiado em 02/09/2026, sem data',
-       c.updated_at = sysdate,
-       c.updated_by = 'MANUAL'
- where c.cod_tipo_dfe in ('NFE','CTE')
-   and c.cod_dfe_empresa = (select e.cod_dfe_empresa
-                              from poseidon.dpc_dfe_empresa e
-                             where e.nro_empresa = 30);
-commit;
-```
+**E a pergunta do teste ficou meio respondida, por acidente.** Queria-se saber
+se drenar ~850 NF-e + ~375 CT-e de atraso de uma vez provocaria 656. A drenagem
+aconteceu — e a empresa 30 fechou **0 bloqueios em 284 execuções** nos últimos
+14 dias. Mas **não vale como o teste**: ela continua com `qtd_min_em_dia = 180`
+no fluxo NFE (a contenção de 14/09), ou seja, drenou devagar, que é o oposto do
+"de uma vez" que o teste queria medir.
 
-> Este `update` ficou **pendente**: o túnel SSH estava fora quando o teste foi
-> adiado. Rodar quando houver conexão — senão quem abrir a tela do Monitor lê
-> "acumulando atraso para teste de volume" e conclui que há algo agendado.
+O `update` de `dsc_ultimo_motivo` que ficava pendente aqui **não é mais
+necessário**: os cursores já gravaram motivo novo nas consultas reais
+("Documento(s) localizado(s)" no NFE, "Nenhum documento localizado." no CTE).
 
 ---
 
