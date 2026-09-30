@@ -376,11 +376,50 @@ permanente volta para cá.
 | **Freio global × cota por CNPJ** | 🔶 **inconsistência exposta em 14/09.** O cooldown virou por CNPJ, mas o freio segue global — então um CNPJ doente ainda derruba todos, por outra porta. A 30 sozinha levou o freio a 9 de 10. Um freio por CNPJ com um teto global mais alto por cima resolveria; decidir junto com a [§2.4](#24--as-duas-travas-que-sobraram-e-o-que-as-segura) |
 | ~~Chave de NFS-e truncada~~ | ✅ **fechado.** Conferido em 03/09/2026: `DPC_DFE_DOCUMENTO.CHAVE_NF` e `DPC_DFE_NFSE.CHAVE_NFSE` são `VARCHAR2(50)`, e as 37 NFS-e têm chave de 50 caracteres. As colunas de 44 que restam guardam chave de NF-e e CT-e, que têm 44 mesmo |
 | **CNPJs ociosos** | ~~empresa 900~~ saiu da base com a limpeza da ALL CARS. ~~O fenômeno persiste na empresa 30~~ — sem recorrência desde 14/09, ver a linha acima |
-| **MDF-e** | ⬜ o parser **continua não existindo**, mas o resto da linha caiu: não são "14 fluxos pausados" e sim **11 pausados / 4 ativos** (17, 20, 29, 30). Os 4 ativos capturam normalmente e o material se acumula sem leitura — medido em 30/09: **3.405 `procEvMDF` + 3.402 `procMDFe`, todos `status_process = I`** (ignorado, sem parser), com entrada até o dia de hoje. É o maior acervo parado do módulo |
+| **MDF-e** | ⬜ o parser **continua não existindo**, mas o resto da linha caiu: não são "14 fluxos pausados" e sim **11 pausados / 4 ativos** (17, 20, 29, 30). Os 4 ativos capturam normalmente e o material se acumula sem leitura — medido em 30/09: **3.405 `procEvMDF` + 3.402 `procMDFe`, todos `status_process = I`**, com entrada até o dia de hoje. É o maior acervo parado do módulo. **Decisão de 30/09: deixar ligado** — ver [§9.1](#91-mdf-e-20-da-cota-para-nada-e-por-que-fica-assim) |
 | **`dfe:manifestar`** | 🔴 **"nada manifesta sozinho hoje" está errado desde 21/09/2026.** A Ciência automática está **ligada nas 4 empresas** (`status_manif_auto_ciencia = 'S'`) e o motor enviou **401 manifestações em 14 dias** — 387 Ciências aceitas (cStat 135), 11 duplicadas (573) e 3 Confirmações aceitas; a última hoje às 18:07. São atos fiscais reais e irreversíveis. O que **de fato** segue fechado é só a **Confirmação automática**: `status_manif_auto_confirmacao = 'N'` nas 4 e `dta_inicio_manif_auto_conf` nulo (dupla trava) — as 3 Confirmações enviadas foram manuais. Ver [06_operacao-comandos.md](06_operacao-comandos.md) |
 | **Corte da Qive** | 🔴 **a linha anterior desta tabela estava errada — corrigido em 23/09/2026.** Nenhum dos quatro CNPJs (17, 20, 29, 30) é livre da Qive; só a empresa **900** (ALL CARS, nem cadastrada na Qive) está fora. 17/20/29/30 seguem todos na Qive hoje, e um 656 neles é **consumo em paralelo esperado**, não anomalia — o NSU é por CNPJ e compartilhado entre quem consulta. A migração real exige um corte seco por CNPJ (parar a Qive naquele CNPJ, então ativar o motor), não convivência. Ver `12_sefaz-656-consumo-indevido.md` |
 | **Parâmetros em produção** | ✔️ **confirmado em 30/09/2026, e já não são 6.** `POSEIDON.DPC_PARAMETRO` de prd (`dpcdb2`) segue com **0** parâmetros `dfe_*`; homolog hoje tem **10** — a manifestação acrescentou 4 (`dfe_manifest_max_ciclo`, `dfe_manifest_max_lote`, `dfe_manifest_pausa_seg`, `dfe_max_bloqueios_manifest`). Como o motor passou a viver só em teste (decisão de 09/09/2026), isto só volta a importar se prd voltar a rodar captura. **Atenção:** as explicações de `dfe_max_bloqueios_dia` e `dfe_min_backoff_656` foram reescritas em 12/09 e o script usa `where not exists` — em base que já tem as linhas, o texto velho permanece |
 | **`pecl` pinado** | `redis-6.0.2`, `oci8-3.4.0`, `memcached-3.2.0` — qualquer rebuild da imagem falha |
+
+### 9.1 MDF-e: 20% da cota para nada, e por que fica assim
+
+🔵 **Medido em 30/09/2026.** `NFE`, `CTE` e `MDFE` **dividem a mesma cota** —
+confirmado no código, não deduzido: `DpcDfeCursor::DOMINIO_COTA` mapeia os três
+para `'SEFAZ'` e só `NFSE` para `'ADN'`. São três web services distintos
+(`sped-nfe`, `sped-cte`, `sped-mdfe`), cada um com NSU próprio, e é por isso que
+os cursores da mesma empresa divergem tanto (9.033 no CTE contra 23.582 no NFE
+da empresa 30).
+
+Execuções nos últimos 14 dias:
+
+| Fluxo | Execuções | Documentos | Aproveitados |
+|---|---|---|---|
+| `NFE` | 531 | 305.048 | sim |
+| `CTE` | 255 | 89.946 | sim |
+| **`MDFE`** | **200** | **6.807** | **nenhum** |
+| `NFSE` | 363 | 10.365 | sim — cota separada (ADN) |
+
+**200 de 986 execuções da cota SEFAZ são MDF-e**, ou seja ~20%. E como o motor
+serializa um fluxo por cota por ciclo, cada ciclo que o MDF-e toma é um ciclo
+em que NF-e e CT-e esperam.
+
+**Decisão: deixar ligado.** Três razões, nesta ordem:
+
+1. **Não há pressão de cota hoje.** 0 bloqueios 656 em 14 dias nas 4 empresas.
+   Os 20% custam folga, não custam documento.
+2. **Desligar perde documento de verdade.** A SEFAZ retém ~90 dias; o XML bruto
+   fica em `bin_documento` e é reprocessável. Foi assim que os 3.085
+   `procEvCTe` esperaram semanas por um parser e depois revelaram **20 CT-e
+   cancelados somando R$ 26.796,56** que passavam por válidos. Desligar troca
+   "acervo parado" por buraco permanente.
+3. **A reavaliação tem data marcada.** O corte da Qive soma carga na mesma
+   cota. Se apertar ali, o MDF-e é o primeiro candidato a sair — e nesse
+   momento a decisão tem contrapartida, que hoje não tem.
+
+O meio-termo que **não** se recomenda é escrever o parser agora: 6.807
+documentos parados não fazem falta a ninguém hoje, e o corte da Qive está na
+frente.
 
 ### O teste de volume — o cenário se desfez sozinho
 
