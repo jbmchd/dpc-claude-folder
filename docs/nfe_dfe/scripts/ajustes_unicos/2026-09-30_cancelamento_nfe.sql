@@ -1,8 +1,20 @@
 -- ============================================================================
---  MODULO DFe - NF-e CANCELADA EXIBIDA COMO AUTORIZADA (ARQUIVO 05_01)
+--  MODULO DFe - NF-e CANCELADA EXIBIDA COMO AUTORIZADA
 -- ============================================================================
 --  Acerto retroativo das notas que tem evento de cancelamento (110111)
 --  capturado e mesmo assim seguem com cod_situacao = 1 (AUTORIZADA).
+--
+--  >>> JA APLICADO em homolog em 30/09/2026. Resultado medido: 133
+--  >>> CANCELADA, 0 AUTORIZADA, 51 linhas ajustadas. Fica versionado como
+--  >>> registro do que foi feito, nao como tarefa pendente.--
+--  ==========================================================================
+--   POR QUE O CARIMBO NAO BATE COM O NOME DO ARQUIVO
+--  ==========================================================================
+--  O updated_by gravado e 'SCRIPT 05_01', nome que este arquivo tinha quando
+--  rodou. O carimbo JA ESTA em linha no banco, e e por ele que o rollback
+--  encontra o que desfazer - renomear o arquivo nao pode renomear o que ja
+--  foi gravado. NAO "corrija" essa diferenca: fazer isso deixa o rollback
+--  sem encontrar nada.
 --
 --  ==========================================================================
 --   O QUE ACONTECEU
@@ -57,7 +69,7 @@
 --  de cancelada.
 --
 --  O updated_by = 'SCRIPT 05_01' nao e enfeite: e ele que permite ao
---  05_99_rollback desfazer EXATAMENTE as linhas que este script mudou, sem
+--  rollback deste arquivo desfazer EXATAMENTE as linhas que ele mudou, sem
 --  atingir nota que ja estava cancelada por outro caminho.
 --
 --  ALVO: homolog (oracle_tst). As tabelas do motor so existem la.

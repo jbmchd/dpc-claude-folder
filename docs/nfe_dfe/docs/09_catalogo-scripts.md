@@ -6,11 +6,16 @@
 > **Atualizado em 09/09/2026**, quando os dois caminhos de instalação viraram um
 > só e a pasta foi reorganizada em blocos.
 
-## 1. Um caminho só, em três blocos
+## 1. Um caminho só de instalação, e o que fica fora dele
 
 ```
 nfe_dfe/scripts/
 ├── levantamento-nfse-municipios.sql     diagnostico, nao instalacao
+├── ajustes_unicos/                      ┐ RODA UMA VEZ E NUNCA MAIS.
+│   ├── 2026-09-30_cancelamento_nfe      │ Corrige LINHA, nao estrutura.
+│   ├── 2026-09-30_..._rollback          │ Nome por DATA, nao por bloco:
+│   ├── 2026-10-01_papel_resumo          │ o que importa e QUANDO rodou.
+│   └── 2026-10-01_..._rollback          ┘ Fora da instalacao - ver §4c
 └── ddl/                                 o UNICO caminho de instalacao
     ├── 01_01_estrutura                  ┐
     ├── 01_02_estabelecimentos           │ BLOCO 01 - MOTOR
@@ -32,8 +37,12 @@ nfe_dfe/scripts/
     └── 04_98_rollback_manifestacao_...  ┘ trancas fechadas por padrao
 ```
 
-O primeiro número é o **bloco**, o segundo é a ordem **dentro** dele. O `_99` de
-cada bloco é o rollback daquele bloco — quem desfaz mora ao lado de quem faz.
+Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
+dele. O `_99` de cada bloco é o rollback daquele bloco — quem desfaz mora ao
+lado de quem faz.
+
+`ajustes_unicos/` **não segue essa numeração de propósito**: ela existe para
+ordenar instalação, e ajuste único não se instala. Ver [§4c](#4c-ajustes-únicos--o-que-roda-uma-vez-e-nunca-mais).
 
 | | |
 |---|---|
@@ -201,30 +210,55 @@ específicas (`dpc_sefaz_*` → `dpc_dfe_*`) e esta tabela nunca teve nome antig
 Pular o `04_02` numa instalação nova deixa a Fase 4 sem permissão para
 conceder — ver [07_ddl-instalacao.md](07_ddl-instalacao.md).
 
-## 4c. O bloco 05 — correção de dado
+## 4c. Ajustes únicos — o que roda uma vez e nunca mais
 
-Primeiro bloco do módulo que **não cria nem altera estrutura**: só conserta
-linhas.
+`scripts/ajustes_unicos/` é irmã de `ddl/`, não filha, e a distinção é a razão
+de ela existir: **`ddl/` instala, `ajustes_unicos/` conserta.** Script daqui
+corrige LINHA (é DML), não cria nem altera estrutura, e **não entra em
+instalação nenhuma** — base recém-criada não tem o dado torto que eles
+consertam.
 
-| # | Arquivo | O que faz | Destrutivo |
-|---|---|---|---|
-| 1 | `05_01_cancelamento_nfe` (30/09/2026) | põe `cod_situacao = 3` nas notas que tinham evento `110111` capturado e seguiam AUTORIZADA. Aplicado em homolog no mesmo dia: **133 CANCELADA, 0 AUTORIZADA, 51 ajustadas** | não (só `UPDATE` de situação, em nota que tem o evento) |
-| — | `05_99_rollback_cancelamento_nfe` | volta as linhas para `1/AUTORIZADA` — **só** as marcadas com `updated_by = 'SCRIPT 05_01'` | sim, com essa guarda |
+### A convenção
 
-Duas coisas que valem para qualquer bloco de correção de dado que venha depois:
+| Regra | Por quê |
+|---|---|
+| Nome por **data** (`AAAA-MM-DD_assunto.sql`) | em script que roda uma vez, o dado útil é *quando* rodou. Numeração de bloco serviria para ordenar instalação, e aqui não há instalação a ordenar |
+| **Rollback ao lado**, mesmo nome + `_rollback` | quem desfaz mora junto de quem faz, igual ao `_99` do `ddl/` |
+| Carimbar `updated_by` com um valor **único do script** | é o que permite ao rollback separar o que o script mudou do que o fluxo normal mudaria |
+| Cabeçalho registra que **já foi aplicado**, com o resultado medido | o arquivo fica versionado como registro do que foi feito, não como tarefa pendente |
+| ASCII + CRLF | mesma regra do `ddl/` — ver [§E a regra do CRLF](#e-a-regra-do-crlf) |
 
-**O `updated_by` é o que torna o rollback possível.** Sem o carimbo `SCRIPT
-05_01` não haveria como separar "nota que o script mudou" de "nota que já
-estava cancelada pelo caminho normal" — e reverter a segunda seria apagar um
-fato real da SEFAZ. Em compensação, o rollback tem **validade curta por
-desenho**: assim que o motor rodar, o código novo recancela essas notas com
-`updated_by = 'DFE NORMALIZAR'` e elas saem do alcance do `05_99`. Está certo
-assim — a partir dali o cancelamento veio do fluxo, não do acerto pontual.
+> ⚠️ **Renomear o arquivo não renomeia o carimbo.** Os dois ajustes de
+> 30/09–01/10 gravaram `updated_by = 'SCRIPT 05_01'` e `'SCRIPT 05_02'`, nomes
+> que tinham antes de virem para cá. Esses valores **estão em linha no banco** e
+> os rollbacks dependem deles — "corrigir" a string para casar com o nome novo
+> deixaria o rollback sem encontrar nada. Os cabeçalhos avisam.
 
-**O script sozinho não resolveria.** Sem a correção de código que foi junto
-(ApiNFE `07b486e`), o próximo reprocessamento de um `procNF` desfaria o acerto
-nota a nota — foi exatamente esse mecanismo que produziu as 51. Correção de
-dado sem correção de causa é conserto que expira.
+### O que já mora aqui
+
+| Arquivo | O que fez | Resultado medido |
+|---|---|---|
+| `2026-09-30_cancelamento_nfe` | `cod_situacao = 3` nas notas com evento `110111` que seguiam AUTORIZADA | **133 CANCELADA, 0 AUTORIZADA**, 51 ajustadas |
+| `2026-10-01_papel_resumo` | `sig_papel_empresa = 'DEST'` nas notas `INDEF` que só tinham resumo. Base: NT 2014.002 v.1.40 | **INDEF zerado**, 96 viraram DEST |
+
+Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é
+manifestada → o `procNF` nunca chega → **a situação ficava errada (o primeiro)
+e o papel ficava indefinido (o segundo)**. Quem investigar um deve ler o outro.
+
+### Duas lições que valem para o próximo
+
+**O rollback tem validade curta, por desenho.** Assim que o motor roda, o
+código corrigido recarimba as mesmas linhas com `updated_by = 'DFE NORMALIZAR'`
+e elas saem do alcance do rollback. Já aconteceu: o carimbo `SCRIPT 05_01`
+caiu de 51 para 6 linhas em um dia. Está certo assim — a partir dali o
+resultado veio do fluxo, não do acerto pontual. O rollback serve para a janela
+entre aplicar e confiar.
+
+**Correção de dado sem correção de causa é conserto que expira.** Sem a
+mudança de código que foi junto (ApiNFE `07b486e`), o próximo reprocessamento
+de um `procNF` desfaria o acerto nota a nota — foi exatamente esse mecanismo
+que produziu as 51. Todo arquivo daqui deveria vir acompanhado do commit que
+impede o problema de voltar.
 
 ## 5. Scripts pontuais
 

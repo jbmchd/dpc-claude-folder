@@ -121,7 +121,12 @@ Dicionário completo de colunas: **`ApiNFE/docs/dfe-tabelas.md`**. Comandos e fl
 
 `DPC_DFE_NOTA.sig_papel_empresa`
 `DEST` recebida · `EMIT` emitida · `TRANSP` transporte · `AUTXML` citada ·
-`OUTRO` nenhum papel casou · `INDEF` ainda não dá para determinar (só o resumo chegou)
+`OUTRO` nenhum papel casou · `INDEF` nem o nosso CNPJ é conhecido (caso raro)
+
+> Desde 01/10/2026 o **resumo grava `DEST`**: pela NT 2014.002 v.1.40 só o
+> destinatário recebe resumo. Antes gravava `INDEF`, e nota cancelada — que
+> nunca é manifestada, logo nunca ganha o XML completo — ficava presa fora da
+> aba Recebidas.
 
 ---
 

@@ -140,15 +140,35 @@ Tabela única ficaria quase toda nula, nenhum `not null` seria possível, nenhum
 | `TRANSP` | Transporte | `transp/transporta/CNPJ` |
 | `AUTXML` | Citadas | `autXML/CNPJ` (lista, até 10) |
 | `OUTRO` | — | XML completo lido, CNPJ em nenhum papel conhecido |
-| `INDEF` | — | o documento **não permite saber** |
+| `INDEF` | Indefinidas | não sabemos nem o nosso próprio CNPJ — hoje, caso raro |
 
-> **`INDEF` e `OUTRO` não são a mesma coisa, e confundi-los quebra a tela.** O `resNFe` tem **546 bytes** e doze tags — não tem `dest`, não tem `transp`, não tem `autXML`. O único CNPJ ali é o do **emitente**. Então nota que só tem resumo é `INDEF`: sabe-se apenas que não somos o emitente. Isso é **temporário** — o XML completo resolve. `OUTRO` é **definitivo**: a informação existia e foi olhada.
+> 🔴 **A regra anterior caiu em 01/10/2026.** Este documento dizia que nota com
+> só o resumo é `INDEF`, porque o `resNFe` tem 546 bytes e não traz `dest`,
+> `transp` nem `autXML` — o único CNPJ ali é o do emitente. O fato está certo;
+> a conclusão não.
 >
-> E o resumo chega **primeiro**, às vezes dias antes do completo, às vezes o completo nunca chega. `INDEF` será comum. Uma tela que o trate como "não é nossa" esconde nota que é.
+> **Só o destinatário recebe o resumo.** NT 2014.002 v.1.40, tabela de
+> distribuição por ator: `Resumo de NF-e` → Emitente **Não**, Destinatário
+> **Sim**, Transportador **Não**, Terceiros **Não**. Transportador e terceiros
+> recebem o XML completo direto e nunca veem um resumo. Ver
+> [02_conhecimento-sefaz.md](02_conhecimento-sefaz.md) para a citação.
+>
+> Então o resumo **grava `DEST`**. `INDEF` sobrou só para a guarda de CNPJ
+> vazio — não é mais o caso comum, é caso raro de verdade.
+>
+> **O que o `INDEF` custava:** nota cancelada nunca é manifestada
+> (`candidatas()` filtra `cod_situacao = 1`), o `procNF` nunca chega, e o papel
+> ficava `INDEF` para sempre. Eram **96 notas** invisíveis na aba Recebidas —
+> a equipe fiscal achou 9 delas no confronto com a Qive em setembro.
+> Corrigido no código e retroativamente por
+> `ajustes_unicos/2026-10-01_papel_resumo`.
+>
+> `OUTRO` continua significando o que significava: **definitivo**, o XML
+> completo foi lido e o nosso CNPJ não está em nenhum dos quatro papéis.
 
 Precedência no preenchimento: `dest → emit → transp → autXML`. Uma nota pode ter a empresa em mais de um papel — destinatária **e** autorizada a baixar — e `DEST` vence porque o caso de uso do módulo é a nota recebida.
 
-> Garantia do código, não da sorte: quando o resumo é reprocessado sobre nota que já é completa, o anti-rebaixamento devolve `IGNORADA` e **não escreve** — então `DEST` não é sobrescrito por `INDEF`, qualquer que seja a ordem do reprocessamento.
+> Garantia do código, não da sorte: quando o resumo é reprocessado sobre nota que já é completa, o anti-rebaixamento devolve `IGNORADA` e **não escreve** — então um papel lido do XML completo (`TRANSP`, `AUTXML`, `OUTRO`) não é sobrescrito pelo `DEST` que o resumo infere, qualquer que seja a ordem do reprocessamento. Importa mais agora que o resumo grava `DEST`: sem essa guarda, reprocessar um resumo sobre nota de transporte a moveria para a aba errada.
 
 Tem as quatro colunas de **conciliação com o ERP** (`status_recebimento`, `seq_nf_erp`, `dta_entrada_erp`, `dta_conciliacao`) porque NF-e é a única família que o ERP também registra. `dta_entrada_erp - dta_emissao` é o **atraso de lançamento**, a métrica que a contabilidade quer.
 

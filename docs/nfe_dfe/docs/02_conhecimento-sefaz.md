@@ -397,6 +397,48 @@ completo. Todo o resto do documento continua sendo promovido normalmente.
 | CT-e | `tpEvento` numérico |
 | **NFS-e (ADN)** | pelo **elemento de detalhe**, ex. `e101101` = cancelamento. **Não existe `tpEvento`** 🔵 |
 
+### 🟢 Quem recebe o quê — a tabela de distribuição por ator
+
+Fonte: **NT 2014.002 v.1.40**, publicada em 03/07/2026, seção *"A distribuição
+ocorrerá para os atores que desempenham papéis de emitente, destinatário,
+transportador e terceiros (informado na tag autXML)"*. Baixada do portal em
+01/10/2026 (`nfe.fazenda.gov.br` → Documentos → Notas Técnicas).
+
+| Documento | Emitente | Destinatário | Transportador | Terceiros |
+|---|---|---|---|---|
+| NF-e | Não | Sim | Sim | Sim |
+| Evento de Cancelamento | Não | Sim | Sim | Sim |
+| Evento de Carta de Correção | Não | Sim | Sim | Sim |
+| Eventos de Manifestação do Destinatário | **Sim** | **Não** | Não | Sim |
+| **Resumo de NF-e** | **Não** | **Sim** | **Não** | **Não** |
+| Resumo de Eventos CT-e Autorizado/Cancelado | Sim | Sim | Sim | Sim |
+| Resumo de Eventos MDF-e Autorizado/Cancelado | Sim | Sim | Sim | Sim |
+
+Duas linhas desta tabela decidem desenho no módulo, e nas duas a intuição
+erra:
+
+**`Resumo de NF-e` só vai ao destinatário.** O texto imediatamente acima da
+tabela dá o mecanismo:
+
+> Caso a consulta seja realizada pelo destinatário (…) Em caso da existência
+> da manifestação do destinatário, a NF-e será retornada para o destinatário.
+> Caso contrário, será retornado apenas o resumo da NF-e.
+>
+> **Para transportador e terceiros, a NF-e estará disponível integralmente na
+> consulta.**
+
+Transportador e terceiros recebem o XML **completo** direto — nunca veem um
+resumo. Então **receber um resumo é prova de que somos o destinatário**, e não
+ausência de informação. O motor gravava `INDEF` nesse caso até 01/10/2026; ver
+a correção em [03_conhecimento-motor.md §6](03_conhecimento-motor.md).
+
+🔵 A medição bate com a norma: das 9.188 notas `DEST`, **9.163 (99,7%)**
+tiveram um `resNFe` capturado antes; das 126 `TRANSP`, **zero**. Resumos cuja
+nota acabou com papel diferente de `DEST`: **zero**.
+
+**`Eventos de Manifestação do Destinatário` não voltam ao destinatário** — é a
+linha que sustenta a seção sobre o rótulo QIVE, detalhada adiante.
+
 ### Eventos de NF-e que o motor reconhece (fora os de manifestação)
 
 | Código | Evento | Efeito |
