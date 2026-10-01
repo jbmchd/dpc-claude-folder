@@ -34,7 +34,9 @@ nfe_dfe/scripts/
     ├── 04_01_manifestacao               ┐ BLOCO 04 - manifestacao do
     ├── 04_99_rollback_manifestacao      │ destinatario: fundacao (23/09) e
     ├── 04_02_manifestacao_fases_2a4     │ Fases 2-4 (24/09) - ato fiscal,
-    └── 04_98_rollback_manifestacao_...  ┘ trancas fechadas por padrao
+    ├── 04_98_rollback_manifestacao_...  ┘ trancas fechadas por padrao
+    ├── 06_01_colunas_usuario            ┐ BLOCO 06 - preferencia de coluna
+    └── 06_99_rollback_colunas_usuario   ┘ por usuario, no lugar do localStorage
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**

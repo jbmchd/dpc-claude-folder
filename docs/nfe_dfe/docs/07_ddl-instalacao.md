@@ -75,6 +75,7 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 | 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
 | 04 | `04_01_manifestacao` | fundação da manifestação (23/09/2026): 6 colunas novas em `dpc_dfe_manifestacao`, UK com sequência, 2 trancas de automação em `dpc_dfe_empresa`, 4 parâmetros. Rollback: `04_99` |
 | 04 | `04_02_manifestacao_fases_2a4` | Fases 2-4 (24/09/2026): corte de data da Confirmação automática (`dta_inicio_manif_auto_conf`) e a tabela `dpc_dfe_usuario_permissao` (permissão da tela manual). Rollback: `04_98` |
+| 06 | `06_01_colunas_usuario` | Tabela `dpc_dfe_usuario_coluna` (01/10/2026): guarda no servidor as colunas que cada usuario escolheu no Monitor, no lugar do `localStorage`, que era por navegador. Rollback: `06_99` (destrutivo — apaga a configuracao de todos) |
 
 Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha
 inserida só se ainda não existir, coluna acrescentada só se faltar. Falha no

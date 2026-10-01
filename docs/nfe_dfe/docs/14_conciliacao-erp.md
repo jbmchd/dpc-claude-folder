@@ -296,6 +296,51 @@ coluna que responde duas coisas acerta uma.
 | ~~Cadência decrescente do re-check~~ | ✅ decidida e implementada: nunca conferida primeiro, recente todo ciclo, com mais de 30 dias uma vez por dia. O número é palpite calibrado para 815 notas — **remedir quando o volume subir** |
 | A tela precisa distinguir `RECEBIDA` de `ESCRITURADA`? | o negócio pediu os quatro estados; medido que `RECEBIDA` fica em 0 |
 | ~~Validação end-to-end~~ | ✅ resolvido pelo `dfe_conexao_erp`: a conciliação lê a Consinco de **produção** a partir de homologação. Validado com notas emitidas no dia — 784 escrituradas, 30 aguardando |
+| **A categoria DEVOLUÇÃO está classificando compra?** | ⏸️ **parado esperando um exemplo concreto** — ver §14 |
+
+## 14. ⏸️ A dúvida da categoria, e por que não foi mexida
+
+**Relato da equipe fiscal, 01/10/2026:** *"Tem algum erro nas categorias, como
+pode observar ao clicar na 'devolução de cliente' está trazendo notas que são
+compras."*
+
+**A medição não sustentou a premissa.** Conferido no mesmo dia, nas 1.254 notas
+que a regra classifica como `DEVOLUCAO`:
+
+| Verificação | Resultado |
+|---|---|
+| Notas `DEVOLUCAO` com CFOP da lista de `COMPRAS` | **0** |
+| CFOPs que de fato aparecem | 1411 (945) · 1202 (239) · 2411 (51) · 2202 (13) · outros (6) |
+| Quantas caem por `dsc_ocorr_dev_erp IS NOT NULL` | **1.254 — todas** |
+| Quantas caem por CFOP sozinho | 0 |
+
+Todos os CFOPs presentes são de devolução de venda. Nenhum é de compra.
+
+**A hipótese mais provável é que o relato tenha outra causa.** Na mesma data
+foi encontrado — e corrigido — um defeito que fazia a grade listar **248**
+notas sob uma aba cujo contador dizia **1**: a lista não aplicava o recorte de
+pendência que todos os contadores aplicavam. Quem olhasse aquela grade veria
+notas que não deviam estar ali, e julgar pelo emitente reforça a impressão:
+Atacadão, supermercado e farmácia *parecem* fornecedores, mas num CFOP
+1202/1411 eles estão devolvendo algo que a DPC vendeu — o que os põe como
+**clientes** naquela operação.
+
+**O que falta para destravar:** a equipe apontar **uma nota específica** que
+considera compra e está aparecendo como devolução. Com a chave em mãos dá para
+dizer se é a regra, o dado do ERP ou a leitura da tela.
+
+**Se for mesmo a regra**, há dois candidatos já mapeados, nesta ordem:
+
+1. `dsc_ocorr_dev_erp IS NOT NULL` é a primeira condição e captura **tudo** —
+   o campo guarda um **código** (20, 14, 06, 01, 05 e mais cinco), e a regra
+   trata qualquer um deles como devolução de cliente. Falta a tabela do
+   Consinco que diz o que cada código significa.
+2. O CFOP **1411 está nas duas listas** (`DEVOLUCAO` e `COMPRAS`) — 945 notas.
+   Hoje é inofensivo porque a condição 1 captura antes, mas é ambiguidade real
+   e deveria sair da lista de `COMPRAS`, onde não parece pertencer.
+
+**Não mexer sem o exemplo.** Trocar a regra com base em suposição move centenas
+de notas de aba, e a tela é usada para decidir manifestação — ato fiscal.
 
 ---
 
