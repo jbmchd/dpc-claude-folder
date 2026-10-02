@@ -220,6 +220,8 @@ flowchart LR
 | `rotuloPdf()` / `renderizaPdf()` | `DANFE`; família sem PDF devolve `null` e as rotas de PDF recusam |
 | `metadadosListagem()` | `pode_manifestar` |
 
+No **front (DPC)** é o mesmo desenho: `src/app/sefaz/documentos/comum/TelaDocumentoFiscal.vue` tem a casca inteira (empresa, abas, busca, período + total, seleção, colunas com visões, exportação, baixar/compartilhar, chips, grade) e a família entrega um `config` mais três slots — `acoes-extras` (o Manifestar da NF-e), `celula` (só os campos listados em `camposComCelula`; o Vue 2.5 não deixa usar slot por coluna) e `modais` (recebem o estado da casca por escopo). `ModalColunas`, `ModalEnviarEmail` e `formatadores.js` também moram em `comum/`. O CSS da casca fica sob `#tela-documento-fiscal`: precisa ser **id**, porque é a especificidade que faz a cor da linha selecionada vencer a da `vue-good-table`. A NF-e foi comparada pela interface antes e depois (abas, ordenação, busca, filtro com chip, seleção, cor da linha, visões, exportação de 2.190 linhas célula a célula, detalhe) e saiu igual.
+
 A extração foi validada por um golden test: 37 requisições (listagem, abas, ordenação, busca, filtros, empresas, chaves, exportação, detalhe, XML, DANFE, ZIP, e-mail) capturadas com o código antigo e o novo, iguais campo a campo. Só o PDF varia, e varia também entre duas execuções do código antigo.
 
 ## Queries de partida
