@@ -52,6 +52,10 @@
 --
 --  Esperado depois: 102 canceladas (75 + 27), 10.298 autorizadas, 0 nulas.
 --
+--  >>> APLICADO em homolog em 02/10/2026, as duas etapas. Resultado medido:
+--  >>> 102 canceladas, todas com dta_cancelamento e 27 com substituta;
+--  >>> 10.298 autorizadas; 0 sem situacao; 0 documentos em erro.
+--
 --  Conectado como POSEIDON. Rodar cada etapa separadamente (selecionar o
 --  bloco e Ctrl+Enter), nao o arquivo inteiro.
 -- ============================================================================

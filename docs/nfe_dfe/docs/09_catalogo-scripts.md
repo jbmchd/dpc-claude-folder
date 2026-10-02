@@ -246,7 +246,8 @@ consertam.
 |---|---|---|
 | `2026-09-30_cancelamento_nfe` | `cod_situacao = 3` nas notas com evento `110111` que seguiam AUTORIZADA | **133 CANCELADA, 0 AUTORIZADA**, 51 ajustadas |
 | `2026-10-01_papel_resumo` | `sig_papel_empresa = 'DEST'` nas notas `INDEF` que só tinham resumo. Base: NT 2014.002 v.1.40 | **INDEF zerado**, 96 viraram DEST |
-| `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | *a rodar* — esperado 102 canceladas, 10.298 autorizadas, 0 sem situação |
+| `2026-10-02_pausa_completa` | pausa completa das empresas 17, 20, 29 e 30: os 16 cursores em `P` e manifestação, Ciência e Confirmação automáticas em `N`. O `_rollback` é a **retomada**, com a foto de antes no cabeçalho | **aplicado** — 16 cursores pausados, 0 ativos na base |
+| `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é
 manifestada → o `procNF` nunca chega → **a situação ficava errada (o primeiro)
