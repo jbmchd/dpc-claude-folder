@@ -274,6 +274,30 @@ O cancelamento (`110111`) escreve `cod_situacao = 3` na `DPC_DFE_CTE`, com
 > níveis diferentes. A leitura tem de ser escopada ao nó do evento, senão grava o
 > protocolo errado.
 
+### `DPC_DFE_NOTA_TOTAL`, `_TRANSPORTE`, `_COBRANCA` — o que estava só no XML
+
+Criadas em 02/10/2026 (DDL `08_01`) para o Monitor NF-e poder **filtrar, ordenar e exportar** por campos que só existiam dentro do XML — que é BLOB gzip, sem índice.
+
+**PK = `cod_dfe_nota` nas três.** É 1:1 com a nota, e a PK sozinha garante isso, sem trigger nem sequence — ao contrário das irmãs 1:N (`dpc_dfe_nota_item`, `dpc_dfe_cte_nfe`), que repetem o pai e precisam de chave própria.
+
+| Tabela | Conteúdo | Presença medida (400 notas) |
+|---|---|---|
+| `_total` | 27 valores do bloco `total`: ICMS, ST, IPI, PIS, COFINS, frete, seguro, desconto + a reforma (IBS, CBS) | `ICMSTot` 100%, `IBSCBSTot` 94% |
+| `_transporte` | frete, transportadora, veículo e volumes | `vol` 90%, `transporta` 24%, `veicTransp` **0%** |
+| `_cobranca` | fatura e formas de pagamento | `pag` 100%, `cobr/fat` 24% |
+
+**Os grupos 1:N vêm agregados**, porque a tela precisa de uma célula por nota: `vol` (até 10) vira soma de peso/quantidade e lista de espécies; `detPag` (até 2) vira lista de formas e soma de valores. As **duplicatas** (`cobr/dup`, 23%) ficaram de fora: são um extrato de parcelas e não cabem em célula.
+
+Três armadilhas do leiaute que a medição revelou, e que o parser documenta:
+
+1. **O telefone do emitente está em `enderEmit`**, não em `emit` — buscar em `emit` devolve nulo em 100% das notas.
+2. **A reforma é aninhada:** `IBSCBSTot/gIBS/gIBSUF/vIBSUF`, não `IBSCBSTot/vIBSUF`.
+3. **`vNFTot` é filho direto de `total`**, fora do `IBSCBSTot`.
+
+> **`dsc_inf_complementar` é CLOB e a listagem o lê com `DBMS_LOB.SUBSTR`.** Não é estilo: o driver oci8 abre um LOB locator por linha, e sobre as 2.239 notas de setembro a consulta foi de **2,06s para 208,67s** — a exportação estourava os 120s do PHP com erro 500. Com `SUBSTR`: 2,08s. O banco é `WE8ISO8859P15` (1 byte por caractere), então 4.000 caracteres cabem no `VARCHAR2`. O texto inteiro continua no detalhe, que lê uma linha só. Isto **não** contradiz a regra de ler CLOB direto: aquela vale para o XML, onde cortar em 4.000 destrói o conteúdo.
+
+---
+
 ### `DPC_DFE_NFSE` — serviço tomado
 
 **Uma linha por (empresa, chave).** Prestador, tomador, ISSQN com base/alíquota/retenção, e o **município de incidência**, que nem sempre é o do prestador — é ele que define para onde vai o ISSQN.

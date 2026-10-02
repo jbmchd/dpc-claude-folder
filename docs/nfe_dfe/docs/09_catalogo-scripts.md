@@ -17,6 +17,10 @@ nfe_dfe/scripts/
 │   ├── 2026-10-01_papel_resumo          │ o que importa e QUANDO rodou.
 │   ├── 2026-10-01_..._rollback          │ Fora da instalacao - ver §4c
 │   ├── 2026-10-02_nfse_reprocessa       │
+│   ├── 2026-10-02_..._rollback          │
+│   ├── 2026-10-02_pausa_completa        │
+│   ├── 2026-10-02_..._rollback          │
+│   ├── 2026-10-02_nfe_reprocessa_xml    │
 │   └── 2026-10-02_..._rollback          ┘
 └── ddl/                                 o UNICO caminho de instalacao
     ├── 01_01_estrutura                  ┐
@@ -40,7 +44,9 @@ nfe_dfe/scripts/
     ├── 06_01_colunas_usuario            ┐ BLOCO 06 - preferencia de coluna
     ├── 06_99_rollback_colunas_usuario   ┘ por usuario, no lugar do localStorage
     ├── 07_01_nfse_tipo_emissao          ┐ BLOCO 07 - NFS-e: tipo de emissao,
-    └── 07_99_rollback_nfse_tipo_emissao ┘ datas e endereco do prestador
+    ├── 07_99_rollback_nfse_tipo_emissao ┘ datas e endereco do prestador
+    ├── 08_01_nfe_satelites              ┐ BLOCO 08 - NF-e: totais, transporte,
+    └── 08_99_rollback_nfe_satelites     ┘ cobranca e 31 campos do XML
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
@@ -247,6 +253,7 @@ consertam.
 | `2026-09-30_cancelamento_nfe` | `cod_situacao = 3` nas notas com evento `110111` que seguiam AUTORIZADA | **133 CANCELADA, 0 AUTORIZADA**, 51 ajustadas |
 | `2026-10-01_papel_resumo` | `sig_papel_empresa = 'DEST'` nas notas `INDEF` que só tinham resumo. Base: NT 2014.002 v.1.40 | **INDEF zerado**, 96 viraram DEST |
 | `2026-10-02_pausa_completa` | pausa completa das empresas 17, 20, 29 e 30: os 16 cursores em `P` e manifestação, Ciência e Confirmação automáticas em `N`. O `_rollback` é a **retomada**, com a foto de antes no cabeçalho | **aplicado** — 16 cursores pausados, 0 ativos na base |
+| `2026-10-02_nfe_reprocessa_xml` | recoloca na fila os **9.397 `procNF`** para o parser novo preencher os campos do XML (DDL 08_01). Só o completo: o resumo não tem esses blocos. Refaz de carona itens, emitente e papel; a situação é protegida pela guarda anti-rebaixamento | *a rodar* — esperado ~9.397 linhas em cada satélite, 175.603 itens e 133 canceladas **inalterados** |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é
