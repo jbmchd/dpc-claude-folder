@@ -199,6 +199,29 @@ Uma linha por **empresa + chave**. UK `(cod_dfe_empresa, chave_nfse)`.
 
 UK **`(cod_dfe_cursor, nro_nsu)`** — o NSU é sequencial **por fluxo**, não por empresa.
 
+## A casca comum das telas de documento (ApiDPC)
+
+Desde 02/10/2026 as telas de documento fiscal — hoje NF-e, depois CT-e e NFS-e — usam a mesma base na ApiDPC. A família só declara o que é dela:
+
+```mermaid
+flowchart LR
+    R["routes/api.php<br/>$documentoFiscalRotas(controller, padrao da chave)"] --> C["SefazDocumentoController<br/>index · empresas · colunas · ultima-consulta<br/>chaves · exportar · zip-xml · zip-pdf<br/>enviar-email · detalhe · xml"]
+    C --> B["SefazDocumentoRepository<br/>permissao · paginacao · totais · exportacao<br/>XML · ZIP · e-mail · ultima consulta"]
+    B --> N["SefazNfeRepository<br/>queryBase · colunas · abas<br/>manifestacao · detalhe · DANFE"]
+```
+
+| Gancho | NF-e |
+|---|---|
+| `tipoDfe()` | `NFE` — também é a tela em `dpc_dfe_usuario_coluna` (o parâmetro `tela` do cliente é ignorado) |
+| `mapaDeAbas()` | recebidas/emitidas/transporte/citadas/indefinidas; a primeira é a padrão |
+| `colunaValor()` / `colunaChave()` | `vlr_nota` / `chave_nf` |
+| `campoOrdemPadrao()` / `colunaDesempate()` | `dta_emissao` / `n.cod_dfe_nota` |
+| `tiposDocumentoXml()` | `procNF`, `resNFe` (preferido primeiro) |
+| `rotuloPdf()` / `renderizaPdf()` | `DANFE`; família sem PDF devolve `null` e as rotas de PDF recusam |
+| `metadadosListagem()` | `pode_manifestar` |
+
+A extração foi validada por um golden test: 37 requisições (listagem, abas, ordenação, busca, filtros, empresas, chaves, exportação, detalhe, XML, DANFE, ZIP, e-mail) capturadas com o código antigo e o novo, iguais campo a campo. Só o PDF varia, e varia também entre duas execuções do código antigo.
+
 ## Queries de partida
 
 **Listagem com conciliação**
