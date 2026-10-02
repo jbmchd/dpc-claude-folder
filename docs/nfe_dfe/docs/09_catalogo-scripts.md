@@ -46,7 +46,8 @@ nfe_dfe/scripts/
     ├── 07_01_nfse_tipo_emissao          ┐ BLOCO 07 - NFS-e: tipo de emissao,
     ├── 07_99_rollback_nfse_tipo_emissao ┘ datas e endereco do prestador
     ├── 08_01_nfe_satelites              ┐ BLOCO 08 - NF-e: totais, transporte,
-    └── 08_99_rollback_nfe_satelites     ┘ cobranca e 31 campos do XML
+    ├── 08_02_nfe_volume_listas          │ cobranca e 31 campos do XML; o 02
+    └── 08_99_rollback_nfe_satelites     ┘ alarga as listas de volume
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
