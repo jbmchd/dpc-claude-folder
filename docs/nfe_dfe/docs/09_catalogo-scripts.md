@@ -15,7 +15,9 @@ nfe_dfe/scripts/
 │   ├── 2026-09-30_cancelamento_nfe      │ Corrige LINHA, nao estrutura.
 │   ├── 2026-09-30_..._rollback          │ Nome por DATA, nao por bloco:
 │   ├── 2026-10-01_papel_resumo          │ o que importa e QUANDO rodou.
-│   └── 2026-10-01_..._rollback          ┘ Fora da instalacao - ver §4c
+│   ├── 2026-10-01_..._rollback          │ Fora da instalacao - ver §4c
+│   ├── 2026-10-02_nfse_reprocessa       │
+│   └── 2026-10-02_..._rollback          ┘
 └── ddl/                                 o UNICO caminho de instalacao
     ├── 01_01_estrutura                  ┐
     ├── 01_02_estabelecimentos           │ BLOCO 01 - MOTOR
@@ -36,7 +38,9 @@ nfe_dfe/scripts/
     ├── 04_02_manifestacao_fases_2a4     │ Fases 2-4 (24/09) - ato fiscal,
     ├── 04_98_rollback_manifestacao_...  ┘ trancas fechadas por padrao
     ├── 06_01_colunas_usuario            ┐ BLOCO 06 - preferencia de coluna
-    └── 06_99_rollback_colunas_usuario   ┘ por usuario, no lugar do localStorage
+    ├── 06_99_rollback_colunas_usuario   ┘ por usuario, no lugar do localStorage
+    ├── 07_01_nfse_tipo_emissao          ┐ BLOCO 07 - NFS-e: tipo de emissao,
+    └── 07_99_rollback_nfse_tipo_emissao ┘ datas e endereco do prestador
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
@@ -242,6 +246,7 @@ consertam.
 |---|---|---|
 | `2026-09-30_cancelamento_nfe` | `cod_situacao = 3` nas notas com evento `110111` que seguiam AUTORIZADA | **133 CANCELADA, 0 AUTORIZADA**, 51 ajustadas |
 | `2026-10-01_papel_resumo` | `sig_papel_empresa = 'DEST'` nas notas `INDEF` que só tinham resumo. Base: NT 2014.002 v.1.40 | **INDEF zerado**, 96 viraram DEST |
+| `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | *a rodar* — esperado 102 canceladas, 10.298 autorizadas, 0 sem situação |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é
 manifestada → o `procNF` nunca chega → **a situação ficava errada (o primeiro)

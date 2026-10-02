@@ -397,6 +397,43 @@ completo. Todo o resto do documento continua sendo promovido normalmente.
 | CT-e | `tpEvento` numérico |
 | **NFS-e (ADN)** | pelo **elemento de detalhe**, ex. `e101101` = cancelamento. **Não existe `tpEvento`** 🔵 |
 
+### 🟢 NFS-e: o `cStat` é tipo de emissão, e só evento cancela
+
+Fonte: **Anexo I** (leiaute DPS/NFS-e), campo `NFSe/infNFSe/cStat`, e **Anexo II**
+(eventos) v1.01 de 22/01/2026, aba *TIPO EVENTOS*, em
+[gov.br/nfse → documentação atual](https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual);
+e [Resolução CGNFS-e nº 3/2023](https://www.gov.br/nfse/pt-br/biblioteca/portarias-e-resolucoes-cgnfs-e/resolucaocgnfsen330082023.pdf), art. 8º.
+Baixados em 02/10/2026.
+
+| `cStat` | Significado | Situação |
+|---|---|---|
+| 100 | NFS-e Gerada | autorizada |
+| 101 | NFS-e **de Substituição** Gerada — a nota *nova*. Está na v1.00 e **saiu da v1.01** (09/02/2026), mas o acervo tem nota anterior com ele | autorizada |
+| 102 | NFS-e de Decisão Judicial ou Administrativa | autorizada |
+| 103 | NFS-e Avulsa | autorizada |
+| 107 | NFS-e MEI | autorizada |
+
+Nenhum `cStat` quer dizer cancelada. O que torna a nota sem efeito é um **evento**:
+
+| Elemento | Evento | Efeito |
+|---|---|---|
+| `e101101` | Cancelamento de NFS-e | **sem efeito** |
+| `e105102` | Cancelamento por **Substituição** — traz `chSubstituta` | **sem efeito** |
+| `e105104` | Cancelamento Deferido por Análise Fiscal | **sem efeito** ("mesmos efeitos do cancelamento") |
+| `e305101` | Cancelamento por Ofício | **sem efeito** |
+| `e101103` | Solicitação de Análise Fiscal para Cancelamento | nenhum — só pede |
+| `e105105` | Cancelamento Indeferido por Análise Fiscal | nenhum — "mantendo os efeitos da NFS-e" |
+| `e305102` / `e305103` | Bloqueio / desbloqueio de eventos por ofício | nenhum sobre a situação |
+| `e2xxxxx` | Manifestações (confirmação, rejeição, tácita, anulação) | nenhum sobre a situação |
+
+🔵 Acervo em 02/10/2026: 10.400 NFS-e (cStat 100: 9.289 · 107: 1.103 · 101: 5 ·
+103: 3) e 107 eventos (`e101101` 76 · `e105102` 29 · `e101103` 1 · `e105105` 1).
+
+🔴 **Derrubado em 02/10/2026:** "cStat 101 e 102 = cancelada". O parser seguia
+essa leitura: deixava 1.066 notas autorizadas sem situação e marcava como
+canceladas 5 substitutas, que valem. E como só reconhecia o `e101101`, deixava
+27 notas substituídas aparecendo como válidas.
+
 ### 🟢 Quem recebe o quê — a tabela de distribuição por ator
 
 Fonte: **NT 2014.002 v.1.40**, publicada em 03/07/2026, seção *"A distribuição

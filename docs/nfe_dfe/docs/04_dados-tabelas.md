@@ -286,6 +286,19 @@ O cancelamento (`110111`) escreve `cod_situacao = 3` na `DPC_DFE_CTE`, com
 
 > Filtre por `dta_competencia`, não por `dta_processamento`: o ADN pode entregar hoje uma nota de competência de anos atrás. Ele **guarda histórico**, ao contrário dos 90 dias da SEFAZ.
 
+**Situação vem de evento, não da nota.** `cod_situacao` é 1 (autorizada) ou 3 (sem efeito). O `cStat` do XML é o **tipo de emissão** e vai para `cod_tipo_emissao` — nunca cancela. Só os quatro eventos de cancelamento do ADN levam a 3, e é aí que `dta_cancelamento` e, na substituição, `chave_nfse_substituta` são gravadas. Regra e fonte em [02 §8](02_conhecimento-sefaz.md). Leia a situação pelo **código**: até 02/10/2026 o `dsc_situacao` misturava `'CANCELADA'` e `'Cancelada'`.
+
+Colunas do bloco `07_01` (02/10/2026):
+
+| Coluna | Origem no XML | Para quê |
+|---|---|---|
+| `cod_tipo_emissao` / `dsc_tipo_emissao` | `infNFSe/cStat` | GERADA, SUBSTITUTA, DECISAO JUDICIAL OU ADMINISTRATIVA, AVULSA, MEI |
+| `dta_emissao` | `infDPS/dhEmi` (com hora) | "Data de Emissão" |
+| `dta_cancelamento` | `infEvento/dhProc` do evento de cancelamento | "Data de Cancelamento" |
+| `chave_nfse_substituta` | `e105102/chSubstituta` | qual nota substituiu esta |
+| `dsc_local_emissao` / `dsc_local_prestacao` | `infNFSe/xLocEmi` / `xLocPrestacao` | município por extenso — `cod_municipio_prest` é só o código IBGE |
+| `dsc_logradouro_prest`, `nro_endereco_prest`, `dsc_complemento_prest`, `dsc_bairro_prest`, `num_cep_prest` | `emit/enderNac/*` | "Endereço e CEP – Prestador" |
+
 ---
 
 ## Ato fiscal
