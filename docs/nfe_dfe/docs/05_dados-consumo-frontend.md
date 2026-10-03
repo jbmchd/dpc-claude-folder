@@ -233,11 +233,11 @@ Duas famílias não casam por ela, por motivos diferentes — e **nenhum dos doi
 |---|---|---|
 | NF-e | a chave, com 44 | 100% preenchida — é a única que casa |
 | CT-e | **nula** | 100% dos 54.213 `procCTe` (02/10/2026) |
-| NFS-e | **os 44 primeiros caracteres** da chave de 50 | 100% dos 10.400 `adnNFSe` (03/10/2026) |
+| NFS-e | ~~os 44 primeiros caracteres da chave de 50~~ → **a chave inteira, desde 03/10/2026** | era 100% truncada; corrigido no código e no acervo (10.428) |
 
 Por isso o gancho `fonteDoXml()`, que CT-e e NFS-e sobrescrevem para ligar por **`(cod_dfe_empresa, nro_nsu)`** — par único por documento e preenchido em 100% das linhas nas três famílias.
 
-> **O truncamento da NFS-e ainda acontece hoje.** A coluna já é `VARCHAR2(50)`; quem corta é o código, em
+> ✅ **O truncamento da NFS-e foi corrigido em 03/10/2026** — no código (`DfeDocumentoRepository.php`, `corta` de 44 para 50) e no acervo, pelo ajuste único `2026-10-03_nfse_chave_documento`, que copiou a chave inteira de `dpc_dfe_nfse` sem reprocessar XML. As telas **continuam** ligando por `(cod_dfe_empresa, nro_nsu)` — funciona e não há motivo para mexer —, mas agora a chave também casa.
 > [`DfeDocumentoRepository.php:82`](../../../../ApiNFE/app/Repositories/DfeDocumentoRepository.php) —
 > `'chave_nf' => $this->corta($doc['chave'] ?? null, 44)`. Conferido numa nota de 02/10/2026: o valor
 > gravado é exatamente `substr(chave_nfse, 1, 44)`. **Aberto**, sem urgência: o link por NSU resolve as
@@ -365,7 +365,7 @@ select s.chave_nfse, s.nro_nfse, s.dta_competencia, s.dsc_razao_prest,
 
 **7. A chave da NFS-e tem 50 caracteres, não 44.** Um `varchar(44)` no frontend, ou uma máscara de exibição feita para chave de NF-e, trunca em silêncio. `DPC_DFE_NOTA.chave_nf` e `DPC_DFE_CTE.chave_cte` seguem com 44, que é o correto para elas — e o padrão da rota da NFS-e na ApiDPC é `[0-9]{50}`, não `[0-9]{44}`.
 
-> ⚠️ `DPC_DFE_DOCUMENTO.chave_nf` **foi alargada para 50, mas o dado continua com 44**: quem corta é o código da ingestão, não a coluna. Medido em 03/10/2026 — os 10.400 `adnNFSe` têm exatamente `substr(chave_nfse, 1, 44)`, inclusive os recebidos naquela semana. Ligar documento e NFS-e pela chave devolve **zero, sem erro**; o caminho correto é `(cod_dfe_empresa, nro_nsu)`. Detalhe e a linha do código na seção da casca comum.
+> ✅ `DPC_DFE_DOCUMENTO.chave_nf` foi alargada para 50, e **desde 03/10/2026 o dado também tem 50**. Até ali o código da ingestão cortava em 44 e as 10.428 `adnNFSe` estavam truncadas; o código foi corrigido e o acervo, refeito por um `MERGE` a partir de `dpc_dfe_nfse.chave_nfse`. Ligar documento e NFS-e pela chave volta a funcionar — `(cod_dfe_empresa, nro_nsu)` continua valendo.
 
 > Ainda no fluxo `NFSE`, **`nro_maximo_nsu` fica nulo**. O ADN não informa o total de documentos — o sinal de fim é a resposta "nenhum documento localizado". Logo `nro_maximo_nsu - nro_ultimo_nsu` é **nulo, não zero**, e a coluna de backlog do painel deve mostrar `-` em vez de calcular. Zero ali seria número inventado.
 
