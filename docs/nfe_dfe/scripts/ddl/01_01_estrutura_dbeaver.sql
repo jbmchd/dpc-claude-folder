@@ -59,7 +59,7 @@
 --     01_99_rollback_motor_dbeaver.sql        desfaz o bloco 01
 --
 --   PASTA empresas/ - UM PAR POR ESTABELECIMENTO
---   trazido ao modulo depois da carga geral do 01_02. Eles nao entram lá
+--   trazido ao modulo depois da carga geral do 01_02. Eles nao entram la
 --   porque precisam de algo FORA das tabelas do modulo: o certificado, que
 --   mora no ERP. O NUMERO DO ARQUIVO E O NUMERO DA EMPRESA, entao trazer a
 --   proxima filial e acrescentar um par, sem escolher numero de bloco.
