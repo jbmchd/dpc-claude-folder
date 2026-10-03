@@ -329,6 +329,12 @@ Três armadilhas do leiaute que a medição revelou, e que o parser documenta:
 
 `chave_nfse` tem **50** caracteres. E há **dois blocos de valor**: `vlr_servico` é o bruto da prestação; `vlr_base_calculo`/`pct_aliquota`/`vlr_issqn`/`vlr_retido`/`vlr_liquido` são o apurado. Não são o mesmo número, e a tela precisa mostrar bruto → retenções → líquido, senão o valor exibido não fecha com o pagamento.
 
+
+> 🟡 **O ADN não manda a quebra das retenções federais.** Medido em 03/10/2026, listando os **94 caminhos de tag folha** de 60 NFS-e reais: não existe `vPIS`, `vCOFINS`, `vCSLL`, `vINSS` nem `vIR`. O que vem é **`valores/vTotalRet`** — o total retido **agregado**, num número só (98,3% preenchido), mais `tribMun/tpRetISSQN` e `trib/totTrib/indTotTrib`.
+
+> O relatório avançado da Qive **exibe** as seis como coluna, e foi daí que veio a ideia de materializá-las. Não dá: a origem não tem o dado. Serve de regra geral — **coluna que o fornecedor mostra não prova que o dado chega**; conferir sempre no XML antes de desenhar DDL.
+
+> Disponível e ainda não materializado, caso a equipe fiscal peça: `valores/vTotalRet` (98,3%), `prest/regTrib/regEspTrib` e `opSimpNac` (100%), `tribMun/tribISSQN` e `tpRetISSQN` (100%), `xTribNac` (100%), `interm/...` e `toma/end/...` (98,3%).
 **Não tem colunas de conciliação, e isso muda o peso da tabela.** Verificado no banco: a DPC **não registra NFS-e recebida** no ERP — nem em `mlf_notafiscal`, nem no módulo MRL. Confirmado pela área: *"só olhamos na Qive"*. Não há com o que conciliar, e **esta tabela passa a ser o registro**, não uma cópia dele. É a única das três em que um erro nosso não tem segunda fonte para aparecer.
 
 > Filtre por `dta_competencia`, não por `dta_processamento`: o ADN pode entregar hoje uma nota de competência de anos atrás. Ele **guarda histórico**, ao contrário dos 90 dias da SEFAZ.
