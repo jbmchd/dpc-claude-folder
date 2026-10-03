@@ -201,7 +201,7 @@ UK **`(cod_dfe_cursor, nro_nsu)`** — o NSU é sequencial **por fluxo**, não p
 
 ## A casca comum das telas de documento (ApiDPC)
 
-Desde 02/10/2026 as telas de documento fiscal — NF-e e CT-e hoje, NFS-e depois — usam a mesma base na ApiDPC. A família só declara o que é dela:
+Desde 02/10/2026 as três telas de documento fiscal — NF-e, CT-e e NFS-e — usam a mesma base na ApiDPC. A família só declara o que é dela:
 
 ```mermaid
 flowchart LR
@@ -209,26 +209,44 @@ flowchart LR
     C --> B["SefazDocumentoRepository<br/>permissao · paginacao · totais · exportacao<br/>XML · ZIP · e-mail · ultima consulta"]
     B --> N["SefazNfeRepository<br/>queryBase · colunas · abas<br/>manifestacao · detalhe · DANFE"]
     B --> T["SefazCteRepository<br/>queryBase · colunas · abas<br/>CCe · desacordo · entrega · DACTE"]
+    B --> S["SefazNfseRepository<br/>queryBase · colunas · abas<br/>substituicao · sem PDF"]
 ```
 
-| Gancho | NF-e | CT-e |
+| Gancho | NF-e | CT-e | NFS-e |
+|---|---|---|---|
+| `tipoDfe()` | `NFE` — também é a tela em `dpc_dfe_usuario_coluna` (o parâmetro `tela` do cliente é ignorado) | `CTE` | `NFSE` |
+| `mapaDeAbas()` | recebidas/emitidas/transporte/citadas/indefinidas; a primeira é a padrão | tomados (`TOMA`) / não tomados (`REM`,`DEST`,`RECEB`,`EXPED`,`OUTRO`) | tomadas (`TOMA`) / outras (`PREST`,`INTERM`,`OUTRO`) |
+| `colunaValor()` / `colunaChave()` | `vlr_nota` / `chave_nf` | `vlr_prestacao` / `chave_cte` | `vlr_servico` / `chave_nfse` |
+| `campoOrdemPadrao()` / `colunaDesempate()` | `dta_emissao` / `n.cod_dfe_nota` | `dta_emissao` / `c.cod_dfe_cte` | **`dta_competencia`** / `s.cod_dfe_nfse` |
+| período (`de`/`ate`) | emissão | emissão | **competência** — é a data do fechamento contábil e a única indexada (`DPCI_DFE_NFSE_COMPET`) |
+| `tiposDocumentoXml()` | `procNF`, `resNFe` (preferido primeiro) | `procCTe` | `adnNFSe` |
+| `fonteDoXml()` | padrão: liga `dpc_dfe_documento` por `chave_nf` | **override**: `(cod_dfe_empresa, nro_nsu)` | **override**: `(cod_dfe_empresa, nro_nsu)` |
+| `rotuloPdf()` / `renderizaPdf()` | `DANFE`; família sem PDF devolve `null` e as rotas de PDF recusam | `DACTE` (`sped-doc-aux`, só `mod = 57`) | **nenhum** — o DANFSe é padrão nacional (NT 008) mas o `sped-doc-aux` não o desenha |
+| `metadadosListagem()` | `pode_manifestar` | — (CT-e não se manifesta) | — |
+| padrão da chave na rota | `[0-9]{44}` | `[0-9]{44}` | **`[0-9]{50}`** |
+
+### 🟡 A chave de `dpc_dfe_documento` só serve para a NF-e
+
+Duas famílias não casam por ela, por motivos diferentes — e **nenhum dos dois dá erro**: o `WHERE` por chave devolve zero, então o download de XML, o ZIP, o e-mail e o PDF sairiam **vazios em silêncio**.
+
+| Família | O que há em `dpc_dfe_documento.chave_nf` | Medido |
 |---|---|---|
-| `tipoDfe()` | `NFE` — também é a tela em `dpc_dfe_usuario_coluna` (o parâmetro `tela` do cliente é ignorado) | `CTE` |
-| `mapaDeAbas()` | recebidas/emitidas/transporte/citadas/indefinidas; a primeira é a padrão | tomados (`TOMA`) / não tomados (`REM`,`DEST`,`RECEB`,`EXPED`,`OUTRO`) |
-| `colunaValor()` / `colunaChave()` | `vlr_nota` / `chave_nf` | `vlr_prestacao` / `chave_cte` |
-| `campoOrdemPadrao()` / `colunaDesempate()` | `dta_emissao` / `n.cod_dfe_nota` | `dta_emissao` / `c.cod_dfe_cte` |
-| `tiposDocumentoXml()` | `procNF`, `resNFe` (preferido primeiro) | `procCTe` |
-| `fonteDoXml()` | padrão: liga `dpc_dfe_documento` por `chave_nf` | **override**: liga por `(cod_dfe_empresa, nro_nsu)` — ver abaixo |
-| `rotuloPdf()` / `renderizaPdf()` | `DANFE`; família sem PDF devolve `null` e as rotas de PDF recusam | `DACTE` (`sped-doc-aux`, só `mod = 57`) |
-| `metadadosListagem()` | `pode_manifestar` | — (CT-e não se manifesta) |
+| NF-e | a chave, com 44 | 100% preenchida — é a única que casa |
+| CT-e | **nula** | 100% dos 54.213 `procCTe` (02/10/2026) |
+| NFS-e | **os 44 primeiros caracteres** da chave de 50 | 100% dos 10.400 `adnNFSe` (03/10/2026) |
 
-### 🟡 `dpc_dfe_documento.chave_nf` é nula em todo CT-e
+Por isso o gancho `fonteDoXml()`, que CT-e e NFS-e sobrescrevem para ligar por **`(cod_dfe_empresa, nro_nsu)`** — par único por documento e preenchido em 100% das linhas nas três famílias.
 
-Medido em 02/10/2026: **100% dos 54.213 `procCTe`** têm `chave_nf` nula, contra 0% de nulos em NF-e e NFS-e. Quem ligar documento e tabela pela chave não acha nada — e não dá erro: o download de XML, o ZIP, o e-mail e o DACTE sairiam **vazios em silêncio**. Daí o gancho `fonteDoXml()`, que o CT-e sobrescreve para ligar por `(cod_dfe_empresa, nro_nsu)`.
+> **O truncamento da NFS-e ainda acontece hoje.** A coluna já é `VARCHAR2(50)`; quem corta é o código, em
+> [`DfeDocumentoRepository.php:82`](../../../../ApiNFE/app/Repositories/DfeDocumentoRepository.php) —
+> `'chave_nf' => $this->corta($doc['chave'] ?? null, 44)`. Conferido numa nota de 02/10/2026: o valor
+> gravado é exatamente `substr(chave_nfse, 1, 44)`. **Aberto**, sem urgência: o link por NSU resolve as
+> três famílias, e trocar o 44 por 50 faria as notas novas casarem pela chave e as velhas não — o que é
+> pior do que o estado atual, a menos que venha com recarga do acervo.
 
-A NFS-e vai precisar do mesmo override, por outro motivo: lá a chave está **truncada** em 44 de 50 caracteres.
+> **Não há índice em `(cod_dfe_empresa, nro_nsu)`** em `dpc_dfe_documento` (o UK é `(cod_dfe_cursor, nro_nsu)`; há um índice só de `cod_dfe_empresa`). Na prática não pesa, porque a consulta entra pela chave da tabela normalizada: medido em 03/10/2026, **1 XML custa 3,7 s na NFS-e, 3,9 s no CT-e e 3,8 s na NF-e** — ou seja, o tempo é da pilha (boot + conexão pelo túnel), não do join. O ZIP de 50 leva 10,5 s (~134 ms/doc). Só uma varredura analítica da tabela inteira sente a falta do índice.
 
-No **front (DPC)** é o mesmo desenho: `src/app/sefaz/documentos/comum/TelaDocumentoFiscal.vue` tem a casca inteira (empresa, abas, busca, período + total, seleção, colunas com visões, exportação, baixar/compartilhar, chips, grade) e a família entrega um `config` mais três slots — `acoes-extras` (o Manifestar da NF-e), `celula` (só os campos listados em `camposComCelula`; o Vue 2.5 não deixa usar slot por coluna) e `modais` (recebem o estado da casca por escopo). `ModalColunas`, `ModalEnviarEmail` e `formatadores.js` também moram em `comum/`. A segunda tela, o CT-e (`documentos/cte/`, rota `SefazDocumentosCte`, menu `cod_menu` 948 em tst sob Sefaz > Documentos), confirmou que o desenho fecha: ela tem 37 colunas de catálogo, dois modais e nenhuma linha de paginação, busca, exportação ou seleção própria. O CSS da casca fica sob `#tela-documento-fiscal`: precisa ser **id**, porque é a especificidade que faz a cor da linha selecionada vencer a da `vue-good-table`. A NF-e foi comparada pela interface antes e depois (abas, ordenação, busca, filtro com chip, seleção, cor da linha, visões, exportação de 2.190 linhas célula a célula, detalhe) e saiu igual.
+No **front (DPC)** é o mesmo desenho: `src/app/sefaz/documentos/comum/TelaDocumentoFiscal.vue` tem a casca inteira (empresa, abas, busca, período + total, seleção, colunas com visões, exportação, baixar/compartilhar, chips, grade) e a família entrega um `config` mais três slots — `acoes-extras` (o Manifestar da NF-e), `celula` (só os campos listados em `camposComCelula`; o Vue 2.5 não deixa usar slot por coluna) e `modais` (recebem o estado da casca por escopo). `ModalColunas`, `ModalEnviarEmail` e `formatadores.js` também moram em `comum/`. As duas telas seguintes confirmaram que o desenho fecha: **CT-e** (`documentos/cte/`, rota `SefazDocumentosCte`, `cod_menu` 948) e **NFS-e** (`documentos/nfse/`, rota `SefazDocumentosNfse`, `cod_menu` 949), as duas em tst sob Sefaz > Documentos. Cada uma tem só o catálogo de colunas, o decorador e dois modais — nenhuma linha de paginação, busca, exportação ou seleção própria. A NFS-e chegou a zero célula com badge próprio: o único estado que vale cor é a situação, e a casca já a desenha. O CSS da casca fica sob `#tela-documento-fiscal`: precisa ser **id**, porque é a especificidade que faz a cor da linha selecionada vencer a da `vue-good-table`. A NF-e foi comparada pela interface antes e depois (abas, ordenação, busca, filtro com chip, seleção, cor da linha, visões, exportação de 2.190 linhas célula a célula, detalhe) e saiu igual.
 
 A extração foi validada por um golden test: 37 requisições (listagem, abas, ordenação, busca, filtros, empresas, chaves, exportação, detalhe, XML, DANFE, ZIP, e-mail) capturadas com o código antigo e o novo, iguais campo a campo. Só o PDF varia, e varia também entre duas execuções do código antigo.
 
@@ -345,7 +363,9 @@ select s.chave_nfse, s.nro_nfse, s.dta_competencia, s.dsc_razao_prest,
 
 **6. `dta_emissao` é DATE sem hora.** Filtro por período com `>= :de and < :ate + 1`, senão o último dia se perde. Na NFS-e o campo equivalente para filtro é **`dta_competencia`**, não `dta_processamento` — o ADN pode entregar hoje uma nota de competência de meses atrás (o primeiro documento real capturado é de out/2022).
 
-**7. A chave da NFS-e tem 50 caracteres, não 44.** Um `varchar(44)` no frontend, ou uma máscara de exibição feita para chave de NF-e, trunca em silêncio. `DPC_DFE_DOCUMENTO.chave_nf` foi alargada para 50 exatamente por isso; `DPC_DFE_NOTA.chave_nf` e `DPC_DFE_CTE.chave_cte` seguem com 44, que é o correto para elas.
+**7. A chave da NFS-e tem 50 caracteres, não 44.** Um `varchar(44)` no frontend, ou uma máscara de exibição feita para chave de NF-e, trunca em silêncio. `DPC_DFE_NOTA.chave_nf` e `DPC_DFE_CTE.chave_cte` seguem com 44, que é o correto para elas — e o padrão da rota da NFS-e na ApiDPC é `[0-9]{50}`, não `[0-9]{44}`.
+
+> ⚠️ `DPC_DFE_DOCUMENTO.chave_nf` **foi alargada para 50, mas o dado continua com 44**: quem corta é o código da ingestão, não a coluna. Medido em 03/10/2026 — os 10.400 `adnNFSe` têm exatamente `substr(chave_nfse, 1, 44)`, inclusive os recebidos naquela semana. Ligar documento e NFS-e pela chave devolve **zero, sem erro**; o caminho correto é `(cod_dfe_empresa, nro_nsu)`. Detalhe e a linha do código na seção da casca comum.
 
 > Ainda no fluxo `NFSE`, **`nro_maximo_nsu` fica nulo**. O ADN não informa o total de documentos — o sinal de fim é a resposta "nenhum documento localizado". Logo `nro_maximo_nsu - nro_ultimo_nsu` é **nulo, não zero**, e a coluna de backlog do painel deve mostrar `-` em vez de calcular. Zero ali seria número inventado.
 
