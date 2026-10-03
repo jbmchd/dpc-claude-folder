@@ -241,6 +241,29 @@ Os cinco CNPJs ficam na própria linha, sem tabela de partes: a transportadora a
 
 Sem colunas de conciliação: CT-e não entra em `mlf_notafiscal`.
 
+#### As 15 colunas do bloco 09_01 (03/10/2026)
+
+Materializadas a pedido do **"Modelo Conferência Mensal CTE"**, que a equipe fiscal mantém salvo no relatório avançado da Qive. Ver [09_01](../scripts/ddl/09_01_cte_conferencia_mensal_dbeaver.sql).
+
+| Coluna | Tag no XML | Preenchimento medido |
+|---|---|---|
+| `dsc_razao_remetente` | `rem/xNome` | 100% |
+| `dsc_razao_destinat` | `dest/xNome` | 100% |
+| `dsc_razao_expedidor` | `exped/xNome` | 31,6% |
+| `dsc_razao_recebedor` | `receb/xNome` | 30,0% |
+| `num_cnpj_tomador4` · `dsc_razao_tomador4` | `ide/toma4/CNPJ` · `/xNome` | 9,45% — **é o `cod_tomador = 4`** |
+| `cod_cst_icms` | `imp/ICMS/<grupo>/CST` | 100% dos blocos ICMS |
+| `vlr_bc_icms` · `vlr_icms` · `pct_icms` | `ICMS00/vBC` · `ICMSOutraUF/vBCOutraUF` · `ICMS60/vBCSTRet` (e os pares de valor e alíquota) | **22,8%** |
+| `dta_autorizacao` | `protCTe/infProt/dhRecbto` | 100% — **com hora**, e ≠ `dta_emissao` |
+| `chave_cte_complementado` | `infCteComp/chCTe` | 2,31% (os `cod_tipo_cte = 1`) |
+| `vlr_ibs_mun` · `vlr_ibs_uf` · `vlr_cbs` | `imp/IBSCBS/gIBSCBS/gIBSMun` · `/gIBSUF` · `/gCBS` | 79,2% — o acervo começa em 24/06/2026 e a reforma foi entrando |
+
+> **Base e valor do ICMS nulos em 77% é o certo, não falha.** O grupo de ICMS é uma *escolha*: `ICMS45` (isento, CST 40) são 70,2% e `ICMSSN` (Simples) 7,0%, e nenhum dos dois tem o que declarar. Por isso `cod_cst_icms` foi materializado junto — sem ele a célula vazia parece defeito. Leia sempre os dois em par.
+
+> **Três armadilhas de XPath**, medidas em 40 CT-e antes de escrever o parser: `chCTe` existe em `protCTe/infProt/chCTe` em **100%** dos CT-e (é a chave do *próprio* documento, não a do complementado); `CST` existe também em `imp/IBSCBS/CST`, que é o da reforma; e `xNome` aparece até **12×** por documento em `vPrest/Comp/xNome`, que são os componentes do frete. Busca global erra nos três — o parser resolve por caminho explícito.
+
+> O **nome do tomador** não é campo do XML: é o nome de outro papel, apontado por `ide/toma3/toma`. A ApiDPC monta em `razaoDoTomador()`, e é por isso que expedidor e recebedor foram materializados mesmo não estando no modelo da Qive — sem eles a coluna sairia vazia em 4,13% dos casos.
+
 ### `DPC_DFE_CTE_NFE` — o que o frete levava
 
 **Uma linha por (CT-e, chave de NF-e).** É o elo entre frete e mercadoria, e **a razão de existir da captura de CT-e**: responde *"o que estava neste caminhão"* e *"quanto custou trazer esta nota"*.
