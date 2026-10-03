@@ -21,7 +21,9 @@ nfe_dfe/scripts/
 │   ├── 2026-10-02_pausa_completa        │
 │   ├── 2026-10-02_..._rollback          │
 │   ├── 2026-10-02_nfe_reprocessa_xml    │
-│   └── 2026-10-02_..._rollback          ┘
+│   ├── 2026-10-02_..._rollback          │
+│   ├── 2026-10-03_cte_reprocessa_09_01  │
+│   └── 2026-10-03_..._rollback          ┘
 └── ddl/                                 o UNICO caminho de instalacao
     ├── 01_01_estrutura                  ┐
     ├── 01_02_estabelecimentos           │ BLOCO 01 - MOTOR
@@ -47,7 +49,9 @@ nfe_dfe/scripts/
     ├── 07_99_rollback_nfse_tipo_emissao ┘ datas e endereco do prestador
     ├── 08_01_nfe_satelites              ┐ BLOCO 08 - NF-e: totais, transporte,
     ├── 08_02_nfe_volume_listas          │ cobranca e 31 campos do XML; o 02
-    └── 08_99_rollback_nfe_satelites     ┘ alarga as listas de volume
+    ├── 08_99_rollback_nfe_satelites     ┘ alarga as listas de volume
+    ├── 09_01_cte_conferencia_mensal     ┐ BLOCO 09 - CT-e: as 15 colunas
+    └── 09_99_rollback_cte_conferencia   ┘ do Modelo Conferencia Mensal
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
@@ -255,6 +259,7 @@ consertam.
 | `2026-10-01_papel_resumo` | `sig_papel_empresa = 'DEST'` nas notas `INDEF` que só tinham resumo. Base: NT 2014.002 v.1.40 | **INDEF zerado**, 96 viraram DEST |
 | `2026-10-02_pausa_completa` | pausa completa das empresas 17, 20, 29 e 30: os 16 cursores em `P` e manifestação, Ciência e Confirmação automáticas em `N`. O `_rollback` é a **retomada**, com a foto de antes no cabeçalho | **aplicado** — 16 cursores pausados, 0 ativos na base |
 | `2026-10-02_nfe_reprocessa_xml` | recoloca na fila os **9.397 `procNF`** para o parser novo preencher os campos do XML (DDL 08_01). Só o completo: o resumo não tem esses blocos. Refaz de carona itens, emitente e papel; a situação é protegida pela guarda anti-rebaixamento | **aplicado 02/10/2026** — 9.397 linhas em cada satélite e 9.397 com natureza da operação; itens (175.603) e canceladas (133) inalterados; **ICMS da nota conferido contra a soma dos itens nas 9.397: zero divergências**. Uma nota falhou por lista de volumes acima de 400 e foi refeita após o `08_02` |
+| `2026-10-03_cte_reprocessa_09_01` | recoloca na fila os **54.213 `procCTe`** para o parser preencher as 15 colunas do bloco 09_01. Refaz de carona as NF-e transportadas (upsert idempotente) e o papel da empresa. ⚠️ **Exigiu um fix antes**: o CT-e era a única das três famílias sem anti-rebaixamento de situação, e a recarga teria devolvido os **518 cancelados** para AUTORIZADO — o protocolo dentro do `procCTe` é o de autorização, com `cStat 100` sempre | **em execução 03/10/2026** |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é
