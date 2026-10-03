@@ -201,26 +201,34 @@ UK **`(cod_dfe_cursor, nro_nsu)`** — o NSU é sequencial **por fluxo**, não p
 
 ## A casca comum das telas de documento (ApiDPC)
 
-Desde 02/10/2026 as telas de documento fiscal — hoje NF-e, depois CT-e e NFS-e — usam a mesma base na ApiDPC. A família só declara o que é dela:
+Desde 02/10/2026 as telas de documento fiscal — NF-e e CT-e hoje, NFS-e depois — usam a mesma base na ApiDPC. A família só declara o que é dela:
 
 ```mermaid
 flowchart LR
     R["routes/api.php<br/>$documentoFiscalRotas(controller, padrao da chave)"] --> C["SefazDocumentoController<br/>index · empresas · colunas · ultima-consulta<br/>chaves · exportar · zip-xml · zip-pdf<br/>enviar-email · detalhe · xml"]
     C --> B["SefazDocumentoRepository<br/>permissao · paginacao · totais · exportacao<br/>XML · ZIP · e-mail · ultima consulta"]
     B --> N["SefazNfeRepository<br/>queryBase · colunas · abas<br/>manifestacao · detalhe · DANFE"]
+    B --> T["SefazCteRepository<br/>queryBase · colunas · abas<br/>CCe · desacordo · entrega · DACTE"]
 ```
 
-| Gancho | NF-e |
-|---|---|
-| `tipoDfe()` | `NFE` — também é a tela em `dpc_dfe_usuario_coluna` (o parâmetro `tela` do cliente é ignorado) |
-| `mapaDeAbas()` | recebidas/emitidas/transporte/citadas/indefinidas; a primeira é a padrão |
-| `colunaValor()` / `colunaChave()` | `vlr_nota` / `chave_nf` |
-| `campoOrdemPadrao()` / `colunaDesempate()` | `dta_emissao` / `n.cod_dfe_nota` |
-| `tiposDocumentoXml()` | `procNF`, `resNFe` (preferido primeiro) |
-| `rotuloPdf()` / `renderizaPdf()` | `DANFE`; família sem PDF devolve `null` e as rotas de PDF recusam |
-| `metadadosListagem()` | `pode_manifestar` |
+| Gancho | NF-e | CT-e |
+|---|---|---|
+| `tipoDfe()` | `NFE` — também é a tela em `dpc_dfe_usuario_coluna` (o parâmetro `tela` do cliente é ignorado) | `CTE` |
+| `mapaDeAbas()` | recebidas/emitidas/transporte/citadas/indefinidas; a primeira é a padrão | tomados (`TOMA`) / não tomados (`REM`,`DEST`,`RECEB`,`EXPED`,`OUTRO`) |
+| `colunaValor()` / `colunaChave()` | `vlr_nota` / `chave_nf` | `vlr_prestacao` / `chave_cte` |
+| `campoOrdemPadrao()` / `colunaDesempate()` | `dta_emissao` / `n.cod_dfe_nota` | `dta_emissao` / `c.cod_dfe_cte` |
+| `tiposDocumentoXml()` | `procNF`, `resNFe` (preferido primeiro) | `procCTe` |
+| `fonteDoXml()` | padrão: liga `dpc_dfe_documento` por `chave_nf` | **override**: liga por `(cod_dfe_empresa, nro_nsu)` — ver abaixo |
+| `rotuloPdf()` / `renderizaPdf()` | `DANFE`; família sem PDF devolve `null` e as rotas de PDF recusam | `DACTE` (`sped-doc-aux`, só `mod = 57`) |
+| `metadadosListagem()` | `pode_manifestar` | — (CT-e não se manifesta) |
 
-No **front (DPC)** é o mesmo desenho: `src/app/sefaz/documentos/comum/TelaDocumentoFiscal.vue` tem a casca inteira (empresa, abas, busca, período + total, seleção, colunas com visões, exportação, baixar/compartilhar, chips, grade) e a família entrega um `config` mais três slots — `acoes-extras` (o Manifestar da NF-e), `celula` (só os campos listados em `camposComCelula`; o Vue 2.5 não deixa usar slot por coluna) e `modais` (recebem o estado da casca por escopo). `ModalColunas`, `ModalEnviarEmail` e `formatadores.js` também moram em `comum/`. O CSS da casca fica sob `#tela-documento-fiscal`: precisa ser **id**, porque é a especificidade que faz a cor da linha selecionada vencer a da `vue-good-table`. A NF-e foi comparada pela interface antes e depois (abas, ordenação, busca, filtro com chip, seleção, cor da linha, visões, exportação de 2.190 linhas célula a célula, detalhe) e saiu igual.
+### 🟡 `dpc_dfe_documento.chave_nf` é nula em todo CT-e
+
+Medido em 02/10/2026: **100% dos 54.213 `procCTe`** têm `chave_nf` nula, contra 0% de nulos em NF-e e NFS-e. Quem ligar documento e tabela pela chave não acha nada — e não dá erro: o download de XML, o ZIP, o e-mail e o DACTE sairiam **vazios em silêncio**. Daí o gancho `fonteDoXml()`, que o CT-e sobrescreve para ligar por `(cod_dfe_empresa, nro_nsu)`.
+
+A NFS-e vai precisar do mesmo override, por outro motivo: lá a chave está **truncada** em 44 de 50 caracteres.
+
+No **front (DPC)** é o mesmo desenho: `src/app/sefaz/documentos/comum/TelaDocumentoFiscal.vue` tem a casca inteira (empresa, abas, busca, período + total, seleção, colunas com visões, exportação, baixar/compartilhar, chips, grade) e a família entrega um `config` mais três slots — `acoes-extras` (o Manifestar da NF-e), `celula` (só os campos listados em `camposComCelula`; o Vue 2.5 não deixa usar slot por coluna) e `modais` (recebem o estado da casca por escopo). `ModalColunas`, `ModalEnviarEmail` e `formatadores.js` também moram em `comum/`. A segunda tela, o CT-e (`documentos/cte/`, rota `SefazDocumentosCte`, menu `cod_menu` 948 em tst sob Sefaz > Documentos), confirmou que o desenho fecha: ela tem 37 colunas de catálogo, dois modais e nenhuma linha de paginação, busca, exportação ou seleção própria. O CSS da casca fica sob `#tela-documento-fiscal`: precisa ser **id**, porque é a especificidade que faz a cor da linha selecionada vencer a da `vue-good-table`. A NF-e foi comparada pela interface antes e depois (abas, ordenação, busca, filtro com chip, seleção, cor da linha, visões, exportação de 2.190 linhas célula a célula, detalhe) e saiu igual.
 
 A extração foi validada por um golden test: 37 requisições (listagem, abas, ordenação, busca, filtros, empresas, chaves, exportação, detalhe, XML, DANFE, ZIP, e-mail) capturadas com o código antigo e o novo, iguais campo a campo. Só o PDF varia, e varia também entre duas execuções do código antigo.
 

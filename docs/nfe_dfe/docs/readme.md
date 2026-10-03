@@ -147,7 +147,14 @@ workspace/
 │   └── app/Repositories/DpcParametroRepository.php
 │                                            ↑ nenhuma doc e nenhum .sql aqui
 ├── ApiDPC/app/Repositories/SefazMonitorDfeRepository.php
-├── DPC/src/app/sefaz/monitor/               a tela
+├── ApiDPC/app/Repositories/SefazDocumentoRepository.php
+│                                            ↑ casca das telas de documento
+├── ApiDPC/app/Repositories/SefazNfeRepository.php    ┐ as familias
+├── ApiDPC/app/Repositories/SefazCteRepository.php    ┘
+├── DPC/src/app/sefaz/monitor/               a tela de monitoramento
+├── DPC/src/app/sefaz/documentos/comum/      a casca no front
+├── DPC/src/app/sefaz/documentos/nfe/        tela de NF-e
+├── DPC/src/app/sefaz/documentos/cte/        tela de CT-e
 │
 └── .claude/docs/nfe_dfe/                    ◀ O HUB
     ├── docs/                                a documentação

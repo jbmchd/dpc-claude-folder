@@ -13,11 +13,11 @@
 --  O 400 saiu de uma amostra de 400 notas, onde o maior era bem menor. Na
 --  carga de 02/10/2026 apareceu a nota real que desmentiu a amostra: 16
 --  especies distintas, 409 caracteres, ORA-12899 - e o documento INTEIRO
---  falhou, ficando sem totais, sem transporte e sem cobranca por causa de uma
---  lista.
+--  falhou, ficando sem totais, sem transporte e sem cobranca por causa de
+--  uma lista.
 --
---  Medido nas 2.088 primeiras linhas gravadas:
---    dsc_especie_volume     media 2, maximo 142, nenhuma acima de 300
+--  Medido no acervo inteiro depois da carga (9.396 linhas):
+--    dsc_especie_volume     media 2, maximo 142
 --    dsc_marca_volume       maximo 16
 --    dsc_numeracao_volume   maximo 15
 --
@@ -30,21 +30,35 @@
 --  derrubar o documento inteiro. Esta DDL e para o corte quase nunca agir.
 --
 --  ==========================================================================
+--   POR QUE AQUI NAO TEM BLOCO PL/SQL
+--  ==========================================================================
+--  Os outros arquivos deste modulo embrulham a DDL num bloco so para poder
+--  perguntar antes "ja existe?". Aqui isso nao e preciso: no Oracle, pedir
+--  para uma coluna o tamanho que ela JA TEM e aceito sem erro (conferido em
+--  02/10/2026). Entao tres ALTER soltos ja sao idempotentes.
+--
+--  E sao mais seguros: a primeira versao deste arquivo usava bloco e o
+--  DBeaver o cortou, devolvendo PLS-00103. O bloco em si era valido - o
+--  Oracle o aceitou quando enviado inteiro -, mas o divisor de statements do
+--  DBeaver nao o digeriu. Sem bloco, nao ha o que cortar.
+--
+--  ==========================================================================
 --   SEGURO COM DADO DENTRO
 --  ==========================================================================
 --  Aumentar VARCHAR2 nao reescreve linha nem invalida indice: o Oracle so
 --  troca o metadado. Nada do que ja esta gravado se perde.
 --
 --  >>> RODAR COM A CARGA PARADA. Um ALTER precisa de lock exclusivo e, com
---  >>> insert acontecendo, pode falhar com ORA-00054. O ddl_lock_timeout
---  >>> abaixo faz o Oracle esperar ate 60s em vez de desistir na hora.
+--  >>> insert acontecendo, falha com ORA-00054 (resource busy). Se isso
+--  >>> acontecer, espere a carga terminar e rode de novo - nada fica pela
+--  >>> metade, cada ALTER e atomico.
 --
 --  ==========================================================================
 --   COMO RODAR (DBeaver)
 --  ==========================================================================
---  Conectado como POSEIDON, arquivo INTEIRO com Alt+X. Idempotente: coluna
---  que ja esta com 1000 e pulada. Rollback: nao ha, e nao faria sentido -
---  reduzir de volta falharia em qualquer linha que ja passe de 400.
+--  Conectado como POSEIDON, arquivo INTEIRO com Alt+X. Pode rodar quantas
+--  vezes quiser. Rollback: nao ha, e nao faria sentido - reduzir de volta
+--  falharia em qualquer linha que ja passe de 400.
 -- ============================================================================
 
 
@@ -68,34 +82,11 @@ select max(length(dsc_especie_volume))   as maior_especie,
 --  SECAO 2 - ALARGAR
 -- ============================================================================
 
-declare
-  type t_lista is table of varchar2(200);
-  nomes t_lista := t_lista(
-    'dsc_especie_volume',
-    'dsc_marca_volume',
-    'dsc_numeracao_volume'
-  );
-  tamanho number;
-begin
-  execute immediate q'[alter session set ddl_lock_timeout = 60]';
+alter table poseidon.dpc_dfe_nota_transporte modify (dsc_especie_volume VARCHAR2(1000));
 
-  for i in 1 .. nomes.count loop
-    select data_length into tamanho from all_tab_columns
-     where owner = 'POSEIDON' and table_name = 'DPC_DFE_NOTA_TRANSPORTE'
-       and column_name = upper(nomes(i));
+alter table poseidon.dpc_dfe_nota_transporte modify (dsc_marca_volume VARCHAR2(1000));
 
-    if tamanho < 1000 then
-      execute immediate q'[alter table poseidon.dpc_dfe_nota_transporte modify (]'
-                        || nomes(i) || ' VARCHAR2(1000))';
-      dbms_output.put_line('alargada: ' || nomes(i) || ' (' || tamanho || ' -> 1000)');
-    else
-      dbms_output.put_line(nomes(i) || ' ja tem ' || tamanho || '.');
-    end if;
-  end loop;
-exception
-  when others then
-    dbms_output.put_line('DPC_DFE_NOTA_TRANSPORTE: FALHOU -> ' || sqlerrm);
-end;
+alter table poseidon.dpc_dfe_nota_transporte modify (dsc_numeracao_volume VARCHAR2(1000));
 
 comment on column poseidon.dpc_dfe_nota_transporte.dsc_especie_volume is
     'Especies distintas, separadas por virgula. 1000 desde 02/10/2026: uma nota real com 16 especies estourou os 400 originais. Tag: transp/vol/esp.';
