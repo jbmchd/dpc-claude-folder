@@ -51,7 +51,9 @@ nfe_dfe/scripts/
     ├── 08_02_nfe_volume_listas          │ cobranca e 31 campos do XML; o 02
     ├── 08_99_rollback_nfe_satelites     ┘ alarga as listas de volume
     ├── 09_01_cte_conferencia_mensal     ┐ BLOCO 09 - CT-e: as 15 colunas
-    └── 09_99_rollback_cte_conferencia   ┘ do Modelo Conferencia Mensal
+    ├── 09_99_rollback_cte_conferencia   ┘ do Modelo Conferencia Mensal
+    ├── 10_01_relatorio_colunas          ┐ BLOCO 10 - dsc_tela aceita as
+    └── 10_99_rollback_relatorio_colunas ┘ variantes _REL dos Relatorios Avancados
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
