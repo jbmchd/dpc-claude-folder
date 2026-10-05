@@ -248,7 +248,28 @@ Por isso o gancho `fonteDoXml()`, que CT-e e NFS-e sobrescrevem para ligar por *
 
 No **front (DPC)** é o mesmo desenho: `src/app/sefaz/documentos/comum/TelaDocumentoFiscal.vue` tem a casca inteira (empresa, abas, busca, período + total, seleção, colunas com visões, exportação, baixar/compartilhar, chips, grade) e a família entrega um `config` mais três slots — `acoes-extras` (o Manifestar da NF-e), `celula` (só os campos listados em `camposComCelula`; o Vue 2.5 não deixa usar slot por coluna) e `modais` (recebem o estado da casca por escopo). `ModalColunas`, `ModalEnviarEmail` e `formatadores.js` também moram em `comum/`. As duas telas seguintes confirmaram que o desenho fecha: **CT-e** (`documentos/cte/`, rota `SefazDocumentosCte`, `cod_menu` 948) e **NFS-e** (`documentos/nfse/`, rota `SefazDocumentosNfse`, `cod_menu` 949), as duas em tst sob Sefaz > Documentos. Cada uma tem só o catálogo de colunas, o decorador e dois modais — nenhuma linha de paginação, busca, exportação ou seleção própria. A NFS-e chegou a zero célula com badge próprio: o único estado que vale cor é a situação, e a casca já a desenha. O CSS da casca fica sob `#tela-documento-fiscal`: precisa ser **id**, porque é a especificidade que faz a cor da linha selecionada vencer a da `vue-good-table`. A NF-e foi comparada pela interface antes e depois (abas, ordenação, busca, filtro com chip, seleção, cor da linha, visões, exportação de 2.190 linhas célula a célula, detalhe) e saiu igual.
 
-**Relatórios Avançados (03/10/2026).** Menu próprio em tst — **Sefaz > Relatórios Avançados** (`cod_menu` 950, agrupador) com **NF-e** (951), **CT-e** (952) e **NFS-e** (953) —, espelhando o módulo homônimo da Qive. Não é tela nova: é a mesma tela de cada família com `relatorio: true`, ligado por `comum/relatorioAvancado.js`. Muda três coisas: abre na visão **Completo** (`colunasIniciais` = catálogo inteiro; o botão "Padrão" do modal continua sendo a visão Padrão da família), guarda a escolha de colunas **à parte** (servidor: `variante=relatorio` → `NFE_REL`/`CTE_REL`/`NFSE_REL`, bloco `10_01`; navegador: chave com sufixo `-relatorio`) e muda título e nome do XLSX. Rotas `/sefaz/relatorios-avancados/{nfe,cte,nfse}`, names `SefazRelatorioAvancado{Nfe,Cte,Nfse}`.
+**Relatórios Avançados — busca avançada (05/10/2026).** Menu próprio em tst — **Sefaz > Relatórios Avançados** (`cod_menu` 950, agrupador) com **NF-e** (951), **CT-e** (952) e **NFS-e** (953). Rotas `/sefaz/relatorios-avancados/{nfe,cte,nfse}`, names `SefazRelatorioAvancado{Nfe,Cte,Nfse}`.
+
+> ⚠️ Em 03/10/2026 isto nasceu como *a mesma listagem com todas as colunas ligadas*. **O usuário derrubou no dia seguinte**: "os relatórios avançados estão idênticos aos relatórios e bem diferentes dos relatórios avançados da Qive". Ele tinha razão — na Qive o relatório avançado é um **formulário de busca** com modelos salvos, não uma listagem larga. Reescrito em 05/10/2026.
+
+Hoje a mesma casca atende aos dois desenhos, pela chave `modoAvancado` do `config` (ligada em `comum/relatorioAvancado.js`):
+
+| | Tela normal | Relatório Avançado |
+|---|---|---|
+| Filtros | escondidos num modal | **todos à vista**, no formulário |
+| Quando a grade carrega | ao abrir | só no **"Pré-visualizar busca"** |
+| Colunas ao abrir | visão Padrão | visão Completo (catálogo inteiro) |
+| Preferência de coluna | `NFE`/`CTE`/`NFSE` | `NFE_REL`/`CTE_REL`/`NFSE_REL` (bloco `10_01`) |
+| Modelos salvos | — | **filtro e colunas**, nomeados (bloco `11_01`) |
+| Lista de chaves colada | — | sim, com contador |
+
+Três decisões que custaram medição:
+
+- **O modelo de filtro guarda o *preset* do período, não as datas.** Um modelo "Conferência Mensal" com *Mês anterior* tem de continuar significando o mês anterior no mês que vem. Só o período personalizado leva datas.
+- **Colar chaves abre período e papel sozinho**, e a tela diz que fez isso. Os dois **continuam valendo no servidor** — medido na API: as mesmas 3 chaves de CT-e com papel `DEST`, na aba "tomados", devolvem **zero**. Sem abrir, colar chave daria resultado vazio sem explicação.
+- **`tamanhoChave` é do `config`, por família (44/44/50).** A primeira versão assumia 44 para todas e a NFS-e recusava toda chave colada, em silêncio — o contador dizia "0 chaves válidas" e a pessoa concluiria que as notas não existem.
+
+Os campos de filtro saíram do `ModalFiltros` para um **`CamposFiltros.vue` por família**, usado nos dois lugares (o modal virou moldura + botões). O painel os desenha pelo slot `campos-filtros`. O `SeletorModelo.vue` (em `comum/`) serve aos dois tipos de modelo e trata o conteúdo como **opaco** — quem monta e aplica é a tela, igual ao servidor.
 
 > ⚠️ Cada rota de relatório usa um componente **próprio** (`{ extends: SefazDocumentosNfe }`), e não o mesmo objeto da tela normal. O `<router-view>` do `App.vue` não tem `:key`: duas rotas com o mesmo componente **reaproveitam a instância**, e ir da tela normal para o relatório pelo menu manteria a `config` da normal. Provado no navegador nos dois sentidos (título, chave e variante trocam; nada vaza entre as duas preferências).
 

@@ -364,6 +364,16 @@ Colunas do bloco `07_01` (02/10/2026):
 
 Deixou de estar vazia em 21/09/2026 (Fase 0: 10 Ciências reais, empresa 29). Desde 24/09/2026 o `dfe:manifestar` está **agendado** (`--auto`, Ciência e Confirmação), mas as trancas por empresa (`status_manifestar` e as duas flags de automação) estão todas em `'N'` — nada novo é gravado sozinho. Colunas novas da Fase 1 (`nro_seq_evento`, `dsc_justificativa`, `dta_registro_evento`, `cod_dfe_empresa`, `dsc_id_lote`, `dta_proxima_tentativa`) e da Fase 2-4 (nenhuma nesta tabela) — ver `04_01`/`04_02` em `scripts/ddl/`.
 
+### `DPC_DFE_USUARIO_MODELO` — os modelos do Relatório Avançado
+
+**Uma linha por (usuário, família, tipo, nome).** Guarda os modelos **nomeados** da busca avançada: `tip_modelo` `F` (filtro) ou `C` (colunas). É o que a equipe fiscal faz hoje na Qive com o "Modelo Conferência Mensal CTE" — escolhe o modelo, troca o período, exporta.
+
+Não substitui `DPC_DFE_USUARIO_COLUNA` (bloco `06_01`), que guarda **uma** escolha corrente por tela. Esta guarda **N escolhas com nome**, para reusar. As duas convivem: aplicar um modelo de colunas também regrava a escolha corrente.
+
+`dsc_conteudo` é **CLOB com JSON, deliberadamente não normalizado**: o conteúdo é um retrato da *tela*, e cada família tem filtros próprios que mudam quando a tela muda. Normalizar exigiria uma tabela por família e migração a cada filtro novo. O servidor só confere que é JSON válido e que cabe no teto (200 KB); quem interpreta é a tela que salvou. Medido em 05/10/2026 no container (PHP 7.2 + `yajra/laravel-oci8` 5.5): o driver grava e lê CLOB de 200 KB inteiro, sem binding especial.
+
+O modelo é **pessoal**: `usuario` vem sempre do token, e toda escrita leva `where usuario = <token>` além do id — um id de outra pessoa não casa, e a operação não afeta nada (conferido na alpha: ler e excluir modelo alheio respondem "não encontrado"). A UK `(usuario, dsc_tela, tip_modelo, nom_modelo)` é o que transforma nome repetido em mensagem na tela, em vez de linha duplicada. Modelo compartilhado com a equipe ficou **fora de escopo** por decisão do usuário em 05/10/2026.
+
 ---
 
 ## Estado em homologação (20/08/2026)

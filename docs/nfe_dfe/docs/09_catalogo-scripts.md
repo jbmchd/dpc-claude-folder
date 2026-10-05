@@ -53,7 +53,9 @@ nfe_dfe/scripts/
     ├── 09_01_cte_conferencia_mensal     ┐ BLOCO 09 - CT-e: as 15 colunas
     ├── 09_99_rollback_cte_conferencia   ┘ do Modelo Conferencia Mensal
     ├── 10_01_relatorio_colunas          ┐ BLOCO 10 - dsc_tela aceita as
-    └── 10_99_rollback_relatorio_colunas ┘ variantes _REL dos Relatorios Avancados
+    ├── 10_99_rollback_relatorio_colunas ┘ variantes _REL dos Relatorios Avancados
+    ├── 11_01_modelos_usuario            ┐ BLOCO 11 - modelos salvos de filtro
+    └── 11_99_rollback_modelos_usuario   ┘ e de colunas da busca avancada
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
