@@ -429,6 +429,8 @@ Nenhum `cStat` quer dizer cancelada. O que torna a nota sem efeito é um **event
 🔵 Acervo em 02/10/2026: 10.400 NFS-e (cStat 100: 9.289 · 107: 1.103 · 101: 5 ·
 103: 3) e 107 eventos (`e101101` 76 · `e105102` 29 · `e101103` 1 · `e105105` 1).
 
+🟢 **DANFSe — a API do ADN foi suspensa.** Fonte: [NT 008 v1.02 (14/07/2026)](https://www.reformatributaria.com/wp-content/uploads/2026/07/nt-008-se-cgnfse-danfse-20260714-v1-02.pdf), introdução: *"a API de geração do DANFSe (adn.nfse.gov.br/danfse) será sobrestada (suspensa) na data de 03 de agosto de 2026"*, e a nota servirá de base à geração por *"softwares de emissão de NFS-e, ERPs e sistemas fiscais"*. **§2.5.1**: nota cancelada leva marca d'água "CANCELADA"; **§2.5.2**: substituída, "SUBSTITUÍDA" (diagonal, mínimo 50 pt, Arial, cinza K35). **Nota 7** do leiaute: na substituta, informar `NFS-e Subst.:` + a chave de `chSubstda`. Como a nota cancelada **não diz** que foi cancelada (parágrafo acima), a marca tem de vir do evento — ver `05_dados-consumo-frontend.md`.
+
 🔴 **Derrubado em 02/10/2026:** "cStat 101 e 102 = cancelada". O parser seguia
 essa leitura: deixava 1.066 notas autorizadas sem situação e marcava como
 canceladas 5 substitutas, que valem. E como só reconhecia o `e101101`, deixava
