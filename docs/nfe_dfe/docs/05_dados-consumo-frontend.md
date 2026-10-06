@@ -279,6 +279,15 @@ Três decisões que custaram medição:
 - **Colar chaves abre período e papel sozinho**, e a tela diz que fez isso. Os dois **continuam valendo no servidor** — medido na API: as mesmas 3 chaves de CT-e com papel `DEST`, na aba "tomados", devolvem **zero**. Sem abrir, colar chave daria resultado vazio sem explicação.
 - **`tamanhoChave` é do `config`, por família (44/44/50).** A primeira versão assumia 44 para todas e a NFS-e recusava toda chave colada, em silêncio — o contador dizia "0 chaves válidas" e a pessoa concluiria que as notas não existem.
 
+**Filtragem avançada dentro de Documentos (06/10/2026).** O modal de Filtros de NF-e, CT-e e NFS-e tem duas abas — **Filtros** (o de sempre) e **Avançado**, que é o **mesmo painel** do Relatório Avançado (`comum/PainelBuscaAvancada.vue`, extraído da casca). Ao confirmar, a grade busca na hora, como Documentos sempre fez; no Relatório Avançado continua sendo o "Pré-visualizar". Decisões que importam:
+
+- **O painel recebe a casca inteira (`tela`) e nunca busca sozinho.** Ele é uma *vista* do estado da casca; só o botão busca.
+- **Os campos da família nas duas abas usam o mesmo rascunho (`form`)**, e o **modelo de filtro lê e grava esse rascunho** — se lesse o filtro já aplicado na tela, salvaria valor velho. Por isso `aplicarModeloFiltro(conteudo, familia)` muta o alvo **no lugar**.
+- **Fechar no X sem aplicar restaura** período, papel, busca e chaves (`snapshotModal`): esses controles são os da própria tela e mudam ao vivo, e sem isso a barra mostraria um período que a grade não usa.
+- **Chaves valem fora do Relatório Avançado**, com chip "Chaves: N" e `removerFiltro('chaves')`. Colar a 1ª chave abre período ("Todo o período") e papel ("Todos") — remover as chaves **não** os fecha de volta.
+- **Lista de chaves vai por POST** (`chamaListagem`): 200 chaves de 44 dígitos são ~9 KB de URL por GET. A API aceita os dois nas três rotas; sem chave, segue GET. *Isso já era um defeito latente no Relatório Avançado desde 05/10.*
+- Só **uma aba existe por vez** (`v-if`): `v-show` montaria dois `treeselect` com o mesmo `instanceId`.
+
 Os campos de filtro saíram do `ModalFiltros` para um **`CamposFiltros.vue` por família**, usado nos dois lugares (o modal virou moldura + botões). O painel os desenha pelo slot `campos-filtros`. O `SeletorModelo.vue` (em `comum/`) serve aos dois tipos de modelo e trata o conteúdo como **opaco** — quem monta e aplica é a tela, igual ao servidor.
 
 > ⚠️ Cada rota de relatório usa um componente **próprio** (`{ extends: SefazDocumentosNfe }`), e não o mesmo objeto da tela normal. O `<router-view>` do `App.vue` não tem `:key`: duas rotas com o mesmo componente **reaproveitam a instância**, e ir da tela normal para o relatório pelo menu manteria a `config` da normal. Provado no navegador nos dois sentidos (título, chave e variante trocam; nada vaza entre as duas preferências).
