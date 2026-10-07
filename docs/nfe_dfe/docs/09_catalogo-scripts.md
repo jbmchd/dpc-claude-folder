@@ -24,6 +24,10 @@ nfe_dfe/scripts/
 │   ├── 2026-10-07_aba_propria_usuarios  │
 │   └── rollback/                        │ O desfazer de CADA ajuste, mesmo
 │       └── <mesmo nome>_rollback        ┘ nome + _rollback
+├── producao/                            SO PRODUCAO (07/10/2026) - ordem em P1_00_LEIA
+│   ├── P1_00_LEIA_ordem_producao.md     a ordem exata + o que fica de fora
+│   ├── P1_01_drop_orfas_prd             apaga as 12 tabelas orfas (trava dpcdb1)
+│   └── P1_02_parametros_prd             os 11 dfe_* da homolog, sem dfe_conexao_erp
 └── ddl/                                 o UNICO caminho de instalacao
     ├── 01_01_estrutura                  ┐
     ├── 01_02_estabelecimentos           │ BLOCO 01 - MOTOR

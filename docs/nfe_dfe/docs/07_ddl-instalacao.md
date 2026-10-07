@@ -87,9 +87,21 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 | 14 | `14_01_usuario_aba_propria` | Amplia a CHECK `DPC_DFE_USUARIO_ABA_CK1` de `dpc_dfe_usuario_aba` para aceitar a categoria **`PROPRIAS`** (07/10/2026): a aba "Notas próprias - DPC" da Gestão de NFe (emitente da raiz do grupo, 66.471.517 — transferências entre filiais). Drop + add da constraint, sem PL/SQL; nenhuma linha existente muda. **Antes** do deploy da ApiDPC desta entrega: com o código novo no ar e sem permissão concedida, as notas próprias somem das outras abas e ninguém vê a nova. Depois: `ajustes_unicos/2026-10-07_aba_propria_usuarios` (libera aos 6 usuários que têm Sem Classificação). **Provado em cópia; aplicação em homolog pendente.** Rollback: `rollback/14_99` (apaga antes as permissões `PROPRIAS`, senão a CHECK antiga não volta) |
 | 07 | `07_01_nfse_tipo_emissao` | 12 colunas em `dpc_dfe_nfse` (02/10/2026): tipo de emissão (o `cStat`), data de emissão e de cancelamento, chave da substituta, municípios por extenso e endereço do prestador. **Antes** do deploy da ApiNFE que grava essas colunas — depois dele, sem o bloco, toda NFS-e falha com ORA-00904. Rollback: `07_99` |
 
-Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha
+A maioria é **reexecutável**: objeto criado só se ainda não existir, linha
 inserida só se ainda não existir, coluna acrescentada só se faltar. Falha no
-meio se resolve corrigindo e rodando de novo.
+meio se resolve corrigindo e rodando de novo. **Exceção (medida em 07/10/2026):**
+`09_01`, `11_01`, `12_01` e `13_01` são de **execução única** — na segunda vez dão
+erro Oracle (coluna, tabela ou FK já existe). Não estragam dado; se um parar no
+meio, rode só o que faltou, guiado pelo `select` do cabeçalho.
+
+### Instalar em PRODUÇÃO
+
+A produção **não** segue a lista acima inteira: tem 12 tabelas `dpc_dfe_*` órfãs a
+apagar antes, e não recebe os arquivos que carregam dado ou valor de homologação.
+A ordem exata, o que fica de fora e por quê estão em
+[`scripts/producao/P1_00_LEIA_ordem_producao.md`](../scripts/producao/P1_00_LEIA_ordem_producao.md)
+(`P1_01` drop → `01_01` … `14_01` → `P1_02` parâmetros). Aceite: comparador de
+estrutura homolog × produção com zero diferenças. Os dados vêm depois, por `dfe:replicar`.
 
 ### Por que não há um único `alter` aqui
 

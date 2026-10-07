@@ -811,7 +811,7 @@ declare
   qtd number;
 begin
   for c in (
-    select 'cod_dfe_empresa'           , 'NUMBER'                                    from dual union all
+    select 'cod_dfe_empresa'           as nome, 'NUMBER'                             as def from dual union all
     select 'nro_empresa'               , 'NUMBER not null'                           from dual union all
     select 'num_cnpj'                  , 'VARCHAR2(14) not null'                     from dual union all
     select 'status_manifestar'         , 'VARCHAR2(1) default ''N'' not null'        from dual union all
