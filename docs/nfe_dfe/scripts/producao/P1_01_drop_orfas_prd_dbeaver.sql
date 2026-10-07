@@ -2,7 +2,7 @@
 --  PRODUCAO - P1_01 - APAGA AS TABELAS DFe ORFAS DA PRODUCAO
 -- ============================================================================
 --
---  Banco: Oracle PRODUCAO (instancia dpcdb1)        Schema: poseidon
+--  Banco: Oracle PRODUCAO (RAC: instancia dpcdb1 ou dpcdb2)   Schema: poseidon
 --  >>> SO PARA A PRODUCAO. Na homolog estas tabelas sao o motor em uso.
 --
 --  ==========================================================================
@@ -75,7 +75,8 @@ select 'DPC_DFE_NOTA_ITEM' as tabela, count(*) as linhas from poseidon.dpc_dfe_n
 --  SECAO 1 - TRAVA. Rode as quatro consultas. Se alguma nao bater, PARE.
 -- ============================================================================
 
---  1a. Esperado: dpcdb1. Qualquer outro nome = voce NAO esta na producao.
+--  1a. Esperado: dpcdb1 OU dpcdb2 (a producao e um RAC e o no muda conforme a
+--      conexao). Qualquer outro nome (ex.: homolog) = voce NAO esta na producao.
 select sys_context('userenv', 'instance_name') as instancia from dual;
 
 --  1b. Esperado: nenhuma linha (nada de fora depende destas tabelas).

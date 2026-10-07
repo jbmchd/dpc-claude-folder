@@ -1,14 +1,14 @@
 # Estrutura de banco do módulo DFe em PRODUÇÃO — ordem de execução
 
 > **Escopo:** só a **estrutura** (Parte 1). Os dados chegam depois, pela carga inicial do `dfe:replicar` (Parte 2).
-> **Banco:** Oracle de produção (`dpcdb1`), schema `poseidon`, conectado como POSEIDON no DBeaver.
+> **Banco:** Oracle de produção (RAC: `dpcdb1` ou `dpcdb2`), schema `poseidon`, conectado como POSEIDON no DBeaver.
 > **Provado em 07/10/2026:** instalação do zero com os scripts reais (renomeados `ZZP_`, numa cópia descartável da homolog) terminou com **0 erros do Oracle e estrutura idêntica à da homolog** (23 tabelas, 466 colunas, 83 constraints, 66 índices, 13 triggers, 13 sequences, comentários).
 
 ## 1. Ordem
 
 | # | Arquivo | O que faz | Observação |
 |---|---|---|---|
-| 1 | `producao/P1_01_drop_orfas_prd_dbeaver.sql` | apaga as 12 tabelas órfãs (estrutura velha, de 25/08/2026) e as 12 sequences | **tem trava**: a seção 1 precisa dar `dpcdb1` e zero dependências. Sem rollback de dado: eram 13 empresas e 52 cursores que a carga inicial refaz |
+| 1 | `producao/P1_01_drop_orfas_prd_dbeaver.sql` | apaga as 12 tabelas órfãs (estrutura velha, de 25/08/2026) e as 12 sequences | **tem trava**: a seção 1 precisa dar `dpcdb1` ou `dpcdb2` e zero dependências. Sem rollback de dado: eram 13 empresas e 52 cursores que a carga inicial refaz |
 | 2 | `ddl/01_01_estrutura_dbeaver.sql` | o motor: tabelas, índices, triggers, sequences | o cabeçalho confere schema e `TSD_POSEIDON` antes de criar |
 | 3 | `ddl/03_01_parametrizacao_telas_dbeaver.sql` | `usuario_empresa`, `usuario_aba`, `painel_alerta` | só estrutura (0 `insert`) |
 | 4 | `ddl/04_01_manifestacao_dbeaver.sql` | fundação da manifestação | cria 4 parâmetros `dfe_manifest_*` (com guarda) |
@@ -54,6 +54,6 @@ Só leitura, pelo dicionário do Oracle. Confronta homolog × produção: tabela
 
 ## 5. Antes de aplicar
 
-1. VPN/rede da empresa e conferir a instância: `select sys_context('userenv','instance_name') from dual` → **`dpcdb1`**.
+1. VPN/rede da empresa e conferir a instância: `select sys_context('userenv','instance_name') from dual` → **`dpcdb1` ou `dpcdb2`** (a produção é um RAC: o nó muda conforme a conexão; qualquer outro nome, como `homolog`, é a base errada).
 2. Ninguém usa o módulo em produção: não há deploy de tela nem de API lá ainda (fora do escopo desta etapa).
 3. Cada arquivo é DBeaver (CRLF, sem `/`): rodar **seção por seção** com Ctrl+Enter, ou o arquivo todo com Alt+X nos que não têm bloco PL/SQL.

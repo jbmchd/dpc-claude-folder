@@ -26,6 +26,7 @@ e NFS-e de entrada direto da SEFAZ (`DistDFe`) e do ADN Nacional, dentro da
 | **Quando o motor consulta a SEFAZ** — a regra de negócio inteira, num lugar só | [03_conhecimento-motor.md §2](03_conhecimento-motor.md) |
 | **Rodar / operar** os comandos | [06_operacao-comandos.md](06_operacao-comandos.md) |
 | **Subir em um ambiente** | [08_operacao-runbook-deploy.md](08_operacao-runbook-deploy.md) |
+| **Levar o módulo para a PRODUÇÃO** — estrutura de banco, ordem dos scripts, replicação homolog → produção | [scripts/producao/P1_00_LEIA_ordem_producao.md](../scripts/producao/P1_00_LEIA_ordem_producao.md) + [`dfe:replicar` em 06](06_operacao-comandos.md#dfereplicar) |
 | Saber **o que cada tabela** guarda | [04_dados-tabelas.md](04_dados-tabelas.md) |
 | **Consumir os dados** numa tela | [05_dados-consumo-frontend.md](05_dados-consumo-frontend.md) |
 | **Instalar ou alterar a base** | [07_ddl-instalacao.md](07_ddl-instalacao.md) |
@@ -208,6 +209,7 @@ Arquitetura da ApiNFE como um todo (não só o DFe):
 | Ambiente | roda em `dkalpha00`, cron ativo, base **homolog**, SEFAZ **real** |
 | Produção | **o motor não vive lá, por decisão de 09/09/2026.** prd serve só para o `dfe:conciliar` **ler** a Consinco e confirmar o que o ERP recebeu. As tabelas `dpc_dfe_*` **existem** em prd desde 25/08/2026 — 12 delas, com `dpc_dfe_nota` em 26 colunas contra 37 em tst — mas estão **órfãs**: ninguém as usa. Os 6 parâmetros realmente não foram carregados lá |
 | CNPJs livres da Qive | **apenas 900 (ALL CARS)**, que nem está cadastrada lá. **Correção de 23/09/2026:** a 30 (DPC MS) NÃO está livre — a lista anterior estava errada. Todos os outros 13 CNPJs, inclusive a 30, seguem com a Qive e o NSU é compartilhado (por CNPJ, não por certificado) |
+| `dfe:replicar` | **agendado desde 07/10/2026, mas desligado** (`dfe_replicacao_prd` não existe ainda na homolog = off): a cada 5 min copia o motor da homolog para a produção até o motor subir lá; `--reconciliar` às 3h. Carga inicial em produção **só com autorização explícita**. Ver [06_operacao-comandos.md](06_operacao-comandos.md#dfereplicar) |
 | `dfe:manifestar` | **agendado desde 24/09/2026** (Fases 2 e 3): `--evento=210210 --auto --confirmar` nos minutos `7,37`, `--evento=210200 --auto --confirmar` no minuto `22`, ambos com a janela noturna 22h-06h. Não manifesta nada sozinho hoje: as 15 empresas estão com `status_manifestar='N'` e as duas flags de automação em `'N'`. Endpoint manual `POST dfe/manifestar` (Fase 4) também existe, atrás da permissão `MANIFESTAR` (ninguém tem ainda). Ver [06_operacao-comandos.md](06_operacao-comandos.md) |
 | Teste de volume (empresa 30) | **adiado, sem data.** Fluxos `NFE` e `CTE` pausados e acumulando atraso de propósito — ver [03_conhecimento-motor.md](03_conhecimento-motor.md) |
 

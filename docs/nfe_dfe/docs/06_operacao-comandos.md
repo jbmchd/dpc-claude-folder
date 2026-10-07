@@ -1,7 +1,7 @@
 # Comandos do módulo DFe — referência de operação
 
-> **Atualizado em 24/09/2026** (seção do `dfe:manifestar` e a tabela de agenda —
-> as demais seções seguem como em 20/08/2026). Cobre os 5 commands do `ApiNFE`
+> **Atualizado em 07/10/2026** (seção do `dfe:replicar` e a tabela de agenda;
+> antes, 24/09/2026 para o `dfe:manifestar` — as demais seguem como em 20/08/2026). Cobre os 6 commands do `ApiNFE`
 > que operam a captura própria de documento fiscal de entrada — NF-e, CT-e e NFS-e.
 
 Todos rodam pelo `dev.cmd` (que existe porque o `php` do PATH é 7.2 e o projeto exige 8.1+, e porque o certificado A1 precisa de duas variáveis de OpenSSL legacy):
@@ -55,6 +55,8 @@ O cron do container roda `schedule:run` a cada minuto (`docker-compose/cron/sche
 | `dfe:manifestar --evento=210210 --auto --confirmar` | minutos `7,37` de cada hora | 30 | Ciência, desde 24/09/2026. Minuto deliberadamente fora de `:00/:15/:30/:45` (a agenda do `dfe:ingerir`) — os dois falam com a mesma SEFAZ, pelo mesmo certificado por empresa |
 | `dfe:manifestar --evento=210200 --auto --confirmar` | minuto `22` de cada hora | 60 | Confirmação, desde 24/09/2026. TTL maior porque o gatilho (`num_estado_erp_max >= 3`) tende a produzir lotes maiores logo depois do `dfe:conciliar` rodar |
 | `dfe:manifestar --fila --confirmar` | minutos `4,14,24,34,44,54` (a cada 10 min) | 30 | **Fila de manifestação em massa**, desde 07/10/2026. Sem pedido nenhum não faz nada. Roda 24h (sem a janela noturna do `--auto`). Minutos fora de `:00/:15/:30/:45`, `:07/:37` e `:22` |
+| `dfe:replicar --agendado --confirmar` | minutos `1,6,11,…,56` (a cada 5 min) | 30 | **Replicação homolog → produção**, desde 07/10/2026. Sai sozinho enquanto `dfe_replicacao_prd` na homolog não for `S` (nasce `N`). Não fala com a SEFAZ. Ver [`dfe:replicar`](#dfereplicar) |
+| `dfe:replicar --reconciliar --agendado --confirmar` | `03:00` | 120 | conferência completa por baldes: pega o que o ciclo não pega (linha apagada na origem, filho trocado sem o pai mudar) |
 | `dfe:normalizar` | 10 min | 20 | mais frequente que a ingestão, para a fila de brutos não acumular |
 | `dfe:conciliar` | 30 min | 30 | mais frequente que o fato que observa — a nota chega da SEFAZ na emissão e é lançada no ERP dias depois |
 
@@ -356,6 +358,61 @@ Painel (tela de NF-e, "Pedidos de manifestação"): `GET dfe/manifestar/pedidos`
 **Medido em 07/10/2026 (homolog):** validar 5.000 chaves + gravar o pedido leva ~8 s (um insert por nota custava 94 ms e levaria ~8 min; por isso o `INSERT ALL` em blocos de 100). Cancelar 4.846 linhas: 0,5 s. O `RETURNING ... INTO` via PDO devolve o código do pedido (a tabela usa `IDENTITY`, sem sequence nomeada).
 
 **Ainda não exercitado:** o **envio real** de um pedido (SEFAZ). Os testes foram todos sem tocar a SEFAZ (criação, recusas, reaproveitamento de falha, cancelamento, `--fila --dry-run`, e a revalidação por reflexão). O primeiro envio real deve ser um pedido pequeno, acompanhado.
+
+## `dfe:replicar`
+
+**Replicação homolog → produção** do módulo DFe (`poseidon.dpc_dfe_*`). Existe **só até o motor ser ligado em produção**: hoje captura, normalização, conciliação e manifestação vivem na homolog, e as telas de produção só enxergam o que este comando copia. Roda no servidor 16 (`docker exec apinfe-app php artisan dfe:replicar …`), lê a conexão `oracle_tst` e grava na `oracle`. **Não há DB link** entre as bases (os quatro públicos não resolvem) e não há DBA no caminho.
+
+| Modo | O que faz |
+|---|---|
+| *(padrão)* | ciclo incremental — o que o agendador roda a cada 5 min |
+| `--carga-inicial` | copia tudo, **com as mesmas chaves**, em ordem de PK; **retomável** (recomeça do maior PK da produção); no fim avança sequences e identities. Tabelas de tela só entram se o destino estiver **vazio** |
+| `--reconciliar` | confere todas as tabelas do motor por baldes, corrige e **apaga** o que sumiu na origem (agendado às 3h) |
+| `--estrutura` | compara a **estrutura** das duas bases pelo dicionário (colunas, constraints com a condição das CHECK, índices, triggers, sequences, comentários). **Zero diferenças = estrutura de produção pronta** |
+| `--status` | contagens e maior PK das duas pontas |
+| `--avanca-sequencias` | só a parte das sequences/identities |
+| `--dry-run` | calcula e mostra, não grava |
+| `--confirmar` | **obrigatório** para escrever |
+| `--tabelas=NOTA,CTE` | restringe (sufixo da tabela) |
+
+### Como detecta mudança — sem depender de `updated_at`
+
+Cada linha vira uma **impressão digital** calculada pelo banco: soma de `ora_hash(coluna, teto, posição)` das colunas (LOB entram só pelo tamanho). As linhas são agrupadas em baldes de 1000 por PK e o balde é comparado por (contagem, soma); só os baldes que divergem descem até a linha. Nenhuma regra depende de a aplicação ter carimbado `updated_at`.
+
+| Classe | Tabelas | No ciclo | No `--reconciliar` |
+|---|---|---|---|
+| **FULL** | `empresa`, `cursor`, `emitente`, `execucao`, `manif_pedido`, `manifestacao`, `nota` (+ `nota_total/_transporte/_cobranca`), `cte`, `nfse` | compara **inteira**: insere, atualiza, apaga | idem |
+| **BIG** | `documento` (1,4 GB de XML), `evento`, `cte_evento`, `nota_item`, `cte_nfe` | só o **novo** (PK maior que o da produção) + regras: documento ainda aberto (`status_process` fora de `C`/`I`); filhos de nota/CT-e que mudou (itens: **regrava** — apaga e reinsere; eventos: grava o que difere) | compara inteira e apaga |
+| **TELA** | `usuario_empresa/aba/permissao/coluna/modelo`, `painel_alerta` | **nunca** | nunca — só na carga inicial; depois a produção é a dona |
+
+A permissão **`MANIFESTAR` não é copiada**: é isso que mantém a manifestação desligada nas telas de produção (manifesta-se só pela alpha).
+
+### Travas — nada é gravado antes de elas passarem
+
+- origem tem de ser a instância **`homolog`**; destino, uma instância **`dpcdb*`** (a produção é um **RAC**: aparece `dpcdb1` ou `dpcdb2` conforme a conexão) em **outro servidor**;
+- escrita exige `--confirmar`; o `--agendado` só roda com **`dfe_replicacao_prd = 'S'`** na homolog (nasce `N`, ajuste único `2026-10-07_param_replicacao_prd`). **Parar sem deploy: `update … set valor = 'N'`**;
+- se a **produção** tiver `dfe_motor_ativo_prd = 'S'`, a replicação é **proibida** (dois escritores corrompem o NSU). Esse parâmetro **não existe hoje**: é criado no dia de ligar o motor;
+- uma execução por vez (trava de arquivo, além do `withoutOverlapping` do agendador);
+- se a estrutura da tabela difere entre as bases, a tabela é **recusada** com a lista do que difere — rode `--estrutura`;
+- teste só com `--destino-prefixo=ZZP_DFE_`: o destino vira a própria homolog e as tabelas `ZZP_DFE_*` descartáveis. O teste **não alcança a produção**.
+
+### Por que o desenho é tão cuidadoso com idas e voltas
+
+Medido em 07/10/2026: **~15 ms por ida e volta** até as duas bases, tanto do notebook quanto do servidor 16. Gravar linha a linha dava ~50 linhas/s. O que resolveu: `insert all` em **blocos** (limite do Oracle: 999 colunas somadas, então 14 linhas por bloco na `nota` e 76 no `documento`) e **LOB lido em pedaços inline** (`dbms_lob.substr` de 4000 caracteres / 2000 bytes) em vez de pelo locator, que custava ~6 idas e voltas por linha — 3000 notas levavam 282 s. Do servidor 16: ~700 linhas/s no `documento` e no `cte_evento`, ~1000 no `cte_nfe`, ~280 no `nfse`. **Rode a carga pelo servidor 16**; a VPN do notebook só entrega 60–100 linhas/s.
+
+### O que NÃO resolve sozinho (de propósito)
+
+- **ORA-02291 (pai ausente)** e **ORA-00001 (UK)** viram "conflitos", não erros: o ciclo seguinte ou o `--reconciliar` resolvem. Em tabela BIG o ciclo **para** no primeiro pai ausente (se seguisse, o maior PK passaria da linha e ela nunca mais seria copiada).
+- Uma linha **extra no destino com PK enorme** impede a cópia dos novos daquela tabela (a regra é "PK maior que o maior do destino") até o `--reconciliar` apagá-la. Ninguém escreve nessas tabelas em produção, então só acontece por mão humana.
+- Apagar nota na homolog **não apaga** os itens da produção no ciclo (ele só apaga FULL); o `--reconciliar` apaga filhos antes dos pais.
+
+### Ligar o motor em produção — o que fazer com a replicação
+
+1. `update poseidon.dpc_parametro set valor = 'N' where nome = 'dfe_replicacao_prd'` (homolog) e esperar o ciclo em andamento terminar;
+2. **sincronismo final**: `dfe:replicar --reconciliar --confirmar` e depois `--avanca-sequencias --confirmar`;
+3. `--estrutura` e `--status`: zero diferenças e contagens iguais;
+4. criar **`dfe_motor_ativo_prd = 'S'`** na produção (trava definitiva contra a replicação);
+5. só então ligar os crons de produção, certificados, `MANIFESTAR` e a manifestação automática.
 
 ## `dfe:monitorar`
 

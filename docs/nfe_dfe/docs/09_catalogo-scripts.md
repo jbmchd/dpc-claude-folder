@@ -22,6 +22,7 @@ nfe_dfe/scripts/
 │   ├── 2026-10-06_nota_cfop_xml         │
 │   ├── 2026-10-07_parametros_fila_...   │
 │   ├── 2026-10-07_aba_propria_usuarios  │
+│   ├── 2026-10-07_param_replicacao_prd  │ (HOMOLOG) liga/desliga o dfe:replicar
 │   └── rollback/                        │ O desfazer de CADA ajuste, mesmo
 │       └── <mesmo nome>_rollback        ┘ nome + _rollback
 ├── producao/                            SO PRODUCAO (07/10/2026) - ordem em P1_00_LEIA
@@ -284,6 +285,7 @@ consertam.
 | `2026-10-06_nota_cfop_xml` | preenche `dpc_dfe_nota.cod_cfop_xml` das notas que já existiam quando a coluna nasceu (`12_01`): o CFOP do item de **maior `vlr_item`**, empate pelo menor `cod_dfe_nota_item` — a mesma regra do `DfeNotaItemRepository::substitui`, que grava as notas novas. `MERGE` com `USE_HASH`, só onde a coluna é nula, carimbo `AJUSTE 2026-10-06 CFOP XML` em `updated_by` (é o que o rollback usa). Roda **depois** do `12_01`. **Provado numa cópia:** 9.582 preenchidas = as 9.582 notas com item, **0 divergências** contra a regra reimplementada em PHP, 2ª rodada toca 0 linhas, rollback zera tudo | **pendente de aplicar** (homolog) |
 | `2026-10-07_parametros_fila_manifestacao` | cria dois parâmetros em `dpc_parametro`: `dfe_manifest_fila_max_ciclo` = **200** (notas por ciclo da fila; o ciclo roda a cada 10 min, ~1.200/h) e `dfe_manifest_fila_max_pedido` = **5000**. A vazão é parâmetro de propósito: não se sabe se o RecepcaoEvento tolera mais sem 656, então sobe-se aos poucos medindo os bloqueios, **sem deploy**. Só insere o que ainda não existe. Roda **depois** do `13_01` | **aplicado 07/10/2026** (homolog) |
 | `2026-10-07_aba_propria_usuarios` | dá a categoria `PROPRIAS` a quem já tem `SEM_CLASSIFICACAO` em `dpc_dfe_usuario_aba` (6 usuários em 07/10/2026), com o carimbo `AJUSTE 2026-10-07 ABA PROPRIA` em `created_by`, que o rollback usa para achar as linhas — permissão dada depois pela tela não leva o carimbo e fica. Só insere para quem ainda não tem (reexecutável). Roda **depois** do `14_01`. **Provado em cópia** (6 = 6, 2ª rodada insere 0, rollback preserva a permissão da tela) | **pendente de aplicar** (homolog) |
+| `2026-10-07_param_replicacao_prd` | **roda na HOMOLOG.** Cria `dfe_replicacao_prd = 'N'` em `dpc_parametro`: o agendamento do `dfe:replicar` só age com `'S'`. Nasce desligado; ligar é decisão acompanhada, depois da carga inicial. Parar sem deploy: `update … set valor = 'N'`. Reexecutável (só insere se faltar). Rollback: `rollback/2026-10-07_param_replicacao_prd_rollback` — sem o parâmetro o agendamento entende "desligado" |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é

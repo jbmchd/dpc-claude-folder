@@ -2,7 +2,7 @@
 --  PRODUCAO - P1_02 - PARAMETROS dfe_* DO MODULO DFe
 -- ============================================================================
 --
---  Banco: Oracle PRODUCAO (dpcdb1)          Tabela: poseidon.dpc_parametro
+--  Banco: Oracle PRODUCAO (dpcdb1/dpcdb2) Tabela: poseidon.dpc_parametro
 --  Gerado em 07/10/2026 a partir dos 11 parametros dfe_* REAIS da homolog (valor e
 --  texto copiados, nao digitados).
 --
