@@ -21,6 +21,7 @@ nfe_dfe/scripts/
 │   ├── 2026-10-03_nfse_chave_documento  │
 │   ├── 2026-10-06_nota_cfop_xml         │
 │   ├── 2026-10-07_parametros_fila_...   │
+│   ├── 2026-10-07_aba_propria_usuarios  │
 │   └── rollback/                        │ O desfazer de CADA ajuste, mesmo
 │       └── <mesmo nome>_rollback        ┘ nome + _rollback
 └── ddl/                                 o UNICO caminho de instalacao
@@ -49,6 +50,7 @@ nfe_dfe/scripts/
     ├── 11_01_modelos_usuario            BLOCO 11 - modelos salvos de filtro e de colunas
     ├── 12_01_nota_cfop_xml              BLOCO 12 - CFOP do XML na nota (categoria prevista)
     ├── 13_01_manifestacao_pedido        BLOCO 13 - pedido de manifestacao em massa
+    ├── 14_01_usuario_aba_propria        BLOCO 14 - aba "Notas proprias - DPC" (CHECK da aba)
     └── rollback/                        O desfazer de CADA bloco, todos juntos
         ├── 01_99_rollback_motor
         ├── 03_99_rollback_telas
@@ -61,7 +63,8 @@ nfe_dfe/scripts/
         ├── 10_99_rollback_relatorio_colunas
         ├── 11_99_rollback_modelos_usuario
         ├── 12_99_rollback_nota_cfop_xml
-        └── 13_99_rollback_manifestacao_pedido
+        ├── 13_99_rollback_manifestacao_pedido
+        └── 14_99_rollback_usuario_aba_propria
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
@@ -276,6 +279,7 @@ consertam.
 | `2026-10-03_nfse_chave_documento` | devolve os **50 caracteres** à chave das NFS-e em `dpc_dfe_documento.chave_nf`, que o código da ingestão cortava em 44. `MERGE` a partir de `dpc_dfe_nfse.chave_nfse`, ligando por `(cod_dfe_empresa, nro_nsu)` — sem reprocessar XML —, travado para só trocar o que era exatamente o prefixo de 44. Roda **depois** do código corrigido (ApiNFE `e74673d`). Rollback corta de volta em 44, e só faz sentido revertendo o código junto | **aplicado 03/10/2026** — 10.428 trocadas em 0,4 s; 10.428 com 50, 0 com 44, todas iguais à chave da NFS-e |
 | `2026-10-06_nota_cfop_xml` | preenche `dpc_dfe_nota.cod_cfop_xml` das notas que já existiam quando a coluna nasceu (`12_01`): o CFOP do item de **maior `vlr_item`**, empate pelo menor `cod_dfe_nota_item` — a mesma regra do `DfeNotaItemRepository::substitui`, que grava as notas novas. `MERGE` com `USE_HASH`, só onde a coluna é nula, carimbo `AJUSTE 2026-10-06 CFOP XML` em `updated_by` (é o que o rollback usa). Roda **depois** do `12_01`. **Provado numa cópia:** 9.582 preenchidas = as 9.582 notas com item, **0 divergências** contra a regra reimplementada em PHP, 2ª rodada toca 0 linhas, rollback zera tudo | **pendente de aplicar** (homolog) |
 | `2026-10-07_parametros_fila_manifestacao` | cria dois parâmetros em `dpc_parametro`: `dfe_manifest_fila_max_ciclo` = **200** (notas por ciclo da fila; o ciclo roda a cada 10 min, ~1.200/h) e `dfe_manifest_fila_max_pedido` = **5000**. A vazão é parâmetro de propósito: não se sabe se o RecepcaoEvento tolera mais sem 656, então sobe-se aos poucos medindo os bloqueios, **sem deploy**. Só insere o que ainda não existe. Roda **depois** do `13_01` | **aplicado 07/10/2026** (homolog) |
+| `2026-10-07_aba_propria_usuarios` | dá a categoria `PROPRIAS` a quem já tem `SEM_CLASSIFICACAO` em `dpc_dfe_usuario_aba` (6 usuários em 07/10/2026), com o carimbo `AJUSTE 2026-10-07 ABA PROPRIA` em `created_by`, que o rollback usa para achar as linhas — permissão dada depois pela tela não leva o carimbo e fica. Só insere para quem ainda não tem (reexecutável). Roda **depois** do `14_01`. **Provado em cópia** (6 = 6, 2ª rodada insere 0, rollback preserva a permissão da tela) | **pendente de aplicar** (homolog) |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é
