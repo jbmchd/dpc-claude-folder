@@ -404,7 +404,12 @@ Medido em 07/10/2026: **~15 ms por ida e volta** até as duas bases, tanto do no
 
 - **ORA-02291 (pai ausente)** e **ORA-00001 (UK)** viram "conflitos", não erros: o ciclo seguinte ou o `--reconciliar` resolvem. Em tabela BIG o ciclo **para** no primeiro pai ausente (se seguisse, o maior PK passaria da linha e ela nunca mais seria copiada).
 - Uma linha **extra no destino com PK enorme** impede a cópia dos novos daquela tabela (a regra é "PK maior que o maior do destino") até o `--reconciliar` apagá-la. Ninguém escreve nessas tabelas em produção, então só acontece por mão humana.
+- **Lacuna por PK**: o ciclo copia o novo por "PK maior que o maior do destino". Se uma linha de PK alto entrar por outro caminho (o upsert de filhos de uma nota que mudou) **antes** de a carga terminar, o intervalo abaixo dela deixa de ser copiado no ciclo. Aconteceu no teste (evento e nota_item). **Rode a carga inicial até o fim antes de ligar o agendamento**; qualquer lacuna é fechada pelo `--reconciliar` (no teste: 386 mil eventos e 166 mil itens, sem erro).
 - Apagar nota na homolog **não apaga** os itens da produção no ciclo (ele só apaga FULL); o `--reconciliar` apaga filhos antes dos pais.
+
+### Prova em escala (07/10/2026, cópia `ZZP_DFE_*` na homolog, rodando pelo servidor 16)
+
+Carga completa de 1,33 milhão de linhas (documento, evento, itens, CT-e…) e duas reconciliações completas: a segunda só mexeu no que o motor da homolog alterou **durante** o teste (94 CT-e novos, 94 documentos, 117 `cte_nfe`) — **converge**. Amostra de 700 LOB (300 BLOB de documento, 300 CLOB de nota, 100 de manifestação) lida pelo PHP: tamanho e md5 **idênticos**. Um defeito real apareceu e foi corrigido: o `maxlength` do bind estava em bytes do banco e truncava texto acentuado (60 → 58 caracteres); a impressão digital acusou, e a reconciliação consertou as 625 notas já copiadas.
 
 ### Ligar o motor em produção — o que fazer com a replicação
 
