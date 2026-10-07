@@ -307,12 +307,31 @@ Solução: **prever pelo XML enquanto o ERP não deu o dele**, e o valor do ERP 
 | Categoria | Regra da previsão | Acerto medido | Estado |
 |---|---|---|---|
 | Devolução | `cod_finalidade = 4` **e** emitente fora do grupo (raiz do CNPJ ≠ `SUBSTR(de.num_cnpj,1,8)`) | **1.293 de 1.298 (99,6%)** | 🟢 medido |
-| Compras | `cod_cfop_xml` mapeado para entrada: 5→1, 6→2, 7→3, e `101/105/401/403`→`102` | **4.675 de 4.736 (98,7%)** | 🟢 medido |
-| Suprimentos | **não dá para prever** | 53% do que o ERP chama de Suprimentos aparece como Compras | 🔴 derrubado |
+| Compras | `cod_cfop_xml` mapeado para entrada: 5→1, 6→2, 7→3, e `101/105/106/401/403`→`102` (o `106` entrou em 07/10/2026: 6106 → 2102 em 38 de 38) | **4.675 de 4.736 (98,7%)** | 🟢 medido |
+| Suprimentos | **só por CFOP específico** do XML: `5104, 5656, 5929, 6108, 6404` (`CFOPS_XML_SUPRIMENTOS`, desde 07/10/2026) | **80 de 80 (100%)** nas escrituradas — 5104, 6108 e 6404 com amostra pequena (7, 2, 1) | 🟢 medido |
+| Suprimentos, em geral | **não dá para prever** | 53% do que o ERP chama de Suprimentos aparece como Compras (o CFOP 5102 serve aos dois) | 🔴 derrubado |
 
 - **`finNFe = 4` sozinho erra.** De **filial do grupo** é *transferência* (CFOP 2209), que o ERP **não** classifica: 1.754 notas. A regra exige emitente externo. **0 falsos positivos** nas 2.060 que o ERP deixa sem classificação.
 - **Suprimentos:** o XML de uma compra para revenda e o de uma para consumo trazem o mesmo CFOP 5102. A diferença é decisão de quem escritura. Na tela essas notas aparecem como **Compras** até escrituradas (133 das 252 escrituradas como Suprimentos).
-- **Efeito nas pendentes** (medido na cópia): Devolução 1 → **547**, Compras 0 → **447**, Sem Classificação 349.
+- **Efeito nas pendentes** (medido na cópia): Devolução 1 → **547**, Compras 0 → **447**, Sem Classificação 349. Com as regras de CFOP de 07/10/2026: Compras **+4** (6106) e Suprimentos **0 → 18**.
+
+### Por que uma nota fica em Sem Classificação (07/10/2026)
+
+**A categoria vem do CFOP da nota — não do fornecedor nem do comprador.** Ter o fornecedor cadastrado, com comprador vinculado, não classifica nada: o comprador só nasce na escrituração, e a categoria olha a natureza da operação. Caso que originou a pergunta: NF 512935 da BDF Nívea (empresa 17), único item *INDUSTRIAL PALLET CHEP BRASIL*, **CFOP 6949** ("outra saída não especificada"). O ERP também deixa esse CFOP em Sem Classificação: **50 de 50** no histórico (entra como 2920/2949). O comportamento estava certo; faltava a tela dizer por quê.
+
+O que mais cai em Sem Classificação, medido nas 250 pendentes (sem filtro de data) e conferido contra as escrituradas:
+
+| CFOP do XML | Pendentes | O que o ERP faz no histórico | Situação |
+|---|---:|---|---|
+| 6209 (devolução de transferência) | 69 | Sem Classificação em 1.756 de 1.758 | 🟢 correto continuar |
+| 6949 / 6920 / 6910 / 6923 / 5910 (pallet, vasilhame, bonificação) | 47 | Sem Classificação (50/50, 139/139, 72 de 74, 4/4, 1/1) | 🟢 correto continuar |
+| 5405 | 13 | Suprimentos 38 · Compras 10 | 🟡 ambíguo (79%/21%): **não prevemos** |
+| 2152 (a própria DPC emitindo entrada, `tpNF = 0`) | 53 | **nenhuma escriturada** para comparar | 🟡 sem histórico: **não prevemos** |
+| 1949, 2949, 2202, 1415, 1920, 2209, 1102, 2102, 6916 | ~44 | sem histórico escriturado | 🟡 sem histórico |
+| resumo sem item (`resNFe`) | 101 no acervo | — | sem CFOP: só depois que o XML completo chegar |
+| 6106 → Compras · 5656/5929/5104/6108/6404 → Suprimentos | 22 | Compras 38/38 · Suprimentos 80/80 | 🟢 passaram a ser **previstos** |
+
+A tela agora mostra a coluna **CFOP (XML)** e, no selo de Sem Classificação, o texto do motivo: o CFOP com a descrição (`consinco.ge_cfop`) e o **histórico medido** do ERP para aquele CFOP (`cfop_xml_historico`, uma consulta agrupada por página) — nunca um texto escrito à mão por CFOP, para não envelhecer. O Excel ganhou três colunas: CFOP do XML, Natureza do CFOP e Por que sem classificação. Custo medido: 0,18 s por página.
 - O `CASE` é o mesmo da permissão por aba (`filtroAbas`): quem só tem a aba Compras passa a ver as pendentes **previstas** como Compras. Coerente, mas é mudança de alcance.
 - Depende de `dpc_dfe_nota.cod_cfop_xml` (bloco `12_01`) preenchida pela ApiNFE e pelo ajuste `2026-10-06_nota_cfop_xml`.
 
