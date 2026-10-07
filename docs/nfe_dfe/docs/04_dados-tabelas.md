@@ -366,6 +366,16 @@ Colunas do bloco `07_01` (02/10/2026):
 
 Deixou de estar vazia em 21/09/2026 (Fase 0: 10 Ciências reais, empresa 29). Desde 24/09/2026 o `dfe:manifestar` está **agendado** (`--auto`, Ciência e Confirmação), mas as trancas por empresa (`status_manifestar` e as duas flags de automação) estão todas em `'N'` — nada novo é gravado sozinho. Colunas novas da Fase 1 (`nro_seq_evento`, `dsc_justificativa`, `dta_registro_evento`, `cod_dfe_empresa`, `dsc_id_lote`, `dta_proxima_tentativa`) e da Fase 2-4 (nenhuma nesta tabela) — ver `04_01`/`04_02` em `scripts/ddl/`.
 
+#### Pedido em massa (bloco 13_01, 07/10/2026)
+
+`dpc_dfe_manifestacao.cod_dfe_manif_pedido` liga a linha ao **pedido** de manifestação em massa (nulo no envio manual de até 20 e no agendador automático). A linha **`P`** (na fila) nasce no pedido e é enviada em segundo plano pelo `dfe:manifestar --fila`; o `registra()` a atualiza para `E` ou `F` sem criar outra (a UK `(nota, evento, seq)` é a mesma).
+
+### `DPC_DFE_MANIF_PEDIDO` — o cabeçalho do pedido em massa
+
+Quem pediu, o evento (só **Ciência 210210** e **Confirmação 210200** — CK1), `qtd_solicitada` / `qtd_aceita` / `qtd_recusada` e `status_pedido` (`A` ativo, `C` cancelado — CK2). **O andamento não é guardado:** quantas saíram e quantas faltam saem de **contar** `dpc_dfe_manifestacao.status_envio` (`P` na fila, `E` enviada, `F` falhou) por pedido, pelo índice `IX2`. "Concluído" não é status: é não restar linha `P`.
+
+As recusadas na entrada (fora do prazo, já manifestadas, já na fila, sem acesso) **nunca viram linha** — só a contagem no cabeçalho. Cancelar apaga **só as `P`** que nunca foram tentadas; uma linha `P` que era uma **falha antiga reaproveitada** (qtd_tentativa > 0) volta a `F`, intacta, para não perder o histórico do ato fiscal.
+
 ### `DPC_DFE_USUARIO_MODELO` — os modelos do Relatório Avançado
 
 **Uma linha por (usuário, família, tipo, nome).** Guarda os modelos **nomeados** da busca avançada: `tip_modelo` `F` (filtro) ou `C` (colunas). É o que a equipe fiscal faz hoje na Qive com o "Modelo Conferência Mensal CTE" — escolhe o modelo, troca o período, exporta.

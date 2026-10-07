@@ -20,6 +20,7 @@ nfe_dfe/scripts/
 │   ├── 2026-10-03_cte_reprocessa_09_01  │
 │   ├── 2026-10-03_nfse_chave_documento  │
 │   ├── 2026-10-06_nota_cfop_xml         │
+│   ├── 2026-10-07_parametros_fila_...   │
 │   └── rollback/                        │ O desfazer de CADA ajuste, mesmo
 │       └── <mesmo nome>_rollback        ┘ nome + _rollback
 └── ddl/                                 o UNICO caminho de instalacao
@@ -47,6 +48,7 @@ nfe_dfe/scripts/
     ├── 10_01_relatorio_colunas          BLOCO 10 - dsc_tela aceita as variantes _REL
     ├── 11_01_modelos_usuario            BLOCO 11 - modelos salvos de filtro e de colunas
     ├── 12_01_nota_cfop_xml              BLOCO 12 - CFOP do XML na nota (categoria prevista)
+    ├── 13_01_manifestacao_pedido        BLOCO 13 - pedido de manifestacao em massa
     └── rollback/                        O desfazer de CADA bloco, todos juntos
         ├── 01_99_rollback_motor
         ├── 03_99_rollback_telas
@@ -58,7 +60,8 @@ nfe_dfe/scripts/
         ├── 09_99_rollback_cte_conferencia
         ├── 10_99_rollback_relatorio_colunas
         ├── 11_99_rollback_modelos_usuario
-        └── 12_99_rollback_nota_cfop_xml
+        ├── 12_99_rollback_nota_cfop_xml
+        └── 13_99_rollback_manifestacao_pedido
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
@@ -272,6 +275,7 @@ consertam.
 | `2026-10-03_cte_reprocessa_09_01` | recoloca na fila os **54.213 `procCTe`** para o parser preencher as 15 colunas do bloco 09_01. Refaz de carona as NF-e transportadas (upsert idempotente) e o papel da empresa. ⚠️ **Exigiu um fix antes**: o CT-e era a única das três famílias sem anti-rebaixamento de situação, e a recarga teria devolvido os **518 cancelados** para AUTORIZADO — o protocolo dentro do `procCTe` é o de autorização, com `cStat 100` sempre | **aplicado 03/10/2026** — 54.794 `procCTe` em `C`, **0 em erro**. Nada caiu: cancelados 518 → 521, NF-e transportadas 61.530 → 62.213 e eventos 37.695 → 38.080 só **subiram** (a captura foi religada no meio da recarga e trouxe documento novo). Preenchimento: remetente e destinatário 99,96%, CST e autorização 100%, expedidor 26,4%, recebedor 25,5%, **valor de ICMS 18,3%** (a amostra de 250 dizia 23,2% — superestimou o ICMS00), `toma4` 9,36%, reforma 84,7%, complementado 2,31%. As **5 regras de coerência deram zero**. Os 20 sem nome de remetente não têm o bloco `rem` no XML (falta também o CNPJ) — característica do documento, não do parser |
 | `2026-10-03_nfse_chave_documento` | devolve os **50 caracteres** à chave das NFS-e em `dpc_dfe_documento.chave_nf`, que o código da ingestão cortava em 44. `MERGE` a partir de `dpc_dfe_nfse.chave_nfse`, ligando por `(cod_dfe_empresa, nro_nsu)` — sem reprocessar XML —, travado para só trocar o que era exatamente o prefixo de 44. Roda **depois** do código corrigido (ApiNFE `e74673d`). Rollback corta de volta em 44, e só faz sentido revertendo o código junto | **aplicado 03/10/2026** — 10.428 trocadas em 0,4 s; 10.428 com 50, 0 com 44, todas iguais à chave da NFS-e |
 | `2026-10-06_nota_cfop_xml` | preenche `dpc_dfe_nota.cod_cfop_xml` das notas que já existiam quando a coluna nasceu (`12_01`): o CFOP do item de **maior `vlr_item`**, empate pelo menor `cod_dfe_nota_item` — a mesma regra do `DfeNotaItemRepository::substitui`, que grava as notas novas. `MERGE` com `USE_HASH`, só onde a coluna é nula, carimbo `AJUSTE 2026-10-06 CFOP XML` em `updated_by` (é o que o rollback usa). Roda **depois** do `12_01`. **Provado numa cópia:** 9.582 preenchidas = as 9.582 notas com item, **0 divergências** contra a regra reimplementada em PHP, 2ª rodada toca 0 linhas, rollback zera tudo | **pendente de aplicar** (homolog) |
+| `2026-10-07_parametros_fila_manifestacao` | cria dois parâmetros em `dpc_parametro`: `dfe_manifest_fila_max_ciclo` = **200** (notas por ciclo da fila; o ciclo roda a cada 10 min, ~1.200/h) e `dfe_manifest_fila_max_pedido` = **5000**. A vazão é parâmetro de propósito: não se sabe se o RecepcaoEvento tolera mais sem 656, então sobe-se aos poucos medindo os bloqueios, **sem deploy**. Só insere o que ainda não existe. Roda **depois** do `13_01` | **aplicado 07/10/2026** (homolog) |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é

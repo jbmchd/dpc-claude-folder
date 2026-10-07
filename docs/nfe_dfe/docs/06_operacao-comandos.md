@@ -54,6 +54,7 @@ O cron do container roda `schedule:run` a cada minuto (`docker-compose/cron/sche
 | `dfe:ingerir` | 15 min | 30 | folgado de propósito: a NT 2014.002 obriga esperar 1h após um `cStat 137`, e o controle é por fluxo via `dta_liberado_em`. A maioria das execuções só confirma que ninguém está liberado e encerra |
 | `dfe:manifestar --evento=210210 --auto --confirmar` | minutos `7,37` de cada hora | 30 | Ciência, desde 24/09/2026. Minuto deliberadamente fora de `:00/:15/:30/:45` (a agenda do `dfe:ingerir`) — os dois falam com a mesma SEFAZ, pelo mesmo certificado por empresa |
 | `dfe:manifestar --evento=210200 --auto --confirmar` | minuto `22` de cada hora | 60 | Confirmação, desde 24/09/2026. TTL maior porque o gatilho (`num_estado_erp_max >= 3`) tende a produzir lotes maiores logo depois do `dfe:conciliar` rodar |
+| `dfe:manifestar --fila --confirmar` | minutos `4,14,24,34,44,54` (a cada 10 min) | 30 | **Fila de manifestação em massa**, desde 07/10/2026. Sem pedido nenhum não faz nada. Roda 24h (sem a janela noturna do `--auto`). Minutos fora de `:00/:15/:30/:45`, `:07/:37` e `:22` |
 | `dfe:normalizar` | 10 min | 20 | mais frequente que a ingestão, para a fila de brutos não acumular |
 | `dfe:conciliar` | 30 min | 30 | mais frequente que o fato que observa — a nota chega da SEFAZ na emissão e é lançada no ERP dias depois |
 
@@ -334,6 +335,27 @@ concedida em Sefaz → Parâmetros na ApiDPC) e valida cada chave antes de envia
 (empresa, prazo, sequência) — teto de 20 chaves por chamada, o mesmo da NT.
 
 ---
+
+
+### `--fila` — manifestação em massa em segundo plano (07/10/2026)
+
+A tela manifesta até 20 notas na hora (teto da SEFAZ por lote). Acima disso a pessoa faz um **pedido** (`POST dfe/manifestar/pedido`, até `dfe_manifest_fila_max_pedido` = 5.000 chaves): o servidor **valida** com a mesma regra do envio manual (`DfeManifestacaoRepository::validaParaEnvio`) e grava uma linha `P` por nota aceita. **O pedido não fala com a SEFAZ.** Quem envia é o `dfe:manifestar --fila`, de 10 em 10 minutos.
+
+| | |
+|---|---|
+| Eventos | só **Ciência (210210)** e **Confirmação (210200)**. Desconhecimento e Operação não realizada declaram que a operação não ocorreu e não têm volta: só no manual de até 20 |
+| Vazão | `dfe_manifest_fila_max_ciclo` (**200** por ciclo ≈ 1.200/h; 5.000 notas em ~4 h). É parâmetro: sobe-se aos poucos medindo os 656, **sem deploy** |
+| Horário | 24h. Um pedido grande feito à tarde termina durante a noite |
+| Freio | o mesmo do `--auto`: teto de 656 em 24h (global e por empresa), espera do CNPJ, pausa entre lotes (`dfe_manifest_pausa_seg`) e o mesmo núcleo de envio (`enviaLote`) |
+| Revalidação | antes de enviar, **cada nota é conferida de novo** (situação, prazo legal, "já manifestada por outro caminho"). Quem não pode mais sair vira `F` com o motivo, sem gastar requisição. Empresa com `status_manifestar` desligado ou CNPJ em espera: as notas **seguem na fila** |
+| Cancelamento | a fila é relida **antes de cada lote de 20**. Cancelar vale para o próximo lote; o que já saiu não volta |
+| Disputa com o `--auto` | `candidatas()` ignora nota com linha `P` no mesmo evento, para os dois não mandarem a mesma nota juntos |
+
+Painel (tela de NF-e, "Pedidos de manifestação"): `GET dfe/manifestar/pedidos` (lista com o andamento contado, mais a vazão para a previsão de término), `GET .../pedidos/{id}` (as notas que falharam) e `POST .../pedidos/{id}/cancelar`. Quem tem a permissão `MANIFESTAR` vê e cancela os pedidos das empresas que enxerga.
+
+**Medido em 07/10/2026 (homolog):** validar 5.000 chaves + gravar o pedido leva ~8 s (um insert por nota custava 94 ms e levaria ~8 min; por isso o `INSERT ALL` em blocos de 100). Cancelar 4.846 linhas: 0,5 s. O `RETURNING ... INTO` via PDO devolve o código do pedido (a tabela usa `IDENTITY`, sem sequence nomeada).
+
+**Ainda não exercitado:** o **envio real** de um pedido (SEFAZ). Os testes foram todos sem tocar a SEFAZ (criação, recusas, reaproveitamento de falha, cancelamento, `--fila --dry-run`, e a revalidação por reflexão). O primeiro envio real deve ser um pedido pequeno, acompanhado.
 
 ## `dfe:monitorar`
 
