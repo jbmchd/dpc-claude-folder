@@ -6,7 +6,7 @@
 --  que esta pendente - e so isso volta para 'C'.
 --
 --  NAO desfaz o que ja foi gravado nas 15 colunas: para isso, o rollback e o
---  ddl/09_99, que derruba as colunas.
+--  ddl/rollback/09_99, que derruba as colunas.
 --
 --  Rodar bloco a bloco.
 -- ============================================================================

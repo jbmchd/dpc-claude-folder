@@ -6,7 +6,7 @@
 --
 --  O que ja foi reprocessado NAO volta, e nem precisa: o reprocessamento so
 --  acrescentou campos que antes eram nulos. Para desfazer a estrutura inteira,
---  usar ddl/08_99_rollback_nfe_satelites_dbeaver.sql.
+--  usar ddl/rollback/08_99_rollback_nfe_satelites_dbeaver.sql.
 --
 --  Conectado como POSEIDON.
 -- ============================================================================

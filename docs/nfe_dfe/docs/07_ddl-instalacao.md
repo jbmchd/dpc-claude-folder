@@ -37,7 +37,8 @@ arquivos de **`scripts/ddl/`**, em três blocos.
 > `dpc_dfe_usuario_aba`) só nasce pelo `04_02` — rodar este bloco não é opcional.
 
 O primeiro número é o bloco, o segundo é a ordem dentro dele. O `_99` de cada
-bloco é o rollback daquele bloco.
+bloco é o rollback daquele bloco e fica em **`ddl/rollback/`** (o de cada
+empresa, em `ddl/empresas/`, continua ao lado do seu `_01`).
 
 O que eliminou a escolha foi a **seção 3 do `01_01`**: ela confere as 273
 colunas uma a uma e acrescenta a que faltar. O `create table` da seção 2 é
@@ -81,6 +82,7 @@ Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
 | 09 | `09_01_cte_conferencia_mensal` | 15 colunas em `dpc_dfe_cte` (03/10/2026): nomes dos quatro papéis, tomador avulso (`toma4`), ICMS (CST, base, valor, alíquota), data de autorização, CT-e complementado e os três da reforma. A lista saiu do **"Modelo Conferência Mensal CTE"**, que a equipe fiscal mantém salvo no relatório avançado da Qive — 27 das 96 colunas, das quais a tela já cobria 16. **Sem bloco PL/SQL**: um único `ALTER`, porque o DBeaver corta bloco (foi a segunda vez; ver `08_02`). Não é idempotente de propósito — o `SELECT` do cabeçalho diz se já rodou. Rollback: `09_99` |
 | 10 | `10_01_relatorio_colunas` | Amplia a CHECK de `dpc_dfe_usuario_coluna.dsc_tela` para aceitar `NFE_REL`, `CTE_REL` e `NFSE_REL` (03/10/2026) — a preferência de colunas do menu **Sefaz > Relatórios Avançados**, guardada à parte da tela do dia a dia. Dois `ALTER` simples (drop + add da constraint), sem bloco PL/SQL; as linhas existentes cabem na condição nova. **Aplicado em homolog em 03/10/2026.** Rollback: `10_99` (apaga só as preferências `_REL`, sem as quais a CHECK antiga não volta) |
 | 11 | `11_01_modelos_usuario` | Tabela `dpc_dfe_usuario_modelo` (05/10/2026): os modelos nomeados de filtro (`F`) e de colunas (`C`) da busca avançada, com `dsc_conteudo` em CLOB (JSON opaco). UK por `(usuario, dsc_tela, tip_modelo, nom_modelo)`; CHECKs fecham família e tipo. **Antes** do deploy da ApiDPC que grava modelos — sem a tabela, salvar responde erro. **Aplicado em homolog em 05/10/2026.** Rollback: `11_99` (destrutivo: apaga todos os modelos, que não derivam de nenhum outro dado) |
+| 12 | `12_01_nota_cfop_xml` | Coluna `cod_cfop_xml NUMBER(4)` em `dpc_dfe_nota` (06/10/2026): o CFOP **declarado no XML** (o do item de maior `vlr_item`; empate: menor item), para a **Gestão de NFe** prever a categoria da nota pendente antes de o ERP escriturar. Anulável e sem `DEFAULT` (nulo = não calculado ou só resumo). **Antes** do deploy da ApiNFE e da ApiDPC desta entrega — sem a coluna o insert dos itens e a listagem da tela dão `ORA-00904`. Depois: `ajustes_unicos/2026-10-06_nota_cfop_xml` preenche o acervo. **Provado em cópia vazia; aplicação em homolog pendente.** Rollback: `12_99` (seguro: dá para recalcular dos itens) |
 | 07 | `07_01_nfse_tipo_emissao` | 12 colunas em `dpc_dfe_nfse` (02/10/2026): tipo de emissão (o `cStat`), data de emissão e de cancelamento, chave da substituta, municípios por extenso e endereço do prestador. **Antes** do deploy da ApiNFE que grava essas colunas — depois dele, sem o bloco, toda NFS-e falha com ORA-00904. Rollback: `07_99` |
 
 Todos são **reexecutáveis**: objeto criado só se ainda não existir, linha

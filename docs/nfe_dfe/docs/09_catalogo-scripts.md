@@ -13,54 +13,60 @@ nfe_dfe/scripts/
 ├── levantamento-nfse-municipios.sql     diagnostico, nao instalacao
 ├── ajustes_unicos/                      ┐ RODA UMA VEZ E NUNCA MAIS.
 │   ├── 2026-09-30_cancelamento_nfe      │ Corrige LINHA, nao estrutura.
-│   ├── 2026-09-30_..._rollback          │ Nome por DATA, nao por bloco:
-│   ├── 2026-10-01_papel_resumo          │ o que importa e QUANDO rodou.
-│   ├── 2026-10-01_..._rollback          │ Fora da instalacao - ver §4c
-│   ├── 2026-10-02_nfse_reprocessa       │
-│   ├── 2026-10-02_..._rollback          │
-│   ├── 2026-10-02_pausa_completa        │
-│   ├── 2026-10-02_..._rollback          │
+│   ├── 2026-10-01_papel_resumo          │ Nome por DATA, nao por bloco:
+│   ├── 2026-10-02_nfse_reprocessa       │ o que importa e QUANDO rodou.
+│   ├── 2026-10-02_pausa_completa        │ Fora da instalacao - ver §4c
 │   ├── 2026-10-02_nfe_reprocessa_xml    │
-│   ├── 2026-10-02_..._rollback          │
 │   ├── 2026-10-03_cte_reprocessa_09_01  │
-│   └── 2026-10-03_..._rollback          ┘
+│   ├── 2026-10-03_nfse_chave_documento  │
+│   ├── 2026-10-06_nota_cfop_xml         │
+│   └── rollback/                        │ O desfazer de CADA ajuste, mesmo
+│       └── <mesmo nome>_rollback        ┘ nome + _rollback
 └── ddl/                                 o UNICO caminho de instalacao
     ├── 01_01_estrutura                  ┐
     ├── 01_02_estabelecimentos           │ BLOCO 01 - MOTOR
-    ├── 01_03_parametros                 │ as 13 tabelas de captura
-    ├── 01_04_validacao                  │
-    ├── 01_99_rollback_motor             ┘
+    ├── 01_03_parametros                 ┘ as 13 tabelas de captura
+    ├── 01_04_validacao
     ├── empresas/                        ┐ UM PAR POR EMPRESA trazida depois
     │   ├── 20_01_empresa_20             │ da carga geral. O numero do arquivo
-    │   ├── 20_99_rollback_empresa_20    │ E o numero da empresa.
-    │   ├── 29_01_empresa_29             │
-    │   ├── 29_99_rollback_empresa_29    │ E o numero da empresa.
-    │   ├── 30_01_empresa_30             │
+    │   ├── 20_99_rollback_empresa_20    │ E o numero da empresa. O rollback
+    │   ├── 29_01_empresa_29             │ DESTE par fica ao lado (a pasta
+    │   ├── 29_99_rollback_empresa_29    │ rollback/ abaixo nao cobre
+    │   ├── 30_01_empresa_30             │ empresas/).
     │   └── 30_99_rollback_empresa_30    ┘
-    ├── 03_01_parametrizacao_telas       ┐ BLOCO 03 - permissao de acesso aos
-    ├── 03_99_rollback_telas             ┘ paineis e limiar de alerta
+    ├── 03_01_parametrizacao_telas       BLOCO 03 - permissao de acesso aos
+    │                                    paineis e limiar de alerta
     ├── 04_01_manifestacao               ┐ BLOCO 04 - manifestacao do
-    ├── 04_99_rollback_manifestacao      │ destinatario: fundacao (23/09) e
-    ├── 04_02_manifestacao_fases_2a4     │ Fases 2-4 (24/09) - ato fiscal,
-    ├── 04_98_rollback_manifestacao_...  ┘ trancas fechadas por padrao
-    ├── 06_01_colunas_usuario            ┐ BLOCO 06 - preferencia de coluna
-    ├── 06_99_rollback_colunas_usuario   ┘ por usuario, no lugar do localStorage
-    ├── 07_01_nfse_tipo_emissao          ┐ BLOCO 07 - NFS-e: tipo de emissao,
-    ├── 07_99_rollback_nfse_tipo_emissao ┘ datas e endereco do prestador
+    ├── 04_02_manifestacao_fases_2a4     ┘ destinatario: fundacao (23/09) e
+    │                                    Fases 2-4 (24/09), trancas fechadas
+    ├── 06_01_colunas_usuario            BLOCO 06 - preferencia de coluna por usuario
+    ├── 07_01_nfse_tipo_emissao          BLOCO 07 - NFS-e: tipo de emissao, datas e endereco
     ├── 08_01_nfe_satelites              ┐ BLOCO 08 - NF-e: totais, transporte,
-    ├── 08_02_nfe_volume_listas          │ cobranca e 31 campos do XML; o 02
-    ├── 08_99_rollback_nfe_satelites     ┘ alarga as listas de volume
-    ├── 09_01_cte_conferencia_mensal     ┐ BLOCO 09 - CT-e: as 15 colunas
-    ├── 09_99_rollback_cte_conferencia   ┘ do Modelo Conferencia Mensal
-    ├── 10_01_relatorio_colunas          ┐ BLOCO 10 - dsc_tela aceita as
-    ├── 10_99_rollback_relatorio_colunas ┘ variantes _REL dos Relatorios Avancados
-    ├── 11_01_modelos_usuario            ┐ BLOCO 11 - modelos salvos de filtro
-    └── 11_99_rollback_modelos_usuario   ┘ e de colunas da busca avancada
+    ├── 08_02_nfe_volume_listas          ┘ cobranca e 31 campos do XML; o 02 alarga as listas
+    ├── 09_01_cte_conferencia_mensal     BLOCO 09 - CT-e: as 15 colunas do Modelo Conferencia Mensal
+    ├── 10_01_relatorio_colunas          BLOCO 10 - dsc_tela aceita as variantes _REL
+    ├── 11_01_modelos_usuario            BLOCO 11 - modelos salvos de filtro e de colunas
+    ├── 12_01_nota_cfop_xml              BLOCO 12 - CFOP do XML na nota (categoria prevista)
+    └── rollback/                        O desfazer de CADA bloco, todos juntos
+        ├── 01_99_rollback_motor
+        ├── 03_99_rollback_telas
+        ├── 04_98_rollback_manifestacao_fases_2a4   (reverte o 04_02)
+        ├── 04_99_rollback_manifestacao             (reverte o 04_01)
+        ├── 06_99_rollback_colunas_usuario
+        ├── 07_99_rollback_nfse_tipo_emissao
+        ├── 08_99_rollback_nfe_satelites
+        ├── 09_99_rollback_cte_conferencia
+        ├── 10_99_rollback_relatorio_colunas
+        ├── 11_99_rollback_modelos_usuario
+        └── 12_99_rollback_nota_cfop_xml
 ```
 
 Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
-dele. O `_99` de cada bloco é o rollback daquele bloco — quem desfaz mora ao
-lado de quem faz.
+dele. O `_99` (ou `_98`) de cada bloco é o rollback daquele bloco, e **mora em
+`ddl/rollback/`**, não ao lado do script que ele desfaz: a pasta `ddl/` fica só
+com o que instala, e quem procura como desfazer abre uma pasta só. O nome do
+rollback continua carregando o número do bloco, então o par se acha de longe.
+Os rollbacks de `ddl/empresas/` são a exceção e ficam ao lado do seu `_01`.
 
 `ajustes_unicos/` **não segue essa numeração de propósito**: ela existe para
 ordenar instalação, e ajuste único não se instala. Ver [§4c](#4c-ajustes-únicos--o-que-roda-uma-vez-e-nunca-mais).
@@ -244,7 +250,7 @@ consertam.
 | Regra | Por quê |
 |---|---|
 | Nome por **data** (`AAAA-MM-DD_assunto.sql`) | em script que roda uma vez, o dado útil é *quando* rodou. Numeração de bloco serviria para ordenar instalação, e aqui não há instalação a ordenar |
-| **Rollback ao lado**, mesmo nome + `_rollback` | quem desfaz mora junto de quem faz, igual ao `_99` do `ddl/` |
+| **Rollback em `ajustes_unicos/rollback/`**, mesmo nome + `_rollback` | `ajustes_unicos/` fica só com o que roda; o desfazer de todos os ajustes mora numa pasta própria, igual ao `ddl/rollback/` |
 | Carimbar `updated_by` com um valor **único do script** | é o que permite ao rollback separar o que o script mudou do que o fluxo normal mudaria |
 | Cabeçalho registra que **já foi aplicado**, com o resultado medido | o arquivo fica versionado como registro do que foi feito, não como tarefa pendente |
 | ASCII + CRLF | mesma regra do `ddl/` — ver [§E a regra do CRLF](#e-a-regra-do-crlf) |
@@ -265,6 +271,7 @@ consertam.
 | `2026-10-02_nfe_reprocessa_xml` | recoloca na fila os **9.397 `procNF`** para o parser novo preencher os campos do XML (DDL 08_01). Só o completo: o resumo não tem esses blocos. Refaz de carona itens, emitente e papel; a situação é protegida pela guarda anti-rebaixamento | **aplicado 02/10/2026** — 9.397 linhas em cada satélite e 9.397 com natureza da operação; itens (175.603) e canceladas (133) inalterados; **ICMS da nota conferido contra a soma dos itens nas 9.397: zero divergências**. Uma nota falhou por lista de volumes acima de 400 e foi refeita após o `08_02` |
 | `2026-10-03_cte_reprocessa_09_01` | recoloca na fila os **54.213 `procCTe`** para o parser preencher as 15 colunas do bloco 09_01. Refaz de carona as NF-e transportadas (upsert idempotente) e o papel da empresa. ⚠️ **Exigiu um fix antes**: o CT-e era a única das três famílias sem anti-rebaixamento de situação, e a recarga teria devolvido os **518 cancelados** para AUTORIZADO — o protocolo dentro do `procCTe` é o de autorização, com `cStat 100` sempre | **aplicado 03/10/2026** — 54.794 `procCTe` em `C`, **0 em erro**. Nada caiu: cancelados 518 → 521, NF-e transportadas 61.530 → 62.213 e eventos 37.695 → 38.080 só **subiram** (a captura foi religada no meio da recarga e trouxe documento novo). Preenchimento: remetente e destinatário 99,96%, CST e autorização 100%, expedidor 26,4%, recebedor 25,5%, **valor de ICMS 18,3%** (a amostra de 250 dizia 23,2% — superestimou o ICMS00), `toma4` 9,36%, reforma 84,7%, complementado 2,31%. As **5 regras de coerência deram zero**. Os 20 sem nome de remetente não têm o bloco `rem` no XML (falta também o CNPJ) — característica do documento, não do parser |
 | `2026-10-03_nfse_chave_documento` | devolve os **50 caracteres** à chave das NFS-e em `dpc_dfe_documento.chave_nf`, que o código da ingestão cortava em 44. `MERGE` a partir de `dpc_dfe_nfse.chave_nfse`, ligando por `(cod_dfe_empresa, nro_nsu)` — sem reprocessar XML —, travado para só trocar o que era exatamente o prefixo de 44. Roda **depois** do código corrigido (ApiNFE `e74673d`). Rollback corta de volta em 44, e só faz sentido revertendo o código junto | **aplicado 03/10/2026** — 10.428 trocadas em 0,4 s; 10.428 com 50, 0 com 44, todas iguais à chave da NFS-e |
+| `2026-10-06_nota_cfop_xml` | preenche `dpc_dfe_nota.cod_cfop_xml` das notas que já existiam quando a coluna nasceu (`12_01`): o CFOP do item de **maior `vlr_item`**, empate pelo menor `cod_dfe_nota_item` — a mesma regra do `DfeNotaItemRepository::substitui`, que grava as notas novas. `MERGE` com `USE_HASH`, só onde a coluna é nula, carimbo `AJUSTE 2026-10-06 CFOP XML` em `updated_by` (é o que o rollback usa). Roda **depois** do `12_01`. **Provado numa cópia:** 9.582 preenchidas = as 9.582 notas com item, **0 divergências** contra a regra reimplementada em PHP, 2ª rodada toca 0 linhas, rollback zera tudo | **pendente de aplicar** (homolog) |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
 Os dois são o mesmo encadeamento visto de dois ângulos: nota cancelada nunca é

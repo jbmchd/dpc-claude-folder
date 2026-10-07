@@ -174,6 +174,8 @@ Tem as quatro colunas de **conciliação com o ERP** (`status_recebimento`, `seq
 
 > `seq_nf_erp` guarda **`SEQNF`**, não `SEQNOTAFISCAL` — conferido em dado real que `SEQNOTAFISCAL` vem nulo. E é **referência**, não chave: a PK de `mlf_notafiscal` é composta.
 
+**`cod_cfop_xml` (bloco 12_01, 06/10/2026) é o CFOP que o XML declara**, e não o que o ERP escriturou — esse é `cod_cfop_erp`, que só nasce depois da escrituração. Vale o CFOP do item de **maior `vlr_item`** (empate: menor `cod_dfe_nota_item`). Existe para a Gestão de NFe **prever** a categoria da nota pendente, e **nunca substitui** `cod_cfop_erp`. Nulo = não calculado ou só resumo (`resNFe` não traz item). Medido em 06/10/2026: 9.582 das 9.689 notas têm item, 351 delas misturam mais de um CFOP, e há 24.322 empates de valor — o desempate decide, por isso é regra e não detalhe.
+
 ### `DPC_DFE_NOTA_ITEM` — os itens da nota
 
 **Uma linha por (nota, `nro_item`).** É o detalhe da mercadoria: código e descrição do fornecedor, NCM, CFOP, quantidade, valor unitário, e os impostos do item — ICMS, ICMS-ST, IPI, PIS, COFINS e **IBS/CBS**.

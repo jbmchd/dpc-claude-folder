@@ -187,14 +187,13 @@ workspace/
             ├── 01_01_estrutura              ┐
             ├── 01_02_estabelecimentos       │ BLOCO 01 - MOTOR
             ├── 01_03_parametros             │ 13 tabelas de captura
-            ├── 01_04_validacao              │
-            ├── 01_99_rollback_motor         ┘
+            ├── 01_04_validacao              ┘
             ├── empresas/                    ┐ UM PAR POR EMPRESA
             │   ├── 20_01 · 20_99_rollback   │ trazida depois da carga
             │   ├── 29_01 · 29_99_rollback   │ geral. O numero do arquivo
             │   └── 30_01 · 30_99_rollback   ┘ E o numero da empresa
-            ├── 03_01_parametrizacao_telas   ┐ BLOCO 03 - permissao e
-            └── 03_99_rollback_telas         ┘ limiar dos paineis
+            ├── 03_01_parametrizacao_telas   BLOCO 03 - permissao e limiar dos paineis
+            └── rollback/                    o desfazer de cada bloco (NN_99_...)
 ```
 
 Arquitetura da ApiNFE como um todo (não só o DFe):

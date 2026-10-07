@@ -294,6 +294,49 @@ Os campos de filtro saíram do `ModalFiltros` para um **`CamposFiltros.vue` por 
 
 A extração foi validada por um golden test: 37 requisições (listagem, abas, ordenação, busca, filtros, empresas, chaves, exportação, detalhe, XML, DANFE, ZIP, e-mail) capturadas com o código antigo e o novo, iguais campo a campo. Só o PDF varia, e varia também entre duas execuções do código antigo.
 
+## Gestão de NFe — categoria prevista, comprador e devolução × CRM (06/10/2026)
+
+Tela **Sefaz > Gestão de NFe** (`/sefaz/documentos-fiscais`; ApiDPC `SefazDocumentosFiscaisRepository`). Seis pedidos da equipe fiscal, e o que a medição achou em cada um.
+
+### Categoria: o ERP só classifica depois da escrituração
+
+A categoria é um `CASE` sobre `cod_cfop_erp` e `dsc_ocorr_dev_erp`, que o `dfe:conciliar` grava **só para nota ESCRITURADA**. Medido: **0 de 1.191 pendentes** tinham esses campos; 8.342 de 8.342 escrituradas tinham. Toda pendente caía em "Sem Classificação" **por construção**, e as abas Compras / Devolução / Suprimentos apareciam vazias para quem trabalha justamente as pendentes.
+
+Solução: **prever pelo XML enquanto o ERP não deu o dele**, e o valor do ERP **sempre vence** depois (`cod_cfop_erp IS NULL` é a condição da previsão). A linha ganha `categoria_prevista = 'S'` e a tela a desenha em itálico tracejado.
+
+| Categoria | Regra da previsão | Acerto medido | Estado |
+|---|---|---|---|
+| Devolução | `cod_finalidade = 4` **e** emitente fora do grupo (raiz do CNPJ ≠ `SUBSTR(de.num_cnpj,1,8)`) | **1.293 de 1.298 (99,6%)** | 🟢 medido |
+| Compras | `cod_cfop_xml` mapeado para entrada: 5→1, 6→2, 7→3, e `101/105/401/403`→`102` | **4.675 de 4.736 (98,7%)** | 🟢 medido |
+| Suprimentos | **não dá para prever** | 53% do que o ERP chama de Suprimentos aparece como Compras | 🔴 derrubado |
+
+- **`finNFe = 4` sozinho erra.** De **filial do grupo** é *transferência* (CFOP 2209), que o ERP **não** classifica: 1.754 notas. A regra exige emitente externo. **0 falsos positivos** nas 2.060 que o ERP deixa sem classificação.
+- **Suprimentos:** o XML de uma compra para revenda e o de uma para consumo trazem o mesmo CFOP 5102. A diferença é decisão de quem escritura. Na tela essas notas aparecem como **Compras** até escrituradas (133 das 252 escrituradas como Suprimentos).
+- **Efeito nas pendentes** (medido na cópia): Devolução 1 → **547**, Compras 0 → **447**, Sem Classificação 349.
+- O `CASE` é o mesmo da permissão por aba (`filtroAbas`): quem só tem a aba Compras passa a ver as pendentes **previstas** como Compras. Coerente, mas é mudança de alcance.
+- Depende de `dpc_dfe_nota.cod_cfop_xml` (bloco `12_01`) preenchida pela ApiNFE e pelo ajuste `2026-10-06_nota_cfop_xml`.
+
+### Comprador: o filtro nunca teve o que filtrar
+
+`compradoresList` era declarada vazia e **nunca preenchida** — o select só tinha "Todos". Além disso o comprador também só nasce na escrituração (0 de 1.191 pendentes). Agora `GET documentos-fiscais/compradores` preenche a lista (8 compradores no acervo), e **com um comprador escolhido a lista não corta em "só pendentes"** — senão nunca devolveria nada. A tela avisa; os cartões e números das abas continuam contando todas as pendências.
+
+> 🔴 **Prever o comprador não vale a pena:** pelo histórico do fornecedor o acerto é de **61%** (um fornecedor atende vários compradores). Decisão: não prever, mostrar "—".
+
+### Devolução × NF de venda × atendimento do CRM
+
+`dsc_nfe_referenciada` (VARCHAR2 500, várias chaves separadas por vírgula) guarda a `refNFe` da devolução. Da chave: CNPJ do emitente = posições 7–20, série 23–25, número 26–34. O CRM: **`consinco.dpc_atendimentonf`** (`nf` VARCHAR2 sem zeros à esquerda, `seriedocto` e `nroempresa` NUMBER, índice em `nf`, 0,02 s). **Não usar a view `dpcv_atd_atendimentos`: ~6 s por busca.**
+
+- Casa por **empresa + série + número** (o número repete entre emitentes); a empresa vem do CNPJ da NF referenciada via `consinco.ge_empresa`. **Uma consulta por página**, só para linhas de Devolução.
+- Conexão = parâmetro `dfe_conexao_erp` (o mesmo do `dfe:conciliar`); se esta API não tem a conexão configurada, cai na do módulo. **Falha do CRM nunca derruba a lista** (log + coluna "—").
+- Exemplo do usuário conferido na produção: devolução NF 2581 → venda **2116906** → atendimento **2376180** (empresa 17, série 55). ✔
+- ⚠️ **Nem toda devolução tem atendimento por este caminho:** das pendentes de venda de filial DPC, **45% casam com um atendimento, 13% com vários, 41% com nenhum**. Contradiz "toda devolução tem atendimento" — a tela mostra "—", não esconde.
+- ⚠️ **A homolog está defasada** para o CRM: último atendimento 2.357.532 no clone × 2.381.694 na produção; o 2376180 **só existe na produção**. A ApiDPC da alpha só tem a conexão de teste, então lá o atendimento só aparece se existir no clone.
+
+### Outros dois, sem mistério
+
+- **Botão XML falhava** (`Erro ao baixar XML`): o SQL antigo ligava `dpc_dfe_documento` a `dpc_dfe_nota` por `d.cod_dfe_nota`, coluna que a tabela de documentos **não tem** (`ORA-00904`, HTTP 500). E a cópia **não conferia a empresa do usuário**. Agora delega a `SefazNfeRepository::xml`, que lê por `chave_nf` só das empresas liberadas. Nota só com resumo (`resNFe`) desabilita XML e DANFE com explicação.
+- **Exportar Excel:** `GET documentos-fiscais/exportar` — mesmo filtro e ordem da grade, sem paginação, **teto de 20.000 linhas** (a tela avisa se cortar; confirma acima de 5.000).
+
 ## Queries de partida
 
 **Listagem com conciliação**

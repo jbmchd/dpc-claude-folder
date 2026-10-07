@@ -6,7 +6,7 @@
 --
 --  O que ja foi reprocessado nao volta: o normalizador regravou a NFS-e a
 --  partir do bruto, e a situacao antiga era o defeito. Para desfazer as
---  colunas novas, usar ddl/07_99_rollback_nfse_tipo_emissao_dbeaver.sql.
+--  colunas novas, usar ddl/rollback/07_99_rollback_nfse_tipo_emissao_dbeaver.sql.
 --
 --  Conectado como POSEIDON.
 -- ============================================================================
