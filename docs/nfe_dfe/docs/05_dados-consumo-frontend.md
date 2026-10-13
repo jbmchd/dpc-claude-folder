@@ -317,7 +317,7 @@ Tela **Sefaz > Gestão de NFe** (`/sefaz/documentos-fiscais`; ApiDPC `SefazDocum
 **Efeito** (regra nova × categoria anterior, nota a nota): **651 de 9.658 mudam de aba.** Nas **pendentes**, Sem Classificação cai de 239 para **22**. Contagem por aba na tela (ApiDPC local sobre a homolog, usuário com todas as abas): Devolução 575 · Compras 493 · Próprias 127 · Suprimentos 38 · Sem classificação 22 — e a exportação de cada aba bate com o donut. As ~60 notas que o ERP escriturou como devolução mas cujo emitente é fornecedor (FARMAX, Falcon…) passam a Compras/Suprimentos: **manda o cadastro**, decisão do usuário.
 
 - ⚠️ **Premissa a confirmar com o fiscal:** que o "Grupo" do cadastro de pessoas é o campo que eles consultam. Os nomes batem (revenda: indústrias e distribuidoras; consumo: serralheria, informática, fundação), mas é inferência dos dados.
-- ⚠️ **126 notas com papel `TRANSP`** (a DPC como transportadora) aparecem na lista e agora caem **todas em Compras** pelo grupo do emitente; antes eram 48 Compras e 78 Sem Classificação. Se essas notas não deviam estar na tela, o filtro é outro assunto.
+- ✅ **126 notas com papel `TRANSP`** (a DPC como transportadora) apareciam na Filial errada e caíam **todas em Compras**. **Resolvido em 13/10/2026** pela empresa efetiva da nota (seção "Empresa efetiva", logo abaixo).
 - ⚠️ Emitente cadastrado com o grupo errado (ex.: Dunax Lubrificantes e Vitta Pane, hoje `PRESTADOR DE SERVIÇOS`) vai para Sem Classificação: o ajuste é no C5.
 - O `CASE` é o mesmo da permissão por aba (`filtroAbas`): quem só tem uma aba passa a ver o que a regra nova manda.
 - A **categoria "prevista"** (selo tracejado, legenda, sufixo "(prevista)" no Excel) **deixou de existir**: a categoria já não depende da escrituração. A coluna **CFOP (XML)** ficou só como informação; ganhou a coluna **Grupo no C5** (e no Excel e no modal), e o tooltip diz o motivo pelo cadastro.
@@ -374,7 +374,44 @@ A tela agora mostra a coluna **CFOP (XML)** e, no selo de Sem Classificação, o
 
 **Excel numérico nas telas de documento (NF-e, CT-e, NFS-e e Relatório Avançado).** A planilha lia o texto da grade ("R$ 15.656,12") e o time apagava o "R$" para somar. Agora valor, alíquota, peso e quantidade saem como **número** (`config.camposNumericos`, montado por `montaCamposNumericos()`); nulo vira célula vazia, não "-"; datas, CNPJ, CFOP e códigos continuam texto; a grade na tela não muda. ⚠️ **Armadilha medida:** o `xlsx` 0.9.13 só registra formatos **embutidos** do Excel — um formato como `#,##0.000` (peso) vira `numFmtId="undefined"` no `styles.xml` e o arquivo fica inválido (o Excel pede para "reparar"). Por isso só há `#,##0.00` e `#,##0`; o peso fica no formato Geral, que mostra todos os dígitos. No CT-e, `qtd_nfe` sobrescreve o próprio campo com o texto formatado, então o número cru vive em `qtd_nfe_num`.
 
-### Comprador: o filtro nunca teve o que filtrar
+### Comprador: o do fornecedor no cadastro do C5 (13/10/2026)
+
+> **Pedido do time fiscal.** Só exibir o comprador quando o CNPJ do emitente está no C5 **como fornecedor** e tem um **comprador relacionado**. Em devolução de cliente não faz sentido mostrar o comprador do item devolvido: pode confundir, e uma nota tem itens da carteira de vários compradores. **Substitui** o comprador do item de maior valor, descrito na seção "Comprador: o filtro nunca teve o que filtrar" (🔴 superada nesse ponto).
+
+- **De onde vem:** `consinco.maf_fornecdivisao` (`nrodivisao = 1`, Atacado) → `seqcomprador` → `max_comprador`, com `maf_fornecedor.statusgeral = 'A'` e comprador ativo. É o mesmo critério da view `DPCV_COMPRADORFORNECEDOR` do próprio C5. `maf_fornecdivisaocomprador` está vazia e não serve.
+- **Onde fica:** `dpc_dfe_emitente.seq_comprador_erp` e `dsc_comprador_erp` (VARCHAR2 40), gravados pelo `dfe:conciliar` na mesma etapa que grava o grupo. **Só** para grupo `FORNECEDOR` ou `FORNECEDOR CONSUMO`; qualquer outro grupo grava nulo (e apaga o que ficou se o grupo mudou). As telas leem o emitente: Gestão de NFe (`SefazDocumentosFiscaisRepository`: lista, filtro, `compradores()` e o Top 5) e a tela NF-e (`SefazNfeRepository`: coluna e ordenação).
+- **Filiais da própria DPC ficam sem comprador**, decisão do usuário. Três delas estão no C5 com grupo `FORNECEDOR` (CNPJ `...2030`, `...2897`, `...2978`: 2.195 notas), então o grupo sozinho não bastava: `completaComComprador()` pula quem tem a raiz de CNPJ de uma empresa do módulo (a mesma regra da aba Próprias).
+- **Medido em 13/10/2026 (homolog):** 170 emitentes com comprador (160 `FORNECEDOR` + 10 `FORNECEDOR CONSUMO`), **3.394 notas**; os outros 39 `FORNECEDOR CONSUMO` não têm comprador no C5. Nenhum comprador inativo.
+- **Efeito:** nas notas `FORNECEDOR` o comprador do item e o do fornecedor **diferiam em 46%** (2.319 de 5.080), então a mudança troca o comprador exibido em quase metade delas. O comprador agora existe **desde a captura** (antes só depois da escrituração), e por isso saiu o aviso "o comprador só é conhecido depois da escrituração" e a exceção que, com comprador escolhido, tirava o recorte "só pendentes". Devolução, Próprias e Sem classificação ficam sempre vazios.
+- **Rótulo:** a coluna passou a se chamar "Comprador do fornecedor" (Gestão de NFe, modal e tela NF-e).
+- As colunas `seq_comprador_erp`/`dsc_comprador_erp` de `dpc_dfe_nota` (comprador do item) **continuam sendo gravadas pelo `detalheEscrituracao()`, mas não são mais lidas por tela nenhuma**. Não foram removidas.
+- ⚠️ O painel "Pendências por comprador (Top 5)" **não filtra por pendente**, apesar do título: conta todas as notas do recorte que têm comprador (o `$where2` de pendentes é montado e não usado). Não foi alterado.
+- ⚠️ A **produção** precisa das 2 colunas novas (`ddl/01_estrutura_motor`, só com ordem explícita) antes do deploy da ApiDPC: sem elas a lista dá ORA-00904.
+
+### Empresa efetiva da nota: quando a DPC é só a transportadora (13/10/2026)
+
+O DistDFe entrega o documento a **qualquer CNPJ que apareça nele**. Quando a DPC aparece só como **transportadora** (`sig_papel_empresa = 'TRANSP'`), `cod_dfe_empresa` é a empresa que **capturou**, não aquela contra a qual a nota foi emitida. Caso que levou ao ajuste: NF 859042 (ALPARGATAS, R$ 108.592,20), capturada pela 17 e emitida contra a **18**; o fiscal a via na Filial 17.
+
+- **Medido:** 126 notas `TRANSP`, todas capturadas pela 17, destinadas à **18 (76)** e à **20 (50)**. Todas pendentes e nenhuma escriturada, porque a conciliação procurava no ERP pela empresa 17 e a entrada foi feita na 18/20: **pendências falsas**, "Aguardando entrada" para sempre. Ao conciliar pela empresa certa, as 126 vieram `ESCRITURADA`. A empresa 18 não tem captura própria (0 notas capturadas); as 50 da 20 já tinham cópia própria como `DEST`.
+- **Regra (empresa efetiva):** para `TRANSP`, é a empresa cujo `num_cnpj` é o `num_cnpj_cpf_dest` do XML; nos demais papéis é `cod_dfe_empresa` (nas notas `DEST` o destinatário já é quem capturou).
+- **Onde vale:** (1) **ApiDPC, Gestão de NFe**: `joinEmpresaEfetiva()` troca as 8 junções de `dpc_dfe_empresa de`, então filtro de Filial, permissão, limiar de alerta e a coluna "Empresa (DPC)" seguem a empresa efetiva de uma vez; `condNaoDuplicataTransp()` esconde a cópia `TRANSP` quando a empresa efetiva já tem a cópia `DEST` (as 50 da 20, sem apagar nada). (2) **ApiNFE, `dfe:conciliar`**: `empresaEfetivaSql()` em `pendentes()`, para procurar a nota no ERP pela empresa certa (a opção `--empresa=` também filtra pela efetiva).
+- **O que não mudou, de propósito:** `cod_dfe_empresa` e o papel da nota. A aba **Transporte** da tela NF-e depende de `cod_dfe_empresa` ser a que capturou, e a manifestação só atua em `DEST`.
+- **Efeito medido (ApiDPC local sobre a homolog):** a Filial 17 perdeu as 126 (6.187 → 6.061 capturadas); a 18 passou a ter 76; a 20 ficou em 1.499, sem duplicata (1.374 linhas, 1.374 chaves distintas na lista). A NF 859042 aparece só na 18.
+- **Sem DDL e sem script de dados.**
+
+### DANFE com o EAN do produto (13/10/2026)
+
+Pedido da logística: o DANFE da Qive mostra o EAN sob cada produto e isso facilita a identificação na conferência; o nosso não mostrava. Basta o número, sem código de barras.
+
+- **Onde:** `ApiDPC/app/Support/DanfeComEan.php`, subclasse de `\NFePHP\DA\NFe\Danfe`, usada por `SefazNfeRepository::renderizaPdf()` (o ponto único do DANFE da Gestão de NFe e do ZIP de PDFs). A biblioteca (`m-galdino/sped-doc-aux`) é dependência do Composer e o `vendor` não é versionado, então **não se edita a biblioteca**.
+- **Como:** sobrescreve só `pDescricaoProduto()`, o texto que a biblioteca usa para **medir** a altura da linha e para **desenhar**; a linha a mais repagina sozinha. Insere `EAN: <número>` logo após o nome do produto (antes de FCI e das linhas de ST).
+- **Regra:** usa `cEAN` (o GTIN comercial, que a Qive rotula "Comercial"); só mostra se for 8 a 14 dígitos. Item `SEM GTIN` (ou vazio) não ganha linha.
+- **Custo:** a nota fica mais longa. Medido: 16 itens, de 1 para 2 páginas; 300 itens, de 7 para 11.
+- **Fora do escopo:** os DANFEs da **ApiNFE** (`DaRepository::emitirDanfe`, `NotaFiscalController`) têm cópia própria da biblioteca e não mudaram.
+
+### Comprador: o filtro nunca teve o que filtrar (🔴 comprador do item, superado em 13/10/2026)
+
+> 🔴 **Superado** quanto a *de onde vem* o comprador: hoje é o do fornecedor (seção acima). O resto, o select preenchido por `GET documentos-fiscais/compradores`, continua valendo.
 
 `compradoresList` era declarada vazia e **nunca preenchida** — o select só tinha "Todos". Além disso o comprador também só nasce na escrituração (0 de 1.191 pendentes). Agora `GET documentos-fiscais/compradores` preenche a lista (8 compradores no acervo), e **com um comprador escolhido a lista não corta em "só pendentes"** — senão nunca devolveria nada. A tela avisa; os cartões e números das abas continuam contando todas as pendências.
 

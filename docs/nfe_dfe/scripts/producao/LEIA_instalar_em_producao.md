@@ -27,6 +27,8 @@ Duas decisões que valem registro:
 
 - **Colunas do grupo no C5 (13/10/2026, a pedido).** O `ddl/01_estrutura_motor_dbeaver.sql` convergente foi aplicado na produção (`dpcdb1`): 592 statements, 106 s, zero erro. Acrescentou `dsc_grupo_erp`, `seq_pessoa_erp` e `dta_conferencia_erp` em `dpc_dfe_emitente` e fechou os comentários que faltavam; as invariantes do final deram zero. O `dfe:replicar --estrutura` fechou em **zero diferenças** (23 tabelas, 469 colunas, 83 constraints, 66 índices, 13 triggers, 13 sequences, 492 comentários). As colunas estão **vazias** em produção: quem as preenche é o `dfe:conciliar` na homolog, e elas chegam à produção pela carga do `dfe:replicar` (`dpc_dfe_emitente` é classe FULL). Sem as colunas, a ApiDPC nova (categoria pelo grupo do emitente) dá ORA-00904; com elas vazias, toda nota cai em Sem classificação até a carga.
 
+- **⏳ Pendente em produção (13/10/2026): comprador do fornecedor.** `dpc_dfe_emitente` ganhou `seq_comprador_erp` e `dsc_comprador_erp` no `ddl/01_estrutura_motor_dbeaver.sql` (594 statements), aplicado **só na homolog**. A produção está com 469 colunas e a homolog com 471, e `dfe:replicar --estrutura` acusa exatamente essas 2. **Rodar o `01` antes do deploy da ApiDPC**, senão a lista da Gestão de NFe e da tela NF-e dão ORA-00904. Só com ordem explícita.
+
 ## O que falta para o módulo andar em produção
 
 1. **Carga inicial** dos dados: `dfe:replicar --carga-inicial --confirmar`, pelo servidor 16 (rede de ~15 ms: do notebook é 10× mais lenta), acompanhada, **só com autorização explícita**. Antes, confirmar espaço no `TSD_POSEIDON` (eram ~1,9 GB a copiar e havia 43 MB livres nos arquivos atuais, com autoextensão).

@@ -231,6 +231,8 @@ cai em `SEM_CLASSIFICACAO`, que nao parece falha).
 A **v13** materializa os dois, e os cinco `OUTER APPLY` sairam. O repositorio da
 tela passou de 35.947 para 29.740 bytes e **nao le mais nada do Consinco**.
 
+> 🔄 **Atualização de 13/10/2026 (2):** a conciliação procura a nota no ERP pela **empresa efetiva** (a destinatária, nas notas `TRANSP`) e passou a gravar também o **comprador do fornecedor** em `dpc_dfe_emitente`; o comprador do item (`detalheEscrituracao`) deixou de ser exibido. Ver [05](05_dados-consumo-frontend.md#empresa-efetiva-da-nota-quando-a-dpc-é-só-a-transportadora-13102026).
+>
 > 🔄 **Atualização de 13/10/2026:** a categoria deixou de ser derivada de CFOP/ocorrência. Agora vem do **grupo do emitente** no cadastro de pessoas do ERP, que a conciliação também grava (em `dpc_dfe_emitente`). `cod_cfop_erp` e `dsc_ocorr_dev_erp` seguem gravados, mas **não definem mais a categoria**. Ver [05](05_dados-consumo-frontend.md#categoria-o-grupo-do-emitente-no-cadastro-de-pessoas-do-c5-13102026).
 
 ### Grava os insumos, nao a categoria

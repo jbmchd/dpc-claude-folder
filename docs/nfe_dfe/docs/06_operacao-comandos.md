@@ -277,6 +277,10 @@ Marca quais notas capturadas já entraram no ERP. **É o único ponto do módulo
 
 Grava `status_recebimento`, `seq_nf_erp`, `dta_entrada_erp` e `dta_conciliacao` em `dpc_dfe_nota`.
 
+**Etapa 0, os emitentes** (`--emitentes-limit`, `--emitentes-todos`, `--sem-emitentes`): confere cada CNPJ em `ge_pessoa` e grava em `dpc_dfe_emitente` o **grupo** (que define a categoria) e, para `FORNECEDOR` e `FORNECEDOR CONSUMO` fora das filiais da DPC, o **comprador do fornecedor** (`maf_fornecdivisao`, divisão 1). Cadência: nunca conferido, na hora; não achado, 1 dia; achado, 7 dias. Para preencher campo novo em quem já foi conferido, rodar uma vez com `--emitentes-todos`. A saída traz "Com comprador do fornecedor: N".
+
+**Empresa efetiva (13/10/2026):** a nota é procurada no ERP pela empresa **destinatária**, não pela que capturou, quando `sig_papel_empresa = 'TRANSP'` (ver [05](05_dados-consumo-frontend.md#empresa-efetiva-da-nota-quando-a-dpc-é-só-a-transportadora-13102026)). `--empresa=` filtra pela efetiva. Reconciliar notas já gravadas: `--sem-emitentes --todas --empresa=18,20`.
+
 > **Nunca envolva `nfechaveacesso` em função** ao mexer nessa consulta. Existe o índice `XIE_MLF_NOTAFISCAL_NFE`, e um `trim()` ou `upper()` ali transforma acesso pontual em full scan numa tabela de 390 colunas, a cada 30 minutos.
 
 Só vale para **NF-e**. CT-e não entra em `mlf_notafiscal`, e NFS-e recebida não é registrada no ERP de forma alguma — para nota de serviço, `dpc_dfe_nfse` **é** o registro.

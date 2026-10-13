@@ -23,7 +23,7 @@
 with esperado as (
   select 'dpc_dfe_empresa' as tabela, 14 as colunas, 'motor' as bloco from dual union all
   select 'dpc_dfe_cursor', 16, 'motor' from dual union all
-  select 'dpc_dfe_emitente', 11, 'motor' from dual union all
+  select 'dpc_dfe_emitente', 13, 'motor' from dual union all
   select 'dpc_dfe_execucao', 15, 'motor' from dual union all
   select 'dpc_dfe_documento', 13, 'motor' from dual union all
   select 'dpc_dfe_nota', 69, 'motor' from dual union all

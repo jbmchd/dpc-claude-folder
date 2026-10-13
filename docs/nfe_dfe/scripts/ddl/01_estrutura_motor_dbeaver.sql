@@ -40,6 +40,10 @@
 --   - A CATEGORIA da nota (Compras, Suprimentos, Devolucao) vem do GRUPO do emitente no cadastro de pessoas do ERP,
 --     gravado em dpc_dfe_emitente.dsc_grupo_erp pelo dfe:conciliar (regra do time fiscal, 13/10/2026). Fica
 --     em coluna, e nao em join com o Consinco, porque o CASE roda no WHERE de contagens e filtros.
+--   - O COMPRADOR exibido e o do FORNECEDOR no ERP (maf_fornecdivisao, divisao 1), gravado em
+--     dpc_dfe_emitente.seq_comprador_erp/dsc_comprador_erp so para emitente FORNECEDOR ou FORNECEDOR CONSUMO
+--     (pedido do time fiscal, 13/10/2026). As colunas de comprador de dpc_dfe_nota (item de maior valor) ficam
+--     sem uso.
 --   - Evento orfao (cod_dfe_nota nulo) e valido: o NFeDistribuicaoDFe entrega evento de nota que ainda nao
 --     foi capturada, e nao pode ser descartado.
 --   - DPC_DFE_EMPRESA_CK1/IX1 e DPC_DFE_DOCUMENTO_UK1 NAO existem de proposito (ver secoes 4 e 5).
@@ -297,7 +301,9 @@ begin
           updated_by                 VARCHAR2(50),
           dsc_grupo_erp              VARCHAR2(40),
           seq_pessoa_erp             NUMBER,
-          dta_conferencia_erp        TIMESTAMP(6)
+          dta_conferencia_erp        TIMESTAMP(6),
+          seq_comprador_erp          NUMBER,
+          dsc_comprador_erp          VARCHAR2(40)
         )
         tablespace TSD_POSEIDON
         ]';
@@ -998,7 +1004,9 @@ begin
     select 'updated_by', q'[VARCHAR2(50)]' from dual union all
     select 'dsc_grupo_erp', q'[VARCHAR2(40)]' from dual union all
     select 'seq_pessoa_erp', q'[NUMBER]' from dual union all
-    select 'dta_conferencia_erp', q'[TIMESTAMP(6)]' from dual
+    select 'dta_conferencia_erp', q'[TIMESTAMP(6)]' from dual union all
+    select 'seq_comprador_erp', q'[NUMBER]' from dual union all
+    select 'dsc_comprador_erp', q'[VARCHAR2(40)]' from dual
   ) loop
     begin
       select count(*) into qtd from all_tab_columns
@@ -2998,6 +3006,10 @@ comment on column poseidon.dpc_dfe_emitente.seq_pessoa_erp is
   'ge_pessoa.seqpessoa do emitente no ERP, para rastrear o cadastro de origem. Nulo quando o CNPJ nao foi encontrado.';
 comment on column poseidon.dpc_dfe_emitente.dta_conferencia_erp is
   'Quando o dfe:conciliar conferiu este CNPJ no cadastro do ERP. Nulo = nunca conferido; preenchido com dsc_grupo_erp nulo = conferido e nao encontrado.';
+comment on column poseidon.dpc_dfe_emitente.seq_comprador_erp is
+  'max_comprador.seqcomprador do comprador do FORNECEDOR no ERP (maf_fornecdivisao, divisao 1, fornecedor e comprador ativos). Gravado pelo dfe:conciliar so quando dsc_grupo_erp e FORNECEDOR ou FORNECEDOR CONSUMO; nulo para os demais grupos e para fornecedor sem comprador.';
+comment on column poseidon.dpc_dfe_emitente.dsc_comprador_erp is
+  'Nome do comprador do fornecedor no ERP (max_comprador.comprador). E o que a coluna Comprador da Gestao de NFe e da tela NF-e mostra. Nulo quando o emitente nao e fornecedor ou nao tem comprador.';
 
 --  ---------- DPC_DFE_EXECUCAO ----------
 comment on table poseidon.dpc_dfe_execucao is
@@ -3848,7 +3860,7 @@ select 'objeto invalido', count(*)
 with esperado as (
   select 'dpc_dfe_empresa' as tabela, 14 as esperado from dual union all
   select 'dpc_dfe_cursor', 16 from dual union all
-  select 'dpc_dfe_emitente', 11 from dual union all
+  select 'dpc_dfe_emitente', 13 from dual union all
   select 'dpc_dfe_execucao', 15 from dual union all
   select 'dpc_dfe_documento', 13 from dual union all
   select 'dpc_dfe_nota', 69 from dual union all

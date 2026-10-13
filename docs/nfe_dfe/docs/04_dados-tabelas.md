@@ -221,6 +221,8 @@ Só serve NF-e. Transportadora e prestador de serviço ficam na própria linha d
 
 **Grupo no ERP (13/10/2026):** `dsc_grupo_erp` (VARCHAR2 40, `consinco.ge_pessoa.grupo`: `FORNECEDOR`, `FORNECEDOR CONSUMO`, `CLIENTE`…), `seq_pessoa_erp` e `dta_conferencia_erp` (TIMESTAMP). Gravados pelo `dfe:conciliar`; **definem a categoria da nota** na Gestão de NFe. Nulo com `seq_pessoa_erp` nulo = CNPJ não encontrado (ou ainda não conferido); `dta_conferencia_erp` distingue os dois. Ver [05](05_dados-consumo-frontend.md#categoria-o-grupo-do-emitente-no-cadastro-de-pessoas-do-c5-13102026).
 
+**Comprador do fornecedor (13/10/2026):** `seq_comprador_erp` (NUMBER) e `dsc_comprador_erp` (VARCHAR2 40), gravados pelo `dfe:conciliar` a partir de `maf_fornecdivisao` (divisão 1). **Só** para emitente de grupo `FORNECEDOR` ou `FORNECEDOR CONSUMO` e fora das filiais da própria DPC; nulo nos demais. É o que a coluna Comprador das telas mostra. As colunas homônimas de `dpc_dfe_nota` (comprador do item) seguem gravadas, mas **sem uso**. Ver [05](05_dados-consumo-frontend.md#comprador-o-do-fornecedor-no-cadastro-do-c5-13102026).
+
 ### `DPC_DFE_EVENTO` — eventos
 
 **Uma linha por (chave, tipo de evento, sequência).** Ciência, confirmação, cancelamento, carta de correção, MDF-e autorizado.
