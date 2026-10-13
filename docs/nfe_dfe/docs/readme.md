@@ -26,7 +26,7 @@ e NFS-e de entrada direto da SEFAZ (`DistDFe`) e do ADN Nacional, dentro da
 | **Quando o motor consulta a SEFAZ** — a regra de negócio inteira, num lugar só | [03_conhecimento-motor.md §2](03_conhecimento-motor.md) |
 | **Rodar / operar** os comandos | [06_operacao-comandos.md](06_operacao-comandos.md) |
 | **Subir em um ambiente** | [08_operacao-runbook-deploy.md](08_operacao-runbook-deploy.md) |
-| **Levar o módulo para a PRODUÇÃO** — estrutura de banco, ordem dos scripts, replicação homolog → produção | [scripts/producao/P1_00_LEIA_ordem_producao.md](../scripts/producao/P1_00_LEIA_ordem_producao.md) + [`dfe:replicar` em 06](06_operacao-comandos.md#dfereplicar) |
+| **Levar o módulo para a PRODUÇÃO** — estrutura de banco, ordem dos scripts, replicação homolog → produção | [scripts/producao/LEIA_instalar_em_producao.md](../scripts/producao/LEIA_instalar_em_producao.md) + [`dfe:replicar` em 06](06_operacao-comandos.md#dfereplicar) |
 | Saber **o que cada tabela** guarda | [04_dados-tabelas.md](04_dados-tabelas.md) |
 | **Consumir os dados** numa tela | [05_dados-consumo-frontend.md](05_dados-consumo-frontend.md) |
 | **Instalar ou alterar a base** | [07_ddl-instalacao.md](07_ddl-instalacao.md) |
@@ -184,17 +184,17 @@ workspace/
     │
     └── scripts/                             SO .sql de DBeaver
         ├── levantamento-nfse-municipios.sql   diagnostico, nao instalacao
-        └── ddl/                             o UNICO caminho de instalacao
-            ├── 01_01_estrutura              ┐
-            ├── 01_02_estabelecimentos       │ BLOCO 01 - MOTOR
-            ├── 01_03_parametros             │ 13 tabelas de captura
-            ├── 01_04_validacao              ┘
-            ├── empresas/                    ┐ UM PAR POR EMPRESA
-            │   ├── 20_01 · 20_99_rollback   │ trazida depois da carga
-            │   ├── 29_01 · 29_99_rollback   │ geral. O numero do arquivo
-            │   └── 30_01 · 30_99_rollback   ┘ E o numero da empresa
-            ├── 03_01_parametrizacao_telas   BLOCO 03 - permissao e limiar dos paineis
-            └── rollback/                    o desfazer de cada bloco (NN_99_...)
+        ├── ddl/                             o UNICO caminho de instalacao (convergente)
+        │   ├── 01_estrutura_motor           17 tabelas de captura
+        │   ├── 02_estrutura_telas           6 tabelas de permissao, colunas, modelos e alerta
+        │   ├── 03_parametros                os 11 dfe_*
+        │   ├── 04_validacao                 somente leitura
+        │   └── rollback/                    UM por DDL (01_99, 02_99, 03_99)
+        ├── homolog/                         dado e valor SO da base de teste
+        │   ├── 01_estabelecimentos · 02_parametros_homolog
+        │   └── empresas/ 20_01 · 29_01 · 30_01
+        ├── operacao/                        pausa_empresas · retomada_empresas
+        └── producao/                        LEIA_instalar_em_producao.md
 ```
 
 Arquitetura da ApiNFE como um todo (não só o DFe):
@@ -207,7 +207,7 @@ Arquitetura da ApiNFE como um todo (não só o DFe):
 | Base normalizada | **18.757 documentos**, todos concluídos — 0 pendente, 0 erro, 0 ignorado |
 | Fluxos ativos | **0 de 60** (15 empresas × 4 tipos) — TODOS os cursores pausados desde 24/09/2026, janela para o teste real de manifestação. Estado exato de antes da pausa gravado (fora do repo, no scratchpad da sessão que pausou) |
 | Ambiente | roda em `dkalpha00`, cron ativo, base **homolog**, SEFAZ **real** |
-| Produção | **o motor não vive lá, por decisão de 09/09/2026.** prd serve só para o `dfe:conciliar` **ler** a Consinco e confirmar o que o ERP recebeu. As tabelas `dpc_dfe_*` **existem** em prd desde 25/08/2026 — 12 delas, com `dpc_dfe_nota` em 26 colunas contra 37 em tst — mas estão **órfãs**: ninguém as usa. Os 6 parâmetros realmente não foram carregados lá |
+| Produção | **estrutura instalada em 13/10/2026, idêntica à da homolog** (`dfe:replicar --estrutura`: zero diferenças). Os dados ainda **não** foram copiados: a carga inicial exige autorização explícita. O motor não vive lá (decisão de 09/09/2026); prd serve ao `dfe:conciliar` para **ler** a Consinco. As tabelas legadas `dpc_sefaz_*` foram renomeadas para `dpc_dfe_*` (a ApiDPC de produção só muda no deploy do Douglas, via PR). Ver [LEIA_instalar_em_producao](../scripts/producao/LEIA_instalar_em_producao.md) |
 | CNPJs livres da Qive | **apenas 900 (ALL CARS)**, que nem está cadastrada lá. **Correção de 23/09/2026:** a 30 (DPC MS) NÃO está livre — a lista anterior estava errada. Todos os outros 13 CNPJs, inclusive a 30, seguem com a Qive e o NSU é compartilhado (por CNPJ, não por certificado) |
 | `dfe:replicar` | **agendado desde 07/10/2026, mas desligado** (`dfe_replicacao_prd` não existe ainda na homolog = off): a cada 5 min copia o motor da homolog para a produção até o motor subir lá; `--reconciliar` às 3h. Carga inicial em produção **só com autorização explícita**. Ver [06_operacao-comandos.md](06_operacao-comandos.md#dfereplicar) |
 | `dfe:manifestar` | **agendado desde 24/09/2026** (Fases 2 e 3): `--evento=210210 --auto --confirmar` nos minutos `7,37`, `--evento=210200 --auto --confirmar` no minuto `22`, ambos com a janela noturna 22h-06h. Não manifesta nada sozinho hoje: as 15 empresas estão com `status_manifestar='N'` e as duas flags de automação em `'N'`. Endpoint manual `POST dfe/manifestar` (Fase 4) também existe, atrás da permissão `MANIFESTAR` (ninguém tem ainda). Ver [06_operacao-comandos.md](06_operacao-comandos.md) |
@@ -224,6 +224,6 @@ Itens abertos, com o porquê de cada um:
 | **Certificado nunca é versionado** | os dois `.pfx` e o `02_certificado_all_cars_tst.sql` — que carrega o PFX em base64 e a senha — ficam em `itens/`, e a pasta **inteira** está no `.gitignore` desde 09/09/2026. A regra era por nome de arquivo e um rename a burlou em silêncio, pela segunda vez; ignorar a pasta protege o propósito, e não um nome. O motor lê o certificado do banco, não do disco |
 | **Pasta `scripts/` só tem `.sql`** | nenhum README lá dentro: a explicação de cada grupo é um documento do hub, e o [catálogo](09_catalogo-scripts.md) diz qual |
 | **DDL em CRLF** | em LF o DBeaver corta o bloco PL/SQL no `end if;` e devolve `PLS-00103`. Garantido por `workspace/.claude/.gitattributes` |
-| **`ddl/01_03_parametros` antes do deploy** | ele carrega valores que o código **lê**; na ordem inversa o freio cai para 5 e o motor se trava em silêncio, e a conciliação passa a ler o clone de homologação em vez de produção |
-| **Os dois caminhos terminam no `04_parametros`** | `DPC_PARAMETRO` é tabela compartilhada do ecossistema, então o `01_estrutura` **não** carrega as linhas dela |
+| **`ddl/03_parametros` antes do deploy** | ele carrega valores que o código **lê**; na ordem inversa o freio cai para 5 e o motor se trava em silêncio, e a conciliação passa a ler o clone de homologação em vez de produção |
+| **A estrutura não carrega parâmetros** | `DPC_PARAMETRO` é tabela compartilhada do ecossistema, então `01_estrutura_motor` e `02_estrutura_telas` **não** carregam as linhas dela: é o `03_parametros` |
 | **Nunca escrever `nro_ultimo_nsu` a mão** | valor arbitrário = `cStat 656` e certificado bloqueado por 1 hora, atingindo todas as filiais do e-CNPJ |

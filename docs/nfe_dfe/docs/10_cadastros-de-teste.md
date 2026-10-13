@@ -14,7 +14,7 @@ motor. Em **09/09/2026 virou três**: a Qive foi removida também da empresa 29.
 | Qive atende? | não | não (confirmado 18/08/2026) | não (removida em 09/09/2026) |
 | Serve para produção? | **não** — cadastro descartável de `tst` | sim, é filial real | sim, é filial real |
 | Movimento | pouco (`ultNSU` 87, imóvel) | real: ~847 NF-e + ~375 CT-e/dia | a medir |
-| Scripts | **removidos em 09/09/2026** — a ALL CARS saiu do repositório por ser descartável; o certificado dela vive em `itens/`, fora de versionamento. Recuperáveis no histórico do git | [`empresas/30_01`](../scripts/ddl/empresas/30_01_empresa_30_dbeaver.sql) e [`30_99`](../scripts/ddl/empresas/30_99_rollback_empresa_30_dbeaver.sql) | [`empresas/29_01`](../scripts/ddl/empresas/29_01_empresa_29_dbeaver.sql) e [`29_99`](../scripts/ddl/empresas/29_99_rollback_empresa_29_dbeaver.sql) |
+| Scripts | **removidos em 09/09/2026** — a ALL CARS saiu do repositório por ser descartável; o certificado dela vive em `itens/`, fora de versionamento. Recuperáveis no histórico do git | [`homolog/empresas/30_01`](../scripts/homolog/empresas/30_01_empresa_30_dbeaver.sql) (o `30_99` saiu em 13/10/2026; está no git, commit `64f6a7a`) | [`homolog/empresas/29_01`](../scripts/homolog/empresas/29_01_empresa_29_dbeaver.sql) (idem para o `29_99`) |
 
 O certificado compartilhado é a armadilha das duas filiais reais, e ela deixou
 de ser teórica em **09/09/2026**: o fluxo NF-e da empresa 30 tomou `cStat 656`

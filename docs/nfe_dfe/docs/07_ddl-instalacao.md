@@ -1,326 +1,106 @@
 # Instalar e alterar a base do módulo DFe
 
-> Os scripts vivem em **`nfe_dfe/scripts/`** e aquela pasta
-> contém **somente `.sql` para o DBeaver** — toda a explicação está aqui.
+> Os scripts vivem em **`nfe_dfe/scripts/`** e aquela pasta contém **somente `.sql` para o DBeaver** — toda a explicação está aqui e no [catálogo](09_catalogo-scripts.md).
 >
-> Schema `POSEIDON`, tablespace `TSD_POSEIDON`. Rodar como `POSEIDON`, no
-> DBeaver, **cada arquivo inteiro com `Alt+X`**, sem `/` para terminar bloco.
+> Schema `POSEIDON`, tablespace `TSD_POSEIDON`. Rodar como `POSEIDON`, no DBeaver, **cada arquivo inteiro com `Alt+X`**, sem `/` para terminar bloco, com o **DBMS_OUTPUT ligado**.
 >
-> Os arquivos são **CRLF por `.gitattributes`**. Em LF o divisor de statements do
-> DBeaver corta o bloco PL/SQL no `end if;` e devolve `PLS-00103`. Foi assim que
-> o `v10` falhou, e o instalador de produção tinha o mesmo problema.
+> Os arquivos são **CRLF por `.gitattributes`**. Em LF o divisor de statements do DBeaver corta o bloco PL/SQL no `end if;` e devolve `PLS-00103`. Dentro de um bloco PL/SQL **não pode haver linha em branco** (o DBeaver a trata como fim de statement).
 
 ---
 
-## Um caminho só
+## Um caminho só, com três arquivos
 
-Até 09/09/2026 havia dois, e escolher errado custava caro. Hoje é um: os
-arquivos de **`scripts/ddl/`**, em três blocos.
+Reescrito em **13/10/2026**: o que eram 17 arquivos acumulados (14 blocos, de 02/09 a 07/10) virou **um instalador convergente por assunto**. Cada um serve a base **vazia, parcial ou completa**, e rodar duas vezes dá o mesmo resultado da primeira.
 
-| | |
-|---|---|
-| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/`, depois `04_01` → `04_02` |
-| **Desfazer** | os `_99` de `empresas/` → `03_99` → `04_98` → `04_99` → `01_99`, do mais específico para o motor |
-
-> **Correção de dado não mora aqui.** Script que conserta linha vive em
-> `scripts/ajustes_unicos/`, fora de `ddl/`, e **não entra em nenhuma das duas
-> listas** — numa base recém-criada não há o que consertar. Ver
-> [09_catalogo-scripts.md §4c](09_catalogo-scripts.md).
-
-> **`04_01`/`04_02` não estavam nesta lista até 24/09/2026** — a manifestação
-> nasceu depois deste documento e ficou fora do caminho de instalação por 1 dia.
-> Sem eles, um ambiente novo sobe sem a fundação da manifestação (fila por
-> evento, prazos, trancas) e sem a permissão de tela da Fase 4. As colunas de
-> `dpc_dfe_empresa` que o `04_02` acrescenta também foram espelhadas no `01_01`
-> como reforço (mesmo motivo do `04_01` — ver seu próprio cabeçalho), mas
-> `dpc_dfe_usuario_permissao` (tabela nova, sem histórico de legado como
-> `dpc_dfe_usuario_aba`) só nasce pelo `04_02` — rodar este bloco não é opcional.
-
-O primeiro número é o bloco, o segundo é a ordem dentro dele. O `_99` de cada
-bloco é o rollback daquele bloco e fica em **`ddl/rollback/`** (o de cada
-empresa, em `ddl/empresas/`, continua ao lado do seu `_01`).
-
-O que eliminou a escolha foi a **seção 3 do `01_01`**: ela confere as 273
-colunas uma a uma e acrescenta a que faltar. O `create table` da seção 2 é
-pulado quando a tabela existe — era exatamente por isso que uma base parcial
-precisava de um segundo conjunto de arquivos, que fazia por `ALTER` o que o
-instalador fazia por `CREATE`.
-
-> **Por que o `01_03` existe separado.** Ele carrega os 6 parâmetros em
-> `POSEIDON.DPC_PARAMETRO`, que é tabela **compartilhada do ecossistema**: já
-> existe, não pertence ao módulo, e por isso nunca entrou no `01_01`.
->
-> Isso ficou por um dia como "seção 5 do arquivo de alterações, com um aviso
-> dentro". Virou passo numerado da instalação porque **aviso dentro de um
-> arquivo de 66 KB não é garantia** — e o custo de esquecer é o freio de consumo
-> indevido cair para o default 5, ficar abaixo do ruído normal, e o motor se
-> recusar a consultar a SEFAZ **em silêncio**. O quinto parâmetro tem um custo
-> parecido e ainda mais discreto: sem `dfe_conexao_erp`, a conciliação lê o
-> clone de homologação e conclui que **nenhuma** nota entrou no ERP.
-
-## 1. Bloco 01 — o motor
-
-| # | Arquivo | O que faz | Escreve? |
-|---|---|---|---|
-| 1 | `01_01_estrutura` | 13 tabelas, 13 sequences, 13 triggers, 54 constraints, 24 índices, 286 comentários — e a seção 3, que reconcilia as 273 colunas | sim (DDL) |
-| 2 | `01_02_estabelecimentos` | 12 CNPJs e 48 fluxos, **todos pausados** | sim (DML) |
-| 3 | `01_03_parametros` | os 6 parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
-| 4 | `01_04_validacao` | confere motor e telas; a seção 5 faz insert + `rollback` | praticamente não |
-| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 6 parâmetros | sim |
-
-Depois do bloco 01 vêm os outros dois, cada um com o seu rollback:
-
-| Bloco | Arquivo | O que faz |
+| # | Arquivo (`scripts/ddl/`) | O que entrega |
 |---|---|---|
-| `empresas/` | `20_01_empresa_20` · `29_01_empresa_29` · `30_01_empresa_30` | um par por estabelecimento trazido depois da carga geral: identidade, 4 fluxos pausados e a cópia do certificado da empresa 1. O número do arquivo é o número da empresa. A **17** não tem par: veio na carga geral e já tinha certificado próprio no ERP — só precisa ser ativada |
-| 03 | `03_01_parametrizacao_telas` | `dpc_dfe_usuario_empresa`, `dpc_dfe_usuario_aba` e `dpc_dfe_painel_alerta` |
-| 04 | `04_01_manifestacao` | fundação da manifestação (23/09/2026): 6 colunas novas em `dpc_dfe_manifestacao`, UK com sequência, 2 trancas de automação em `dpc_dfe_empresa`, 4 parâmetros. Rollback: `04_99` |
-| 04 | `04_02_manifestacao_fases_2a4` | Fases 2-4 (24/09/2026): corte de data da Confirmação automática (`dta_inicio_manif_auto_conf`) e a tabela `dpc_dfe_usuario_permissao` (permissão da tela manual). Rollback: `04_98` |
-| 06 | `06_01_colunas_usuario` | Tabela `dpc_dfe_usuario_coluna` (01/10/2026): guarda no servidor as colunas que cada usuario escolheu no Monitor, no lugar do `localStorage`, que era por navegador. Rollback: `06_99` (destrutivo — apaga a configuracao de todos) |
-| 08 | `08_01_nfe_satelites` | 3 tabelas satélite da NF-e (`dpc_dfe_nota_total`, `_transporte`, `_cobranca`) e 31 colunas em `dpc_dfe_nota` (02/10/2026): totais de imposto, frete, cobrança, endereços e informações adicionais, tudo extraído do XML. PK = `cod_dfe_nota` nas três, que garante o 1:1 sem trigger. **Antes** do deploy da ApiNFE que grava essas colunas. Rollback: `08_99` (destrutivo nas 3 tabelas; o conteúdo é reconstruível pelo reprocessamento) |
-| 08 | `08_02_nfe_volume_listas` | as três listas de volume de 400 para 1000 (02/10/2026). O 400 saiu de uma amostra; na carga apareceu a nota real com 16 espécies e 409 caracteres, e o ORA-12899 derrubou o documento inteiro. **Rodar com a carga parada** — `ALTER` precisa de lock exclusivo. Sem rollback: reduzir de volta falharia em qualquer linha acima de 400 |
-| 09 | `09_01_cte_conferencia_mensal` | 15 colunas em `dpc_dfe_cte` (03/10/2026): nomes dos quatro papéis, tomador avulso (`toma4`), ICMS (CST, base, valor, alíquota), data de autorização, CT-e complementado e os três da reforma. A lista saiu do **"Modelo Conferência Mensal CTE"**, que a equipe fiscal mantém salvo no relatório avançado da Qive — 27 das 96 colunas, das quais a tela já cobria 16. **Sem bloco PL/SQL**: um único `ALTER`, porque o DBeaver corta bloco (foi a segunda vez; ver `08_02`). Não é idempotente de propósito — o `SELECT` do cabeçalho diz se já rodou. Rollback: `09_99` |
-| 10 | `10_01_relatorio_colunas` | Amplia a CHECK de `dpc_dfe_usuario_coluna.dsc_tela` para aceitar `NFE_REL`, `CTE_REL` e `NFSE_REL` (03/10/2026) — a preferência de colunas do menu **Sefaz > Relatórios Avançados**, guardada à parte da tela do dia a dia. Dois `ALTER` simples (drop + add da constraint), sem bloco PL/SQL; as linhas existentes cabem na condição nova. **Aplicado em homolog em 03/10/2026.** Rollback: `10_99` (apaga só as preferências `_REL`, sem as quais a CHECK antiga não volta) |
-| 11 | `11_01_modelos_usuario` | Tabela `dpc_dfe_usuario_modelo` (05/10/2026): os modelos nomeados de filtro (`F`) e de colunas (`C`) da busca avançada, com `dsc_conteudo` em CLOB (JSON opaco). UK por `(usuario, dsc_tela, tip_modelo, nom_modelo)`; CHECKs fecham família e tipo. **Antes** do deploy da ApiDPC que grava modelos — sem a tabela, salvar responde erro. **Aplicado em homolog em 05/10/2026.** Rollback: `11_99` (destrutivo: apaga todos os modelos, que não derivam de nenhum outro dado) |
-| 12 | `12_01_nota_cfop_xml` | Coluna `cod_cfop_xml NUMBER(4)` em `dpc_dfe_nota` (06/10/2026): o CFOP **declarado no XML** (o do item de maior `vlr_item`; empate: menor item), para a **Gestão de NFe** prever a categoria da nota pendente antes de o ERP escriturar. Anulável e sem `DEFAULT` (nulo = não calculado ou só resumo). **Antes** do deploy da ApiNFE e da ApiDPC desta entrega — sem a coluna o insert dos itens e a listagem da tela dão `ORA-00904`. Depois: `ajustes_unicos/2026-10-06_nota_cfop_xml` preenche o acervo. **Provado em cópia vazia; aplicação em homolog pendente.** Rollback: `12_99` (seguro: dá para recalcular dos itens) |
-| 13 | `13_01_manifestacao_pedido` | Pedido de **manifestação em massa** (07/10/2026): tabela `dpc_dfe_manif_pedido` (cabeçalho: quem pediu, evento, solicitadas/aceitas/recusadas, status A/C) e, em `dpc_dfe_manifestacao`, a coluna `cod_dfe_manif_pedido`, a FK2 e o índice `IX2 (pedido, status_envio)`. Sem `DEFAULT` na coluna, para o Oracle não reescrever a tabela. **Antes** do deploy da ApiNFE e da ApiDPC desta entrega: sem a coluna, a listagem de NF-e e o envio manual dão `ORA-00904`. Depois: `ajustes_unicos/2026-10-07_parametros_fila_manifestacao`. **Provado em cópia; aplicado em homolog em 07/10/2026.** Rollback: `rollback/13_99` (destrutivo para o histórico de pedidos) |
-| 14 | `14_01_usuario_aba_propria` | Amplia a CHECK `DPC_DFE_USUARIO_ABA_CK1` de `dpc_dfe_usuario_aba` para aceitar a categoria **`PROPRIAS`** (07/10/2026): a aba "Notas próprias - DPC" da Gestão de NFe (emitente da raiz do grupo, 66.471.517 — transferências entre filiais). Drop + add da constraint, sem PL/SQL; nenhuma linha existente muda. **Antes** do deploy da ApiDPC desta entrega: com o código novo no ar e sem permissão concedida, as notas próprias somem das outras abas e ninguém vê a nova. Depois: `ajustes_unicos/2026-10-07_aba_propria_usuarios` (libera aos 6 usuários que têm Sem Classificação). **Provado em cópia; aplicação em homolog pendente.** Rollback: `rollback/14_99` (apaga antes as permissões `PROPRIAS`, senão a CHECK antiga não volta) |
-| 07 | `07_01_nfse_tipo_emissao` | 12 colunas em `dpc_dfe_nfse` (02/10/2026): tipo de emissão (o `cStat`), data de emissão e de cancelamento, chave da substituta, municípios por extenso e endereço do prestador. **Antes** do deploy da ApiNFE que grava essas colunas — depois dele, sem o bloco, toda NFS-e falha com ORA-00904. Rollback: `07_99` |
+| 1 | `01_estrutura_motor_dbeaver.sql` | **17 tabelas** do motor: `empresa`, `cursor`, `emitente`, `execucao`, `documento`, `nota` (+ `item`, `total`, `transporte`, `cobranca`), `cte` (+ `cte_nfe`, `cte_evento`), `nfse`, `evento`, `manifestacao`, `manif_pedido` — com sequences, triggers, constraints, índices e comentários |
+| 2 | `02_estrutura_telas_dbeaver.sql` | **6 tabelas** de tela: `usuario_empresa`, `usuario_aba`, `usuario_permissao`, `usuario_coluna`, `usuario_modelo`, `painel_alerta` |
+| 3 | `03_parametros_dbeaver.sql` | os **11** parâmetros `dfe_*` de `DPC_PARAMETRO` (só insere o que falta; nunca atualiza) |
+| — | `04_validacao_dbeaver.sql` | somente leitura; compare com o ESPERADO de cada seção (a seção 5 faz um insert que termina em `rollback`) |
+| — | `rollback/01_99`, `02_99`, `03_99` | **um rollback para cada DDL** (derruba o motor / as telas / remove os parâmetros) |
 
-A maioria é **reexecutável**: objeto criado só se ainda não existir, linha
-inserida só se ainda não existir, coluna acrescentada só se faltar. Falha no
-meio se resolve corrigindo e rodando de novo. **Exceção (medida em 07/10/2026):**
-`09_01`, `11_01`, `12_01` e `13_01` são de **execução única** — na segunda vez dão
-erro Oracle (coluna, tabela ou FK já existe). Não estragam dado; se um parar no
-meio, rode só o que faltou, guiado pelo `select` do cabeçalho.
+**Instalar:** `01` → `02` → `03`; depois `04`. **Desfazer:** `02_99` → `01_99` → `03_99`.
 
-### Instalar em PRODUÇÃO
+Dado e valor que só existem na base de **teste** (estabelecimentos, as empresas 20/29/30 com o certificado, `dfe_conexao_erp` e `dfe_replicacao_prd`) ficam em **`scripts/homolog/`**; operação recorrente (pausar e retomar empresas) em **`scripts/operacao/`**. Nada disso entra numa instalação de produção, onde os dados vêm da replicação (`dfe:replicar`). A ordem para um ambiente novo, e o que foi feito na produção em 13/10/2026, estão em [`scripts/producao/LEIA_instalar_em_producao.md`](../scripts/producao/LEIA_instalar_em_producao.md).
 
-A produção **não** segue a lista acima inteira: tem 12 tabelas `dpc_dfe_*` órfãs a
-apagar antes, e não recebe os arquivos que carregam dado ou valor de homologação.
-A ordem exata, o que fica de fora e por quê estão em
-[`scripts/producao/P1_00_LEIA_ordem_producao.md`](../scripts/producao/P1_00_LEIA_ordem_producao.md)
-(`P1_01` drop → `01_01` … `14_01` → `P1_02` parâmetros). Aceite: comparador de
-estrutura homolog × produção com zero diferenças. Os dados vêm depois, por `dfe:replicar`.
+### Como o arquivo é convergente
 
-### Por que não há um único `alter` aqui
+Cada seção dos instaladores 1 e 2 é uma lista de blocos guardados por consulta ao dicionário:
 
-A estrutura de homologação foi construída por um `install_dbeaver.sql` mais cinco
-alters (`v2`–`v6`). **Aqueles arquivos foram removidos do repositório** em
-20/08/2026 — seguem no histórico do git — porque não serviam para instalar em
-produção, e não era questão de estilo:
+| Seção | O que faz | Se já existe |
+|---|---|---|
+| 1 Sequences · 2 Tabelas | cria | pula |
+| **3 Colunas** | confere cada coluna **uma a uma** e acrescenta a que faltar | no-op |
+| **4 Constraints** | PK e FK: cria se faltar. **UK e CHECK: derrubam e recriam se a definição difere** (uma UK que ganhou coluna, uma CHECK que aceitou valor novo) | no-op |
+| 5 Índices | cria se faltar | pula |
+| 6 Triggers · 7 Comentários | `create or replace` / `comment on` | reescreve igual |
+| 8 Conferência | invariantes e contagem por tabela | só leitura |
 
-| O que o script antigo faria | Por que é errado |
+Coluna nova do módulo entra em **dois lugares** do mesmo arquivo: no `create table` (seção 2) e na lista da seção 3. **Nunca** se acrescenta um script de "alteração" separado — foi essa divergência entre instalador e alters que, em 09/09/2026, voltou a base de teste 13 dias e inutilizou os alters antigos para produção.
+
+O que o instalador **não** faz: não altera tipo nem tamanho de coluna existente (`MODIFY` pode falhar por causa do dado e não cabe em script automático — a divergência aparece no `04_validacao` e no `dfe:replicar --estrutura`) e coluna `NOT NULL` sem `DEFAULT` acrescentada a tabela **com linhas** falha com `ORA-01758` (é o certo; o `DBMS_OUTPUT` diz qual coluna exige decisão humana).
+
+### Prova de que o arquivo novo equivale ao antigo (13/10/2026)
+
+Os instaladores foram gerados do **dicionário da homolog** e provados numa cópia descartável (`DPC_DFE_` → `ZZP_DFE_`, mesma largura) em quatro partidas, todas com **0 erros do Oracle** e estrutura **idêntica** à da homolog (23 tabelas, 466 colunas, 83 constraints, 66 índices, 13 triggers, 13 sequences):
+
+| Partida | Resultado |
 |---|---|
-| criaria `DPC_DFE_EMPRESA_CK1` e `_IX1` | são sobre `status_sincronismo`, `dta_liberado_em` e outras colunas de cursor que **saíram** daquela tabela no `v2`. Recriar é ressuscitar objeto sobre coluna inexistente |
-| manteria `DPC_DFE_DOCUMENTO_UK1 (empresa, nsu)` | foi **substituída** pela `UK2 (cursor, nsu)`. O NSU é sequencial **por fluxo**: o NSU 100 da NF-e e o NSU 100 do CT-e são documentos diferentes e colidiriam. A unique que protege contra duplicidade viraria **perda de documento** |
+| base **vazia** | instala tudo; a 2ª passada é no-op |
+| por cima do **estado antigo** (os 14 arquivos anteriores) | no-op |
+| por cima de **só o `01_01` antigo** (parcial) | acrescenta as 60 colunas que faltavam e converge |
+| CHECK da aba sem `PROPRIAS`, UK da manifestação sem a sequência e uma coluna removida | redefine as duas constraints e re-acrescenta a coluna; a passada seguinte é no-op |
 
-Os arquivos de hoje são o **estado final**, com os deltas já aplicados.
+Única diferença para a homolog: **28 colunas que estavam sem comentário** (as três tabelas satélite da NF-e, `manif_pedido`, `usuario_coluna` e `usuario_modelo`) ganharam o seu. É só `COMMENT ON`; sai na primeira vez que o arquivo rodar em cada ambiente.
 
-### Antes de rodar — uma decisão e duas conferências
+---
 
-**A decisão: quais CNPJs entram.** O `02` cadastra 13 — as 12 filiais de
-homologação mais a empresa 30 (MS). A **ALL CARS (900) não entra**: é cadastro de
-teste e o certificado dela não existe em produção. Se a lista estiver errada,
-ajuste as linhas da seção 1 do `02` antes de rodar; cada uma é um `insert`
-independente e guardado.
+## Antes de rodar
 
-**Conferência 1 — o tablespace.** A seção 0 do `01` mostra se `TSD_POSEIDON`
-existe e está `ONLINE`. Se em produção o nome for outro, troque no arquivo antes
-— é o único lugar.
+**Tablespace.** A seção 0 mostra se `TSD_POSEIDON` existe e está `ONLINE`. Se em produção o nome for outro, troque no arquivo antes — é o único lugar.
 
-**Conferência 2 — espaço.** O XML fica em BLOB comprimido em gzip: **~2,3 GB por
-ano** para o corpus de NF-e completo. A guarda legal é de **11 anos** (Ajuste
-SINIEF 2/2025, que ampliou de 5), então dimensione para **~25 GB**, não para o
-primeiro ano.
+**Espaço.** O XML fica em BLOB comprimido em gzip: **~2,3 GB por ano** para o corpus de NF-e completo. A guarda legal é de **11 anos** (Ajuste SINIEF 2/2025), então dimensione para **~25 GB**, não para o primeiro ano. Em 13/10/2026 os dados DFe da homolog somavam **~1,9 GB** (tabelas, índices e LOBs).
 
 ### O que a instalação **não** liga
 
-**Nada consulta nada depois de rodar estes scripts.** Os 52 fluxos nascem com
-`status_sincronismo = 'P'`.
+**Nada consulta nada depois de rodar estes scripts.** A estrutura sozinha não cadastra empresa nem cria fluxo; os fluxos que a homolog tem nascem **pausados**.
 
-Não é cautela genérica. A posição de leitura (o NSU) é **uma por CNPJ e
-compartilhada entre quem consulta**, e hoje quem consulta os CNPJs da DPC é a
-**Qive**. Dois consumidores no mesmo CNPJ é causa documentada de `cStat 656`, que
-bloqueia **aquele CNPJ** por 1 hora (NT 2014.002 item 3.11.4.1). O corte com a
-Qive continua tendo de ser seco: o problema é a sequência de NSU disputada, não
-o certificado.
+Não é cautela genérica. A posição de leitura (o NSU) é **uma por CNPJ e compartilhada entre quem consulta**, e hoje quem consulta os CNPJs da DPC é a **Qive**. Dois consumidores no mesmo CNPJ é causa documentada de `cStat 656`, que bloqueia **aquele CNPJ** por 1 hora (NT 2014.002 item 3.11.4.1). Ativar um fluxo exige antes saber **a data e hora em que a Qive para de consultar aquele CNPJ**.
 
-Ativar um fluxo exige antes saber **a data e hora em que a Qive para de consultar
-aquele CNPJ**. As duas exceções conhecidas são a empresa **900** (que não vai
-para produção) e a empresa **30**.
-
-Além dos fluxos, falta:
-
-- **`RUN_SCHEDULE=1`** no `.env`. O agendamento já está no `Kernel`; com `0`,
-  nada dispara;
-- **certificados.** O levantamento de 06/08/2026 achou, dos 27 CNPJs ativos,
-  apenas **3** com certificado utilizável (empresas 1, 3 e 8): 7 expiraram em
-  13/11/2025 e 2 têm senha errada gravada. É cadastro, não código — a seção 3 do
-  `02` lista a situação de cada um.
-
-> Cadastrar o fluxo **mesmo sem certificado** é o certo: quem reporta validade é
-> o `dfe:monitorar`, e ele só vê o que está cadastrado. Fluxo ausente não gera
-> alerta — foi assim que um vencimento passou **9 meses** sem ninguém notar.
+Falta, além dos fluxos, `RUN_SCHEDULE=1` no `.env` (o agendamento já está no `Kernel`) e os certificados — cadastro, não código. Cadastrar o fluxo **mesmo sem certificado** é o certo: quem reporta validade é o `dfe:monitorar`, e ele só vê o que está cadastrado; fluxo ausente não gera alerta (um vencimento passou **9 meses** assim).
 
 ### Como conferir que ficou igual ao testado
 
-A seção 6 do `03` produz uma **impressão digital** da estrutura: colunas com tipo
-e tamanho, constraints com condição, índices com colunas e direção. Rode **nos
-dois ambientes** e compare.
+O jeito certo é o comando, que lê as duas bases e compara pelo dicionário (colunas com tipo e tamanho, constraints **com a condição das CHECK**, índices com colunas e direção, triggers com o corpo, sequences, comentários):
 
-Contagem por si não basta — não pega coluna com tamanho diferente nem check
-divergente, que é exatamente o erro que só aparece em produção.
+```
+cd ApiNFE
+dev.cmd dfe:replicar --estrutura        # homolog (origem) x o destino configurado
+```
 
-**Duas diferenças são conhecidas e aceitas:**
+**Zero diferenças = pronto.** Sem o comando, a seção 6 do `04_validacao` produz a impressão digital para rodar nos dois ambientes e comparar à mão. Contagem por si não basta: não pega coluna com tamanho diferente nem CHECK divergente.
 
-1. As sequences `DPCS_DFE_CURSOR`, `_CTE`, `_CTE_NFE` e `_NFSE` estão `NOCACHE`
-   em homologação e `CACHE 20` na instalação nova. Uniformizado de propósito.
-2. **Comentários de coluna: 263 na instalação nova, 135 em homologação.**
-   Medido em 02/09/2026. Homologação não foi construída pelo `01_estrutura` — foi
-   pelo `install` antigo mais os alters — e aquele `install` nunca comentou todas
-   as colunas. As duas tabelas criadas pelos alters estão completas
-   (`NOTA_ITEM` 51/51, `CTE_EVENTO` 20/20); as do instalador antigo, não. A
-   instalação nova é **mais** completa, e a diferença aparece só nessa contagem.
+Falso positivo que vale conhecer: `DPCI_DFE_EXECUCAO_CURSOR` aparece no dicionário como `(cod_dfe_cursor, SYS_NC00016$ desc)`. Não é divergência: é como o Oracle guarda índice descendente (coluna virtual oculta; o índice é `FUNCTION-BASED` com a expressão `"DTA_INICIO"`).
 
-Qualquer outra diferença merece investigação.
+---
 
-#### O ESPERADO da seção 1, hoje
+## De onde veio o que está nos instaladores
 
-| Objeto | Esperado |
+| Antes (até 13/10/2026) | Hoje |
 |---|---|
-| tabelas · sequences · triggers | **13** cada |
-| constraints (fora `SYS_%`) | **52** |
-| índices (`all_indexes` de `DPC_DFE%`, inclui os de PK/UK) | **47** |
-| colunas | **263** |
-| comentários de tabela | **13** |
-| comentários de coluna | **263** (homologação mostra 135 — ver acima) |
+| `01_01_estrutura` | `01_estrutura_motor` |
+| `04_01`, `07_01`, `08_01`, `08_02`, `09_01`, `12_01`, `13_01` | `01_estrutura_motor` (as colunas e tabelas do estado final) |
+| `03_01_parametrizacao_telas`, `04_02`, `06_01`, `10_01`, `11_01`, `14_01` | `02_estrutura_telas` (a lógica de rename `dpc_sefaz_* → dpc_dfe_*` saiu: todos os ambientes já migraram) |
+| `01_03_parametros`, parâmetros do `04_01`, `ajustes_unicos/2026-10-07_parametros_fila_manifestacao`, `producao/P1_02` | `03_parametros` (e `dfe_conexao_erp` foi para `homolog/02_parametros_homolog`) |
+| `01_04_validacao` | `04_validacao` |
+| 13 rollbacks por bloco | 3 rollbacks, um por DDL |
+| `01_02_estabelecimentos`, `empresas/*_01` | `homolog/` (os `_99` saíram) |
+| `ajustes_unicos/` (13) | removidos; histórico em [09 §6](09_catalogo-scripts.md); a pausa virou `operacao/` |
 
-Esses números **deixaram de ser digitados à mão** em 02/09/2026: o gerador os
-deriva da estrutura e tem uma autoverificação que o faz **parar** se o script
-emitido discordar. A razão está registrada na seção 2, em "o que a unificação
-consertou".
+Tudo continua no git do `.claude` (último commit com a estrutura antiga: `64f6a7a`).
 
-#### O que essa comparação já achou
-
-Os arquivos foram gerados a partir dos scripts e depois comparados com a
-estrutura real de homologação, objeto por objeto:
-
-| Comparação | Resultado |
-|---|---|
-| 11 tabelas, 190 colunas — tipo, tamanho, nulabilidade, default | **zero divergência** |
-| `DPC_DFE_NOTA_ITEM` (51 colunas) | acrescentada depois; parser validado em **833 itens reais**, 0 erro |
-| 43 constraints — conjunto de nomes | **idênticos** |
-| 9 `CHECK` — condição literal | **todas iguais** |
-| 17 índices próprios — colunas e direção | **todos iguais** |
-| 21 índices restantes | todos de PK/UK; nenhum órfão |
-
-Achou **um erro real**: `'EMIT'` estava escrito como valor aceito em
-`DPC_DFE_CTE_CK1`, e esse valor **não existe** — o parser só devolve `REM`,
-`EXPED`, `RECEB`, `DEST`, `TOMA` ou `OUTRO`. Corrigido, com a explicação junto da
-constraint no `01`.
-
-E um falso positivo que vale conhecer: `DPCI_DFE_EXECUCAO_CURSOR` aparece no
-dicionário como `(cod_dfe_cursor, SYS_NC00016$ desc)`. Não é divergência — é como
-o Oracle armazena índice descendente, criando coluna virtual oculta. O índice é
-`FUNCTION-BASED` com expressão `"DTA_INICIO"`, exatamente o que `dta_inicio desc`
-produz.
-
-## 2. De onde veio o que está no `01_01`
-
-Esta seção é **história**, e não um caminho a rodar. Os arquivos citados aqui
-foram removidos em 09/09/2026, quando o `01_01` passou a servir a qualquer base
-— seguem no git do `.claude` e no da ApiNFE.
-
-Os quatro scripts de estrutura (`v7` a `v10`) foram unificados em 02/09/2026, e
-absorvidos pelo instalador em 09/09. Cada um segue recuperável no histórico do
-git da ApiNFE:
-
-| Seção | O que acrescenta | vinha de | commit |
-|---|---|---|---|
-| 1 | `DPC_DFE_NOTA_ITEM` — os itens da NF-e | `v7` | `1bdc4a7` |
-| 2 | `NOTA.SIG_PAPEL_EMPRESA` — o papel da empresa na nota | `v8` | `ede36cc` |
-| 3 | `NOTA.VLR_TOTAL_PRODUTO` — o `vProd` do `ICMSTot`, para a conferência comparar grandezas iguais | `v9` | `1bdc4a7` |
-| 4 | `DPC_DFE_CTE_EVENTO` — trouxe 2.853 eventos, o comprovante de entrega e **20 CT-e cancelados** (R$ 26.796,56) que passavam por válidos | `v10` | `77771bc` |
-
-O antigo `v11` virou o **`01_03_parametros`**, e o `v12` e o `v13` — a escada de
-estado no ERP e a categoria com o comprador — foram absorvidos pelo `01_01`
-junto com estes quatro.
-
-> **Duas correções de 09/09/2026, feitas ao reinstalar em tst depois de a base
-> de teste ser refeita — no arquivo que depois foi absorvido pelo `01_01`.**
->
-> A seção 1 tinha uma **cópia da conferência da seção 3**, e ela lia
-> `VLR_TOTAL_PRODUTO` — coluna que a seção 3 cria ~300 linhas adiante. Numa base
-> que ainda não tinha a coluna, o script morria com
-> `ORA-00904: "N"."VLR_TOTAL_PRODUTO": invalid identifier`. Era o único forward
-> reference do arquivo. A cópia saiu (a da seção 3 é melhor: filtra pela
-> tolerância de 0,02 e devolve só as divergências), e o comentário que mandava
-> rodar `v9_total_produto_nota_dbeaver.sql` antes saiu com ela — aquele arquivo
-> não existe mais desde a unificação, virou a própria seção 3.
->
-> E o `04` ganhou um **quinto parâmetro**, o `dfe_conexao_erp`. Ele é de outra
-> natureza: os quatro primeiros calibram o motor e o default do código serve;
-> este responde **onde está o ERP**, e o default é "a conexão corrente" — que em
-> homologação é a errada. Tinha sido criado à mão em 03/09 e nenhum script o
-> registrava, então quando a base foi refeita ele sumiu sem deixar rastro e não
-> havia de onde recriá-lo.
-
-Tudo já aplicado em **tst**. Em **prd** nada disto rodou — mas a afirmação que
-estava aqui, de que as tabelas não existem em produção, **era falsa desde
-25/08/2026**: alguém rodou o instalador e a carga inicial lá naquele dia.
-
-Medido em 09/09/2026: prd tem 12 tabelas (falta a `DPC_DFE_CTE_EVENTO`),
-`DPC_DFE_NOTA` com **26 colunas** contra 37 em tst — nenhuma da v12/v13 —, os 13
-estabelecimentos, os 52 fluxos pausados, 0 documento e **0 parâmetro**. É o mesmo
-estado de 27/08 em que homologação foi encontrada naquele dia.
-
-Por decisão de 09/09/2026, **o motor vive só na base de teste**, e produção serve
-exclusivamente para o `dfe:conciliar` **ler** a Consinco. Aquelas 12 tabelas,
-portanto, não são usadas por ninguém. Removê-las é o
-`01_99_rollback_motor_dbeaver.sql` rodado em prd — ele é guardado por existência,
-lida com a 13ª ausente, e **não toca** nas três tabelas de tela, que em prd
-guardam 45 e 16 linhas de permissão de usuário.
-
-**A ordem interna não pode ser mexida**: a seção 3 usa na conferência a coluna
-que a 1 introduz.
-
-**As seções "popular o acervo" são comentário, não statement.** Rodar o arquivo
-**não** reprocessa nada. Quem quiser reinterpretar o acervo já capturado
-descomenta e roda à mão — e isso não custa nenhuma chamada à SEFAZ, porque os
-XML estão guardados em `DPC_DFE_DOCUMENTO`.
-
-### A unificação não mudou uma linha de SQL
-
-Foi concatenação verbatim, com banner de comentário entre as seções. Conferido
-por comparação linha a linha do conteúdo executável: **559 linhas** nos quatro
-originais, 559 no arquivo único, idênticas e na mesma ordem. O `04` idem: **51
-linhas**, iguais às do antigo `v11`.
-
-### O que a unificação consertou
-
-Juntar os arquivos obrigou a olhar o conjunto, e apareceram dois defeitos que
-estavam calados:
-
-| Defeito | Consequência |
-|---|---|
-| O `03_validacao` esperava **12 tabelas** | passava por "ok" sem nunca conferir a 13ª (`DPC_DFE_CTE_EVENTO`), criada pelo `v10` |
-| O `99_rollback` dropava **12 tabelas** | **rollback incompleto que se apresenta como completo** — deixava `DPC_DFE_CTE_EVENTO` de pé, com sequence e trigger |
-
-A causa dos dois era a mesma: as contagens eram literais digitados no gerador, e
-envelheceram quando a estrutura cresceu. Agora derivam de `estrutura_final.json`
-e o gerador **para** se o script emitido discordar da estrutura.
-
-### A regra que impede a divergência voltar
-
-**Toda alteração está também no `01_estrutura` consolidado**, e as duas
-definições saem do **mesmo gerador**, de propósito.
-
-Não é preciosismo: foi a divergência entre o `install` e os cinco alters
-anteriores (`v2`–`v6`) que tornou aqueles scripts inservíveis para produção — o
-install continuava criando objetos que um alter havia removido, e mantinha a UK
-que outro havia substituído. Essa UK, se recriada, transforma a proteção contra
-duplicidade em **perda de documento**.
+---
 
 ### Depois de rodar, se quiser popular os itens do acervo
 
@@ -347,7 +127,7 @@ A conferência que vale está na seção 1 do próprio arquivo — compara a som
 `<det>` com o total que veio do `ICMSTot`. São dois caminhos independentes do
 mesmo XML, e divergência ali aponta extração incompleta.
 
-## 3. Duas colunas que merecem atenção de quem for consultar
+## Duas colunas que merecem atenção de quem for consultar
 
 **`DPC_DFE_CURSOR.NRO_ULTIMO_NSU` é o dado mais sensível do módulo.** É um token
 que a fonte devolve e que só pode ser **continuado**; nem a SEFAZ nem o ADN
@@ -361,7 +141,7 @@ total; o **ADN não informa**. Nesse caso o atraso é **desconhecido, não zero*
 nunca calcule `maximo - ultimo` sem checar `maximo >= ultimo`, senão o painel
 exibe atraso negativo e o total de backlog encolhe.
 
-## 4. Uma assimetria da estrutura que vale saber antes de instalar
+## Uma assimetria da estrutura que vale saber antes de instalar
 
 A **`DPC_DFE_NFSE` não tem colunas de conciliação com o ERP**, ao contrário da
 `DPC_DFE_NOTA`. Foi verificado no banco que a DPC **não registra NFS-e recebida

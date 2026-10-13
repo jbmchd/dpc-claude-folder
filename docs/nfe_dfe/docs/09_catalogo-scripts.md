@@ -1,279 +1,108 @@
 # Catálogo de scripts do módulo DFe
 
-> Onde cada script vive, o que faz e se já rodou. Todos os scripts do módulo
-> moram no hub, e são todos `.sql` de DBeaver.
+> Onde cada script vive, o que faz e se já rodou. Todos os scripts do módulo moram no hub, e são todos `.sql` de DBeaver.
 >
-> **Atualizado em 09/09/2026**, quando os dois caminhos de instalação viraram um
-> só e a pasta foi reorganizada em blocos.
+> **Reescrito em 13/10/2026**: os 17 arquivos de `ddl/` (14 blocos acumulados), os 13 rollbacks por bloco, os pares de rollback por empresa e os 13 ajustes únicos viraram **16 arquivos**. O instalador convergente é o mesmo princípio de 09/09/2026, agora para tudo.
 
-## 1. Um caminho só de instalação, e o que fica fora dele
+---
+
+## 1. O layout
 
 ```
 nfe_dfe/scripts/
-├── levantamento-nfse-municipios.sql     diagnostico, nao instalacao
-├── ajustes_unicos/                      ┐ RODA UMA VEZ E NUNCA MAIS.
-│   ├── 2026-09-30_cancelamento_nfe      │ Corrige LINHA, nao estrutura.
-│   ├── 2026-10-01_papel_resumo          │ Nome por DATA, nao por bloco:
-│   ├── 2026-10-02_nfse_reprocessa       │ o que importa e QUANDO rodou.
-│   ├── 2026-10-02_pausa_completa        │ Fora da instalacao - ver §4c
-│   ├── 2026-10-08_pausa_completa        │ (de novo, apos a retomada de 02/10)
-│   ├── 2026-10-02_nfe_reprocessa_xml    │
-│   ├── 2026-10-03_cte_reprocessa_09_01  │
-│   ├── 2026-10-03_nfse_chave_documento  │
-│   ├── 2026-10-06_nota_cfop_xml         │
-│   ├── 2026-10-07_parametros_fila_...   │
-│   ├── 2026-10-07_aba_propria_usuarios  │
-│   ├── 2026-10-07_param_replicacao_prd  │ (HOMOLOG) liga/desliga o dfe:replicar
-│   └── rollback/                        │ O desfazer de CADA ajuste, mesmo
-│       └── <mesmo nome>_rollback        ┘ nome + _rollback
-├── producao/                            SO PRODUCAO (07/10/2026) - ordem em P1_00_LEIA
-│   ├── P1_00_LEIA_ordem_producao.md     a ordem exata + o que fica de fora
-│   ├── P1_01_drop_orfas_prd             apaga as 12 tabelas orfas (trava dpcdb1)
-│   └── P1_02_parametros_prd             os 11 dfe_* da homolog, sem dfe_conexao_erp
-└── ddl/                                 o UNICO caminho de instalacao
-    ├── 01_01_estrutura                  ┐
-    ├── 01_02_estabelecimentos           │ BLOCO 01 - MOTOR
-    ├── 01_03_parametros                 ┘ as 13 tabelas de captura
-    ├── 01_04_validacao
-    ├── empresas/                        ┐ UM PAR POR EMPRESA trazida depois
-    │   ├── 20_01_empresa_20             │ da carga geral. O numero do arquivo
-    │   ├── 20_99_rollback_empresa_20    │ E o numero da empresa. O rollback
-    │   ├── 29_01_empresa_29             │ DESTE par fica ao lado (a pasta
-    │   ├── 29_99_rollback_empresa_29    │ rollback/ abaixo nao cobre
-    │   ├── 30_01_empresa_30             │ empresas/).
-    │   └── 30_99_rollback_empresa_30    ┘
-    ├── 03_01_parametrizacao_telas       BLOCO 03 - permissao de acesso aos
-    │                                    paineis e limiar de alerta
-    ├── 04_01_manifestacao               ┐ BLOCO 04 - manifestacao do
-    ├── 04_02_manifestacao_fases_2a4     ┘ destinatario: fundacao (23/09) e
-    │                                    Fases 2-4 (24/09), trancas fechadas
-    ├── 06_01_colunas_usuario            BLOCO 06 - preferencia de coluna por usuario
-    ├── 07_01_nfse_tipo_emissao          BLOCO 07 - NFS-e: tipo de emissao, datas e endereco
-    ├── 08_01_nfe_satelites              ┐ BLOCO 08 - NF-e: totais, transporte,
-    ├── 08_02_nfe_volume_listas          ┘ cobranca e 31 campos do XML; o 02 alarga as listas
-    ├── 09_01_cte_conferencia_mensal     BLOCO 09 - CT-e: as 15 colunas do Modelo Conferencia Mensal
-    ├── 10_01_relatorio_colunas          BLOCO 10 - dsc_tela aceita as variantes _REL
-    ├── 11_01_modelos_usuario            BLOCO 11 - modelos salvos de filtro e de colunas
-    ├── 12_01_nota_cfop_xml              BLOCO 12 - CFOP do XML na nota (categoria prevista)
-    ├── 13_01_manifestacao_pedido        BLOCO 13 - pedido de manifestacao em massa
-    ├── 14_01_usuario_aba_propria        BLOCO 14 - aba "Notas proprias - DPC" (CHECK da aba)
-    └── rollback/                        O desfazer de CADA bloco, todos juntos
-        ├── 01_99_rollback_motor
-        ├── 03_99_rollback_telas
-        ├── 04_98_rollback_manifestacao_fases_2a4   (reverte o 04_02)
-        ├── 04_99_rollback_manifestacao             (reverte o 04_01)
-        ├── 06_99_rollback_colunas_usuario
-        ├── 07_99_rollback_nfse_tipo_emissao
-        ├── 08_99_rollback_nfe_satelites
-        ├── 09_99_rollback_cte_conferencia
-        ├── 10_99_rollback_relatorio_colunas
-        ├── 11_99_rollback_modelos_usuario
-        ├── 12_99_rollback_nota_cfop_xml
-        ├── 13_99_rollback_manifestacao_pedido
-        └── 14_99_rollback_usuario_aba_propria
+├── ddl/                                  o UNICO caminho de instalacao (convergente, CRLF)
+│   ├── 01_estrutura_motor_dbeaver.sql    17 tabelas do motor
+│   ├── 02_estrutura_telas_dbeaver.sql    6 tabelas de tela
+│   ├── 03_parametros_dbeaver.sql         os 11 dfe_* de DPC_PARAMETRO
+│   ├── 04_validacao_dbeaver.sql          somente leitura (secao 5: insert + rollback)
+│   └── rollback/                         UM por DDL
+│       ├── 01_99_rollback_estrutura_motor_dbeaver.sql
+│       ├── 02_99_rollback_estrutura_telas_dbeaver.sql
+│       └── 03_99_rollback_parametros_dbeaver.sql
+├── homolog/                              dado e valor que so existem na base de TESTE
+│   ├── 01_estabelecimentos_dbeaver.sql   12 CNPJs e 48 fluxos, pausados
+│   ├── 02_parametros_homolog_dbeaver.sql dfe_conexao_erp e dfe_replicacao_prd
+│   └── empresas/ 20_01, 29_01, 30_01     identidade, fluxos pausados e copia do certificado
+├── operacao/                             o que se repete: pausar e retomar empresas
+│   ├── pausa_empresas_dbeaver.sql
+│   └── retomada_empresas_dbeaver.sql
+├── producao/LEIA_instalar_em_producao.md ordem num ambiente novo + registro de 13/10/2026
+└── levantamento-nfse-municipios.sql      diagnostico (roda em prd, so SELECT, tem 3 marcadores <<< AJUSTAR)
 ```
 
-Dentro de `ddl/`, o primeiro número é o **bloco** e o segundo é a ordem **dentro**
-dele. O `_99` (ou `_98`) de cada bloco é o rollback daquele bloco, e **mora em
-`ddl/rollback/`**, não ao lado do script que ele desfaz: a pasta `ddl/` fica só
-com o que instala, e quem procura como desfazer abre uma pasta só. O nome do
-rollback continua carregando o número do bloco, então o par se acha de longe.
-Os rollbacks de `ddl/empresas/` são a exceção e ficam ao lado do seu `_01`.
-
-`ajustes_unicos/` **não segue essa numeração de propósito**: ela existe para
-ordenar instalação, e ajuste único não se instala. Ver [§4c](#4c-ajustes-únicos--o-que-roda-uma-vez-e-nunca-mais).
-
-| | |
-|---|---|
-| **Instalar** | `01_01` → `01_02` → `01_03` → `01_04`, depois `03_01` e os pares de `empresas/`, depois `04_01` → `04_02` |
-| **Desfazer** | os `_99` de `empresas/` → `03_99` → `04_98` → `04_99` → `01_99`, do mais específico para o motor |
-
-**Só `.sql` para rodar no DBeaver.** Nenhum `README` dentro das pastas de
-script: a explicação de cada grupo está em documento próprio do hub, e este
-catálogo diz qual.
-
-A DDL saiu do repositório da ApiNFE em 02/09/2026. Isso tem uma consequência que
-precisa ficar registrada: **um deploy da ApiNFE não carrega mais o próprio
-schema** — quem instala em ambiente novo tem de vir buscar os scripts aqui. O
-`README.md` da ApiNFE aponta para cá.
-
-### Por que os blocos são estes
-
-O módulo tem duas naturezas, e elas não se misturam:
-
-```
-dfe  (modulo)
- |-- MOTOR   as 13 tabelas dpc_dfe_*. Captura documento na SEFAZ e no ADN.
- |           NAO tem conceito de usuario: e CLI e banco, sem sessao, sem login.
- |
- '-- TELAS   as 3 tabelas dpc_dfe_usuario_* e dpc_dfe_painel_alerta. Permissao
-             de acesso aos paineis e o limiar que eles usam para pintar a linha.
-```
-
-Por isso o motor **não** leva rótulo no nome das tabelas e o bloco de telas
-leva: o motor é o assunto próprio do módulo, e o que precisa de rótulo é o bloco
-anexo. Qualquer tabela com `usuario` no nome, dentro do módulo, é
-necessariamente de tela.
-
-A **empresa 30** ganhou bloco próprio por um motivo material, e não por ser
-especial: é o único estabelecimento que precisa de algo **fora** das tabelas do
-módulo — o certificado, que mora em `poseidon.dpc_conta_certif_digital_emp`, do
-ERP. É também por isso que ela tem rollback próprio: o `01_99` derruba as 13
-tabelas `dpc_dfe_*` e **não alcança** o certificado.
+**Só `.sql` para rodar no DBeaver.** Nenhum `README` dentro das pastas de script: a explicação de cada grupo está em documento próprio do hub, e este catálogo diz qual. A DDL saiu do repositório da ApiNFE em 02/09/2026, então **um deploy da ApiNFE não carrega mais o próprio schema**: quem instala em ambiente novo vem buscar os scripts aqui.
 
 ### A regra que impede a divergência voltar
 
-Não existe mais script de "alteração". O **`01_01_estrutura` é convergente**: a
-seção 3 dele confere as 273 colunas uma a uma e acrescenta a que faltar, então o
-mesmo arquivo serve a base vazia, parcial ou completa.
+Não existe script de "alteração". Os instaladores `01` e `02` são **convergentes**: conferem as colunas uma a uma, acrescentam a que faltar e redefinem CHECK e UNIQUE cuja definição mudou. Coluna ou tabela nova entra **no próprio instalador** (no `create table` e na lista de colunas), e a contagem por tabela do `04_validacao` muda na mesma edição.
 
-Isso substitui a regra antiga — "toda alteração está também no instalador
-consolidado" —, que dependia de disciplina humana e falhou: em 09/09/2026 a base
-de teste voltou 13 dias, as 13 tabelas estavam de pé e 11 colunas de
-`DPC_DFE_NOTA` não, e recuperar exigiu escolher a dedo três scripts de alteração
-na ordem certa. Um deles morria no meio, num *forward reference* que ninguém
-tinha percebido.
-
-Antes disso, foi a divergência entre o `install_dbeaver.sql` e os cinco alters
-(`v2`–`v6`) que tornou aqueles scripts inservíveis para produção — o install
-continuava criando objetos que um alter havia removido, e mantinha uma UK que
-outro havia substituído. Essa UK, se recriada, transforma a proteção contra
-duplicidade em **perda de documento**.
+Isso substitui a regra antiga — "toda alteração está também no instalador consolidado" —, que dependia de disciplina humana e falhou: em 09/09/2026 a base de teste voltou 13 dias, as 13 tabelas estavam de pé e 11 colunas de `DPC_DFE_NOTA` não. Antes, foi a divergência entre `install_dbeaver.sql` e os alters `v2`–`v6` que os tornou inservíveis para produção: o install continuava criando objetos que um alter havia removido e mantinha uma UK que outro havia substituído. Essa UK, se recriada, transforma a proteção contra duplicidade em **perda de documento**.
 
 ### E a regra do CRLF
 
-Os `.sql` são **CRLF por `.gitattributes`** (`workspace/.claude/.gitattributes`).
-Em LF o divisor de statements do DBeaver corta o bloco PL/SQL no `end if;` e
-devolve `PLS-00103`. Aconteceu com o `v10`, e o instalador consolidado tinha o
-mesmo defeito sem ninguém ter notado.
+Os `.sql` são **CRLF por `.gitattributes`** (`workspace/.claude/.gitattributes`). Em LF o divisor de statements do DBeaver corta o bloco PL/SQL no `end if;` e devolve `PLS-00103`. E **linha em branco dentro de bloco PL/SQL** também corta (o DBeaver a trata como fim de statement).
 
-## 2. O bloco 01 — motor
+---
 
-Como rodar, o que conferir antes e o que a instalação **não** liga:
-**[07_ddl-instalacao.md](07_ddl-instalacao.md)**.
+## 2. `ddl/` — os instaladores
 
-| # | Arquivo | O que faz | Destrutivo |
-|---|---|---|---|
-| 1 | `01_01_estrutura` | 13 tabelas, 13 sequences, 13 triggers, 54 constraints, 24 índices, 286 comentários — e a **seção 3**, que reconcilia as 273 colunas | não |
-| 2 | `01_02_estabelecimentos` | 12 CNPJs e 48 fluxos, **todos pausados** | sim (DML) |
-| 3 | `01_03_parametros` | os **5** parâmetros em `DPC_PARAMETRO`. **Antes do deploy do código** | sim (DML) |
-| 4 | `01_04_validacao` | confere motor e telas; a seção 5 faz insert + `rollback` | praticamente não |
-| — | `01_99_rollback_motor` | desfaz as 13 tabelas, as 13 sequences e os 6 parâmetros | sim |
+Como rodar, o que conferir antes e o que a instalação **não** liga: **[07_ddl-instalacao.md](07_ddl-instalacao.md)**.
 
-⚠️ **O `01_03` tem ordem obrigatória: antes do deploy do código.** Ele carrega os
-6 parâmetros em `DPC_PARAMETRO` — tabela compartilhada do ecossistema, que por
-isso não vem no `01_01`. Dois desses defaults **mudam comportamento em
-silêncio** se a linha faltar: o freio de consumo indevido cai para 5, fica
-abaixo do ruído normal do sistema e o motor se recusa a consultar; e o
-`dfe_conexao_erp` volta para "a conexão corrente", o que em homologação faz
-**toda** nota parecer não lançada.
+| Arquivo | Tabelas | Absorveu |
+|---|---|---|
+| `01_estrutura_motor` | `empresa`, `cursor`, `emitente`, `execucao`, `documento`, `nota`, `nota_item`, `nota_total`, `nota_transporte`, `nota_cobranca`, `cte`, `cte_nfe`, `cte_evento`, `nfse`, `evento`, `manif_pedido`, `manifestacao` | o antigo `01_01` e os blocos `04_01`, `07_01`, `08_01`, `08_02`, `09_01`, `12_01`, `13_01` |
+| `02_estrutura_telas` | `usuario_empresa`, `usuario_aba` (CHECK com `PROPRIAS`), `usuario_permissao`, `usuario_coluna` (CHECK com as variantes `_REL`), `usuario_modelo`, `painel_alerta` | `03_01` e os blocos `04_02`, `06_01`, `10_01`, `11_01`, `14_01` |
+| `03_parametros` | — (`DPC_PARAMETRO`) | `01_03`, os parâmetros do `04_01`, `ajustes_unicos/2026-10-07_parametros_fila_manifestacao` e `producao/P1_02` |
+| `04_validacao` | — | `01_04`, adaptado: a seção de dados do motor (CNPJs de teste) saiu |
+
+⚠️ **O `03_parametros` tem ordem obrigatória: antes do deploy do código.** `DPC_PARAMETRO` é tabela compartilhada do ecossistema, por isso não vem nos instaladores de estrutura. Dois defaults **mudam comportamento em silêncio** se a linha faltar: o freio de consumo indevido cai para 5, fica abaixo do ruído normal do sistema e o motor se recusa a consultar; e `dfe_conexao_erp` (só na homolog) volta para "a conexão corrente", o que em homologação faz **toda** nota parecer não lançada.
 
 ### Sem contagem global escrita à mão
 
-A seção 1 do `01_04` conta **coluna por tabela** — 16 números, um por tabela — e
-a seção 2 checa **invariantes** que não citam quantidade nenhuma: coluna sem
-comentário, tabela sem comentário, tabela sem PK, tabela sem PK automática,
-sequence sem tabela, objeto inválido. Todos devem dar zero.
+A seção 1 do `04_validacao` conta **coluna por tabela** (23 números, um por tabela) e a seção 2 checa **invariantes** que não citam quantidade: coluna sem comentário, tabela sem comentário, tabela sem PK, tabela sem PK automática (fora as 1:1 cuja PK é a FK da nota), sequence sem tabela, objeto inválido. Todos devem dar zero. Número global escrito à mão envelhece sozinho, e em silêncio: até 09/09/2026 a conferência esperava 12 tabelas e 242 colunas comentadas, de antes das colunas de etapa no ERP.
 
-O motivo é concreto: até 09/09/2026 a conferência do instalador comparava contra
-oito números globais, e eles estavam **defasados** — esperavam 12 tabelas e 242
-colunas comentadas, de antes das colunas de etapa no ERP. Quem instalasse numa
-base limpa leria "esperado 12, achado 13" e concluiria que a instalação falhou.
-Número global escrito à mão envelhece sozinho, e em silêncio.
+### Os rollbacks
 
-## 3. O bloco 02 — empresa 30
+Um para cada DDL, cada um com foto do que será perdido, trava de instância e conferência no fim:
 
-Cadastro da **empresa 30** (DPC MS, `66.471.517/0030-01`): identidade, os 4
-fluxos pausados e a cópia do certificado da empresa 1. É um dos dois CNPJs
-livres da Qive, e onde o volume real foi medido —
-[10_cadastros-de-teste.md](10_cadastros-de-teste.md).
+| Rollback | Faz | Atenção |
+|---|---|---|
+| `01_99_rollback_estrutura_motor` | derruba as 17 tabelas e as 13 sequences | **apaga todo documento capturado**; a posição de leitura (`nro_ultimo_nsu`) só existe aqui. Para só parar a captura, use `operacao/pausa_empresas` |
+| `02_99_rollback_estrutura_telas` | derruba as 6 tabelas de tela | apaga permissão: usuário sem linha **não vê nada e não recebe erro** (HTTP 200 com lista vazia) |
+| `03_99_rollback_parametros` | remove os 11 `dfe_*` | sem eles o código cai nos defaults internos |
 
-O `30_99_rollback_empresa_30` apaga o que o `30_01` criou, filtrando por
-`created_by = 'CADASTRO DFE'`. Esse filtro só passou a funcionar em 09/09/2026:
-antes a empresa 30 nascia na carga inicial com `'CARGA INICIAL'` e o rollback
-procurava `'CADASTRO DFE'` — não apagava nada, e a conferência acusava sem
-explicar por quê. Com a empresa nascendo em **um** lugar só, o filtro sempre
-casa.
+Os pares de rollback **por empresa** (`empresas/*_99`) saíram: as empresas vêm da replicação em produção e, na homolog, o cadastro é refeito pelo `_01`.
 
-## 4. O bloco 03 — telas
+---
 
-As três tabelas que os painéis usam:
+## 3. `homolog/` — o que só existe na base de teste
 
-| Tabela | O que guarda |
+| Arquivo | O que é |
 |---|---|
-| `dpc_dfe_usuario_empresa` | quais filiais cada usuário vê |
-| `dpc_dfe_usuario_aba` | quais categorias cada usuário vê |
-| `dpc_dfe_painel_alerta` | o limiar de dias por filial, e as cores |
+| `01_estabelecimentos` | 12 CNPJs e 48 fluxos, **todos pausados** (a ALL CARS, 900, fica de fora: cadastro de teste de outra raiz de CNPJ) |
+| `02_parametros_homolog` | `dfe_conexao_erp` (aponta para a conexão de produção, porque o clone da homolog é congelado) e `dfe_replicacao_prd` (liga o `dfe:replicar`, nasce `N`). **Na produção `dfe_conexao_erp` não pode existir** |
+| `empresas/20_01`, `29_01`, `30_01` | identidade fiscal, 4 fluxos pausados e a cópia do certificado da empresa 1 (que mora em `poseidon.dpc_conta_certif_digital_emp`, tabela do ERP). **O número do arquivo é o número da empresa.** A 17 não tem arquivo: veio na carga geral e já tinha certificado próprio |
 
-Renomeadas de `dpc_sefaz_*` em 09/09/2026, quando o módulo passou a ter prefixo
-único. O `03_01` é convergente do mesmo jeito que o `01_01`: renomeia se achar o
-nome antigo, cria se não existir, ajusta os nomes de constraint e de índice, e
-escreve os 23 comentários.
+Tudo grava `created_by = 'CADASTRO DFE'`, o marcador que identifica a origem. Antes de 09/09/2026 o cadastro nascia com `'CARGA INICIAL'` e o rollback procurava `'CADASTRO DFE'`: não apagava nada e a conferência acusava sem explicar por quê.
 
-⚠️ **O `03_99` apaga permissão, e o que se perde ali não volta rodando o
-`03_01`.** Aquele arquivo recria a estrutura; quem preenche as linhas é uma
-pessoa, na tela *Sefaz → Parâmetros*, uma por uma. E a perda é silenciosa do
-outro lado: usuário sem linha em `dpc_dfe_usuario_empresa` não vê nada nas
-telas e **não recebe erro** — o repositório curto-circuita e devolve HTTP 200
-com lista vazia, indistinguível de "não há nota no período". Por isso a seção 0
-do `03_99` gera o script de volta: rode, copie e guarde antes de seguir.
+## 4. `operacao/` — o que se repete
 
-Essas três nasceram no card #3235, pelo lado do front, e ficaram **fora de
-qualquer script** até 09/09/2026 — foram criadas à mão em 25/08/2026, e nenhum
-`.sql` do workspace as criava. Sobreviveram ao refresh da base de teste por
-sorte: o snapshot restaurado era de 27/08, dois dias depois de elas existirem.
-
-## 4b. O bloco 04 — manifestação
-
-Dois arquivos, um por leva de trabalho — não um por evento nem por fase:
-
-| # | Arquivo | O que faz | Destrutivo |
-|---|---|---|---|
-| 1 | `04_01_manifestacao` (23/09/2026) | fundação: 6 colunas novas em `dpc_dfe_manifestacao` (`nro_seq_evento`, `dsc_justificativa`, `dta_registro_evento`, `cod_dfe_empresa`, `dsc_id_lote`, `dta_proxima_tentativa`); UK passa a incluir `nro_seq_evento`; 2 colunas de tranca de automação em `dpc_dfe_empresa`; 4 parâmetros em `DPC_PARAMETRO` | não (só ALTER ADD + INSERT condicional) |
-| — | `04_99_rollback_manifestacao` | reverte o `04_01` — **recusa** reverter a UK se já existir mais de uma sequência por `(nota, evento)`, porque a UK antiga não comporta esse dado | sim, com essa guarda |
-| 2 | `04_02_manifestacao_fases_2a4` (24/09/2026) | Fases 2-4: `dta_inicio_manif_auto_conf` em `dpc_dfe_empresa` (corte de data da Confirmação automática); tabela nova `dpc_dfe_usuario_permissao` (permissão da tela manual, mesmo padrão de `dpc_dfe_usuario_aba`) | não |
-| — | `04_98_rollback_manifestacao_fases_2a4` | reverte o `04_02` — apaga a tabela de permissão inteira, então mede antes (o cabeçalho do script traz o `SELECT` de conferência) | sim |
-
-Por que dois arquivos e não um só cobrindo tudo: o `04_01` já estava aplicado e
-testado quando as Fases 2-4 ganharam forma um dia depois, e reabrir um script
-já rodado em homolog para acrescentar objetos teria exigido reconferir tudo de
-novo. O padrão do módulo é bloco por leva de trabalho, não por fase de negócio —
-o mesmo raciocínio do bloco 02 ter nascido separado do 01.
-
-⚠️ **Diferente dos blocos 01 e 03, o 04 não tem tudo espelhado em outro
-arquivo.** As colunas de `dpc_dfe_empresa` dos dois arquivos foram copiadas para
-o `01_01` (mesmo motivo do `01_03`: um rebuild não pode recriar a base sem
-elas), mas `dpc_dfe_usuario_permissao` só existe pelo `04_02` — não há cópia no
-`03_01`, porque aquele arquivo narra uma migração histórica de 3 tabelas
-específicas (`dpc_sefaz_*` → `dpc_dfe_*`) e esta tabela nunca teve nome antigo.
-Pular o `04_02` numa instalação nova deixa a Fase 4 sem permissão para
-conceder — ver [07_ddl-instalacao.md](07_ddl-instalacao.md).
-
-## 4c. Ajustes únicos — o que roda uma vez e nunca mais
-
-`scripts/ajustes_unicos/` é irmã de `ddl/`, não filha, e a distinção é a razão
-de ela existir: **`ddl/` instala, `ajustes_unicos/` conserta.** Script daqui
-corrige LINHA (é DML), não cria nem altera estrutura, e **não entra em
-instalação nenhuma** — base recém-criada não tem o dado torto que eles
-consertam.
-
-### A convenção
-
-| Regra | Por quê |
+| Arquivo | O que faz |
 |---|---|
-| Nome por **data** (`AAAA-MM-DD_assunto.sql`) | em script que roda uma vez, o dado útil é *quando* rodou. Numeração de bloco serviria para ordenar instalação, e aqui não há instalação a ordenar |
-| **Rollback em `ajustes_unicos/rollback/`**, mesmo nome + `_rollback` | `ajustes_unicos/` fica só com o que roda; o desfazer de todos os ajustes mora numa pasta própria, igual ao `ddl/rollback/` |
-| Carimbar `updated_by` com um valor **único do script** | é o que permite ao rollback separar o que o script mudou do que o fluxo normal mudaria |
-| Cabeçalho registra que **já foi aplicado**, com o resultado medido | o arquivo fica versionado como registro do que foi feito, não como tarefa pendente |
-| ASCII + CRLF | mesma regra do `ddl/` — ver [§E a regra do CRLF](#e-a-regra-do-crlf) |
+| `pausa_empresas` | **pausa completa**: os 4 cursores de cada empresa em `P` e manifestação, Ciência e Confirmação automáticas em `N`. Troque a lista de empresas nos pontos marcados `EDITE`; o carimbo `PAUSA COMPLETA AAAA-MM-DD` entra em `updated_by` |
+| `retomada_empresas` | devolve cursores `A`, manifestação `S`, Ciência `S`, Confirmação `N` **só onde o carimbo da pausa ainda vale** |
 
-> ⚠️ **Renomear o arquivo não renomeia o carimbo.** Os dois ajustes de
-> 30/09–01/10 gravaram `updated_by = 'SCRIPT 05_01'` e `'SCRIPT 05_02'`, nomes
-> que tinham antes de virem para cá. Esses valores **estão em linha no banco** e
-> os rollbacks dependem deles — "corrigir" a string para casar com o nome novo
-> deixaria o rollback sem encontrar nada. Os cabeçalhos avisam.
+O `P` resiste a uma execução que já estava drenando: o `DfeCursorRepository` mantém `P` como `P` ao registrar consulta. Prazo que corre durante a pausa: Ciência = 10 dias da **autorização** (NT 2020.001); nota que só tem resumo e passa da janela fica sem XML completo (`cStat 596`). A captura aguenta: a SEFAZ segura 90 dias.
 
-### O que já mora aqui
+## 5. `producao/`
+
+[`LEIA_instalar_em_producao.md`](../scripts/producao/LEIA_instalar_em_producao.md): a ordem para um ambiente novo (os 3 instaladores) e o registro do que foi aplicado em 13/10/2026.
+
+---
+
+## 6. Os ajustes únicos — removidos em 13/10/2026
+
+`scripts/ajustes_unicos/` existiu de 30/09 a 13/10/2026 para **consertar linha** (DML) da homolog sem entrar em instalação nenhuma. Foram todos aplicados e a pasta saiu: o dado corrigido chega à produção pela replicação, e o que era configuração de ambiente foi para os instaladores. Cada um tinha rollback. **Recuperar:** git do `.claude`, commit `64f6a7a` (`scripts/ajustes_unicos/`).
 
 | Arquivo | O que fez | Resultado medido |
 |---|---|---|
@@ -287,6 +116,7 @@ consertam.
 | `2026-10-06_nota_cfop_xml` | preenche `dpc_dfe_nota.cod_cfop_xml` das notas que já existiam quando a coluna nasceu (`12_01`): o CFOP do item de **maior `vlr_item`**, empate pelo menor `cod_dfe_nota_item` — a mesma regra do `DfeNotaItemRepository::substitui`, que grava as notas novas. `MERGE` com `USE_HASH`, só onde a coluna é nula, carimbo `AJUSTE 2026-10-06 CFOP XML` em `updated_by` (é o que o rollback usa). Roda **depois** do `12_01`. **Provado numa cópia:** 9.582 preenchidas = as 9.582 notas com item, **0 divergências** contra a regra reimplementada em PHP, 2ª rodada toca 0 linhas, rollback zera tudo | **pendente de aplicar** (homolog) |
 | `2026-10-07_parametros_fila_manifestacao` | cria dois parâmetros em `dpc_parametro`: `dfe_manifest_fila_max_ciclo` = **200** (notas por ciclo da fila; o ciclo roda a cada 10 min, ~1.200/h) e `dfe_manifest_fila_max_pedido` = **5000**. A vazão é parâmetro de propósito: não se sabe se o RecepcaoEvento tolera mais sem 656, então sobe-se aos poucos medindo os bloqueios, **sem deploy**. Só insere o que ainda não existe. Roda **depois** do `13_01` | **aplicado 07/10/2026** (homolog) |
 | `2026-10-07_aba_propria_usuarios` | dá a categoria `PROPRIAS` a quem já tem `SEM_CLASSIFICACAO` em `dpc_dfe_usuario_aba` (6 usuários em 07/10/2026), com o carimbo `AJUSTE 2026-10-07 ABA PROPRIA` em `created_by`, que o rollback usa para achar as linhas — permissão dada depois pela tela não leva o carimbo e fica. Só insere para quem ainda não tem (reexecutável). Roda **depois** do `14_01`. **Provado em cópia** (6 = 6, 2ª rodada insere 0, rollback preserva a permissão da tela) | **pendente de aplicar** (homolog) |
+| `2026-10-13_aba_propria_usuarios_prd` | **roda na PRODUCAO** (versao do anterior para a producao, onde a aba vem pela estrutura renomeada de `dpc_sefaz_usuario_aba`). Deu `PROPRIAS` aos 4 usuarios com `SEM_CLASSIFICACAO` (DOUGLAS, LEONARDO, SERGIOSANTOS, WARLITON), carimbo `AJUSTE 2026-10-13 ABA PROPRIA PRD`. Sem isso, depois do deploy da ApiDPC as notas proprias somem das outras abas e ninguem ve a aba nova | 16 → 20 permissoes de aba |
 | `2026-10-07_param_replicacao_prd` | **roda na HOMOLOG.** Cria `dfe_replicacao_prd = 'N'` em `dpc_parametro`: o agendamento do `dfe:replicar` só age com `'S'`. Nasce desligado; ligar é decisão acompanhada, depois da carga inicial. Parar sem deploy: `update … set valor = 'N'`. Reexecutável (só insere se faltar). Rollback: `rollback/2026-10-07_param_replicacao_prd_rollback` — sem o parâmetro o agendamento entende "desligado" |
 | `2026-10-02_nfse_reprocessa` | recoloca na fila os 107 `adnEvento` e, **depois**, as 10.400 `adnNFSe`, para o parser corrigido regravar situação e colunas do `07_01`. Carimbo em `det_erro`. Base: Anexos I e II do gov.br/nfse | **aplicado 02/10/2026** — 102 canceladas (todas com data, 27 com substituta), 10.298 autorizadas, 0 sem situação; as 5 substitutas (cStat 101) voltaram a autorizadas |
 
@@ -309,13 +139,11 @@ de um `procNF` desfaria o acerto nota a nota — foi exatamente esse mecanismo
 que produziu as 51. Todo arquivo daqui deveria vir acompanhado do commit que
 impede o problema de voltar.
 
-## 5. Scripts pontuais
+Convenção que valeu enquanto a pasta existiu: nome por **data** (o dado útil de um script que roda uma vez é *quando* rodou), rollback em pasta própria, carimbo único em `updated_by` para o rollback separar o que o script mudou do que o fluxo normal mudaria, e cabeçalho que registra o que foi medido. ⚠️ **Renomear o arquivo não renomeia o carimbo**: o `SCRIPT 05_01` e o `SCRIPT 05_02` ficaram em linha no banco com os nomes antigos.
 
-| Arquivo | O que é | Explicação |
-|---|---|---|
-| `levantamento-nfse-municipios.sql` | cobertura de NFS-e por município, para decidir se vale construir a captura pelo ADN | roda em **prd**, só `SELECT`. Tem três marcadores `<<< AJUSTAR` que exigem edição humana — não é script de instalação |
+---
 
-## 6. O que foi apagado, e onde recuperar
+## 7. O que foi apagado antes, e onde recuperar
 
 ### Em 09/09/2026, quando os dois caminhos viraram um
 
@@ -350,7 +178,7 @@ A pasta `historico/` foi removida — nada nela descrevia o sistema atual:
 | Item | Onde está agora |
 |---|---|
 | `plano-estrutural-v2.md` — o plano de desacoplar do Consinco e criar cursor por tipo | implementado no `39b172d`; o desenho vigente está em [03_conhecimento-motor.md](03_conhecimento-motor.md) |
-| `ddl-por-objeto-superada/` — a primeira DDL, um arquivo por objeto | substituída pelo instalador consolidado, hoje `ddl/01_01_estrutura` |
+| `ddl-por-objeto-superada/` — a primeira DDL, um arquivo por objeto | substituída pelo instalador consolidado, hoje `ddl/01_estrutura_motor` |
 
 | O que | De onde recuperar |
 |---|---|
@@ -369,7 +197,7 @@ Foi essa divergência que inutilizou os alters `v2`–`v6` para produção, e é
 isso que hoje existe **um arquivo só**, convergente, em vez de um instalador
 mais uma pilha de alterações.
 
-## 7. O que não é versionado, nunca
+## 8. O que não é versionado, nunca
 
 | Item | Onde está | Tratamento |
 |---|---|---|

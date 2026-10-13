@@ -1,6 +1,6 @@
 # Tabelas do módulo DFe — para que serve cada uma
 
-> **Atualizado em 02/09/2026.** As **13 tabelas** do motor, criadas por [`scripts/ddl/01_01_estrutura_dbeaver.sql`](../scripts/ddl/01_01_estrutura_dbeaver.sql), no schema `POSEIDON`. O bloco de telas tem outras três — ver o [03_01_parametrizacao_telas](../scripts/ddl/03_01_parametrizacao_telas_dbeaver.sql).
+> **Atualizado em 02/09/2026.** As tabelas do motor (**17** em 13/10/2026), criadas por [`scripts/ddl/01_estrutura_motor_dbeaver.sql`](../scripts/ddl/01_estrutura_motor_dbeaver.sql), no schema `POSEIDON`. As de tela (**6**) vêm do [02_estrutura_telas](../scripts/ddl/02_estrutura_telas_dbeaver.sql). Os nomes de bloco citados abaixo (`04_01`, `07_01`, `08_01`…) são os dos scripts de antes da consolidação de 13/10/2026; o mapa está em [09_catalogo-scripts.md](09_catalogo-scripts.md).
 
 Este documento responde **o que cada tabela é e por que existe separada**. Para coluna a coluna, com queries e armadilhas de tela, ver [05_dados-consumo-frontend.md](05_dados-consumo-frontend.md). Para operar, [06_operacao-comandos.md](06_operacao-comandos.md).
 
@@ -161,7 +161,7 @@ Tabela única ficaria quase toda nula, nenhum `not null` seria possível, nenhum
 > ficava `INDEF` para sempre. Eram **96 notas** invisíveis na aba Recebidas —
 > a equipe fiscal achou 9 delas no confronto com a Qive em setembro.
 > Corrigido no código e retroativamente por
-> `ajustes_unicos/2026-10-01_papel_resumo`.
+> o ajuste único de 01/10/2026 (`papel_resumo`, hoje só no git — [09 §6](09_catalogo-scripts.md)).
 >
 > `OUTRO` continua significando o que significava: **definitivo**, o XML
 > completo foi lido e o nosso CNPJ não está em nenhum dos quatro papéis.
@@ -209,7 +209,7 @@ E uma quinta, de precisão: `vUnCom` usa **até 10 decimais** no dado real (`6.4
 
 **Escala:** a maior nota do acervo tem **300 itens**; a média é ~44. É a tabela que mais cresce depois de `dpc_dfe_documento`.
 
-> **Como criar:** o [`ddl/01_01_estrutura_dbeaver.sql`](../scripts/ddl/01_01_estrutura_dbeaver.sql), em qualquer base — vazia, parcial ou completa. A seção 3 dele confere as colunas uma a uma e acrescenta a que faltar, então não existe mais um script de alteração à parte. Depois, um `dfe:normalizar` popula o acervo já capturado — sem nenhuma chamada à SEFAZ.
+> **Como criar:** o [`ddl/01_estrutura_motor_dbeaver.sql`](../scripts/ddl/01_estrutura_motor_dbeaver.sql), em qualquer base — vazia, parcial ou completa. A seção 3 dele confere as colunas uma a uma e acrescenta a que faltar, então não existe mais um script de alteração à parte. Depois, um `dfe:normalizar` popula o acervo já capturado — sem nenhuma chamada à SEFAZ.
 
 ### `DPC_DFE_EMITENTE` — o fornecedor
 
@@ -245,7 +245,7 @@ Sem colunas de conciliação: CT-e não entra em `mlf_notafiscal`.
 
 #### As 15 colunas do bloco 09_01 (03/10/2026)
 
-Materializadas a pedido do **"Modelo Conferência Mensal CTE"**, que a equipe fiscal mantém salvo no relatório avançado da Qive. Ver [09_01](../scripts/ddl/09_01_cte_conferencia_mensal_dbeaver.sql).
+Materializadas a pedido do **"Modelo Conferência Mensal CTE"**, que a equipe fiscal mantém salvo no relatório avançado da Qive. Ver [`ddl/01_estrutura_motor`](../scripts/ddl/01_estrutura_motor_dbeaver.sql) (antigo bloco `09_01`).
 
 | Coluna | Tag no XML | Preenchimento medido |
 |---|---|---|

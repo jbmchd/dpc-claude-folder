@@ -390,7 +390,7 @@ A permissão **`MANIFESTAR` não é copiada**: é isso que mantém a manifestaç
 ### Travas — nada é gravado antes de elas passarem
 
 - origem tem de ser a instância **`homolog`**; destino, uma instância **`dpcdb*`** (a produção é um **RAC**: aparece `dpcdb1` ou `dpcdb2` conforme a conexão) em **outro servidor**;
-- escrita exige `--confirmar`; o `--agendado` só roda com **`dfe_replicacao_prd = 'S'`** na homolog (nasce `N`, ajuste único `2026-10-07_param_replicacao_prd`). **Parar sem deploy: `update … set valor = 'N'`**;
+- escrita exige `--confirmar`; o `--agendado` só roda com **`dfe_replicacao_prd = 'S'`** na homolog (nasce `N`, criado por `scripts/homolog/02_parametros_homolog`). **Parar sem deploy: `update … set valor = 'N'`**;
 - se a **produção** tiver `dfe_motor_ativo_prd = 'S'`, a replicação é **proibida** (dois escritores corrompem o NSU). Esse parâmetro **não existe hoje**: é criado no dia de ligar o motor;
 - uma execução por vez (trava de arquivo, além do `withoutOverlapping` do agendador);
 - se a estrutura da tabela difere entre as bases, a tabela é **recusada** com a lista do que difere — rode `--estrutura`;
