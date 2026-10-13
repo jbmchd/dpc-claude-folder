@@ -219,6 +219,8 @@ E uma quinta, de precisão: `vUnCom` usa **até 10 decimais** no dado real (`6.4
 
 Só serve NF-e. Transportadora e prestador de serviço ficam na própria linha do CT-e e da NFS-e — misturar tornaria esta tabela ambígua.
 
+**Grupo no ERP (13/10/2026):** `dsc_grupo_erp` (VARCHAR2 40, `consinco.ge_pessoa.grupo`: `FORNECEDOR`, `FORNECEDOR CONSUMO`, `CLIENTE`…), `seq_pessoa_erp` e `dta_conferencia_erp` (TIMESTAMP). Gravados pelo `dfe:conciliar`; **definem a categoria da nota** na Gestão de NFe. Nulo com `seq_pessoa_erp` nulo = CNPJ não encontrado (ou ainda não conferido); `dta_conferencia_erp` distingue os dois. Ver [05](05_dados-consumo-frontend.md#categoria-o-grupo-do-emitente-no-cadastro-de-pessoas-do-c5-13102026).
+
 ### `DPC_DFE_EVENTO` — eventos
 
 **Uma linha por (chave, tipo de evento, sequência).** Ciência, confirmação, cancelamento, carta de correção, MDF-e autorizado.

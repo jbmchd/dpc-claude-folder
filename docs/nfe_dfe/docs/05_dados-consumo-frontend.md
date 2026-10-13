@@ -93,7 +93,7 @@ UK `(cod_dfe_empresa, cod_tipo_dfe)`. Backlog = `nro_maximo_nsu - nro_ultimo_nsu
 
 ### `DPC_DFE_EMITENTE` — o fornecedor
 
-`cod_dfe_emitente` (PK) · `num_cnpj_cpf` (14, sem máscara, UK) · `dsc_razao_social` · `num_inscr_estadual`.
+`cod_dfe_emitente` (PK) · `num_cnpj_cpf` (14, sem máscara, UK) · `dsc_razao_social` · `num_inscr_estadual` · e, desde 13/10/2026, o **grupo no cadastro de pessoas do ERP**: `dsc_grupo_erp` (`ge_pessoa.grupo`), `seq_pessoa_erp` e `dta_conferencia_erp`, gravados pelo `dfe:conciliar`. É deles que sai a **categoria da nota** (ver [Categoria](#categoria-o-grupo-do-emitente-no-cadastro-de-pessoas-do-c5-13102026)).
 
 ### `DPC_DFE_EVENTO` — eventos
 
@@ -294,11 +294,38 @@ Os campos de filtro saíram do `ModalFiltros` para um **`CamposFiltros.vue` por 
 
 A extração foi validada por um golden test: 37 requisições (listagem, abas, ordenação, busca, filtros, empresas, chaves, exportação, detalhe, XML, DANFE, ZIP, e-mail) capturadas com o código antigo e o novo, iguais campo a campo. Só o PDF varia, e varia também entre duas execuções do código antigo.
 
-## Gestão de NFe — categoria prevista, comprador e devolução × CRM (06/10/2026)
+## Gestão de NFe — categoria, comprador e devolução × CRM (06/10/2026, categoria reescrita em 13/10/2026)
 
 Tela **Sefaz > Gestão de NFe** (`/sefaz/documentos-fiscais`; ApiDPC `SefazDocumentosFiscaisRepository`). Seis pedidos da equipe fiscal, e o que a medição achou em cada um.
 
-### Categoria: o ERP só classifica depois da escrituração
+### Categoria: o grupo do emitente no cadastro de pessoas do C5 (13/10/2026)
+
+> **Regra do time fiscal, em vigor desde 13/10/2026.** Substitui a categoria por CFOP/escrituração descrita nas duas seções seguintes, que ficam como registro do que foi medido e **derrubado**.
+
+| Aba | O emitente da nota, no C5 (`consinco.ge_pessoa.grupo`), é… |
+|---|---|
+| Compras | `FORNECEDOR` — fornecedor de mercadoria para **revenda** |
+| Suprimentos | `FORNECEDOR CONSUMO` — fornecedor de **consumo** |
+| Devolução | `CLIENTE` (a tela traz a NF de venda referenciada no XML e o atendimento do CRM) |
+| Sem classificação | CNPJ **não encontrado** — e, por decisão do usuário, também o achado em **outro grupo** (`PRESTADOR DE SERVIÇOS`, `CONTATO`, `REPRESENTANTE`…), que o fiscal corrige no C5 se for engano |
+| Próprias | raiz do CNPJ do emitente = a da empresa que recebeu: **continua sendo o primeiro ramo** (o fiscal não tratou desse caso) |
+
+**Como funciona.** O `dfe:conciliar` ganhou uma etapa 0 que, para cada emitente, procura o CNPJ em `ge_pessoa` (conexão `dfe_conexao_erp`, a de produção) e grava o grupo em `dpc_dfe_emitente`. Cadência: nunca conferido → na hora; **não achado** → reconfere após 1 dia (pode ter sido cadastrado); achado → após 7 dias. A busca compara `nrocgccpf` como **texto** e `digcgccpf` como número, o que usa o índice `XIE3IV_CLIENTE` (~0,2 s por lote de 300); montar o CNPJ com `lpad()` derrubaria o índice. O `CASE` da ApiDPC lê a coluna — **não** junta o Consinco, porque roda no `WHERE` de contagens, filtros e permissão por aba, e a homolog tem um clone defasado do ERP. Nota recém-capturada pode ficar uns minutos em Sem Classificação até o próximo ciclo.
+
+**Medido em 13/10/2026** nos 1.097 emitentes das 9.658 notas recebidas: 853 `CLIENTE` (3.880 notas), 163 `FORNECEDOR` (5.432), 49 `FORNECEDOR CONSUMO` (240), 27 `PRESTADOR DE SERVIÇOS` (88), 1 `CONTATO` (14), **4 não encontrados**. **Nenhum CNPJ cai em dois grupos.** `maf_fornecedor.tipfornecedor` (D/S/I) **não** serve: é tipo para tributação, não revenda × consumo.
+
+**Efeito** (regra nova × categoria anterior, nota a nota): **651 de 9.658 mudam de aba.** Nas **pendentes**, Sem Classificação cai de 239 para **22**. Contagem por aba na tela (ApiDPC local sobre a homolog, usuário com todas as abas): Devolução 575 · Compras 493 · Próprias 127 · Suprimentos 38 · Sem classificação 22 — e a exportação de cada aba bate com o donut. As ~60 notas que o ERP escriturou como devolução mas cujo emitente é fornecedor (FARMAX, Falcon…) passam a Compras/Suprimentos: **manda o cadastro**, decisão do usuário.
+
+- ⚠️ **Premissa a confirmar com o fiscal:** que o "Grupo" do cadastro de pessoas é o campo que eles consultam. Os nomes batem (revenda: indústrias e distribuidoras; consumo: serralheria, informática, fundação), mas é inferência dos dados.
+- ⚠️ **126 notas com papel `TRANSP`** (a DPC como transportadora) aparecem na lista e agora caem **todas em Compras** pelo grupo do emitente; antes eram 48 Compras e 78 Sem Classificação. Se essas notas não deviam estar na tela, o filtro é outro assunto.
+- ⚠️ Emitente cadastrado com o grupo errado (ex.: Dunax Lubrificantes e Vitta Pane, hoje `PRESTADOR DE SERVIÇOS`) vai para Sem Classificação: o ajuste é no C5.
+- O `CASE` é o mesmo da permissão por aba (`filtroAbas`): quem só tem uma aba passa a ver o que a regra nova manda.
+- A **categoria "prevista"** (selo tracejado, legenda, sufixo "(prevista)" no Excel) **deixou de existir**: a categoria já não depende da escrituração. A coluna **CFOP (XML)** ficou só como informação; ganhou a coluna **Grupo no C5** (e no Excel e no modal), e o tooltip diz o motivo pelo cadastro.
+- **Devolução:** a NF de venda e o atendimento (seção "Devolução × NF de venda × atendimento do CRM") passaram a aparecer também no **modal** da nota.
+
+### Categoria por CFOP: o ERP só classifica depois da escrituração (🔴 superado em 13/10/2026)
+
+> 🔴 **Superado.** Esta era a regra até 12/10/2026; o texto fica como registro do que foi medido.
 
 A categoria é um `CASE` sobre `cod_cfop_erp` e `dsc_ocorr_dev_erp`, que o `dfe:conciliar` grava **só para nota ESCRITURADA**. Medido: **0 de 1.191 pendentes** tinham esses campos; 8.342 de 8.342 escrituradas tinham. Toda pendente caía em "Sem Classificação" **por construção**, e as abas Compras / Devolução / Suprimentos apareciam vazias para quem trabalha justamente as pendentes.
 
@@ -315,7 +342,9 @@ Solução: **prever pelo XML enquanto o ERP não deu o dele**, e o valor do ERP 
 - **Suprimentos:** o XML de uma compra para revenda e o de uma para consumo trazem o mesmo CFOP 5102. A diferença é decisão de quem escritura. Na tela essas notas aparecem como **Compras** até escrituradas (133 das 252 escrituradas como Suprimentos).
 - **Efeito nas pendentes** (medido na cópia): Devolução 1 → **547**, Compras 0 → **447**, Sem Classificação 349. Com as regras de CFOP de 07/10/2026: Compras **+4** (6106) e Suprimentos **0 → 18**.
 
-### Por que uma nota fica em Sem Classificação (07/10/2026)
+### Por que uma nota ficava em Sem Classificação, pelo CFOP (07/10/2026, 🔴 superado em 13/10/2026)
+
+> 🔴 **Superado.** A afirmação de que "a categoria vem do CFOP, não do fornecedor" **deixou de valer**: o fiscal respondeu que a categoria vem do cadastro do emitente no C5 (seção acima).
 
 **A categoria vem do CFOP da nota — não do fornecedor nem do comprador.** Ter o fornecedor cadastrado, com comprador vinculado, não classifica nada: o comprador só nasce na escrituração, e a categoria olha a natureza da operação. Caso que originou a pergunta: NF 512935 da BDF Nívea (empresa 17), único item *INDUSTRIAL PALLET CHEP BRASIL*, **CFOP 6949** ("outra saída não especificada"). O ERP também deixa esse CFOP em Sem Classificação: **50 de 50** no histórico (entra como 2920/2949). O comportamento estava certo; faltava a tela dizer por quê.
 
