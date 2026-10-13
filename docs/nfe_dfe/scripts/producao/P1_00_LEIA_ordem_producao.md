@@ -4,6 +4,32 @@
 > **Banco:** Oracle de produção (RAC: `dpcdb1` ou `dpcdb2`), schema `poseidon`, conectado como POSEIDON no DBeaver.
 > **Provado em 07/10/2026:** instalação do zero com os scripts reais (renomeados `ZZP_`, numa cópia descartável da homolog) terminou com **0 erros do Oracle e estrutura idêntica à da homolog** (23 tabelas, 466 colunas, 83 constraints, 66 índices, 13 triggers, 13 sequences, comentários).
 
+## 0. Rode a pasta `rodar_em_ordem/`
+
+Os arquivos da tabela abaixo estão copiados, **numerados na ordem de execução**, em [`rodar_em_ordem/`](rodar_em_ordem/): é só abrir do `00` ao `16` no DBeaver.
+
+| Arquivo da pasta | Banco | Origem (a fonte da verdade) |
+|---|---|---|
+| `00_HOMOLOG_param_replicacao_prd` | **homolog** | `ajustes_unicos/2026-10-07_param_replicacao_prd` |
+| `01_drop_orfas_prd` | produção | `producao/P1_01` |
+| `02_estrutura_motor` | produção | `ddl/01_01` |
+| `03_telas_parametrizacao` | produção | `ddl/03_01` |
+| `04_manifestacao` | produção | `ddl/04_01` |
+| `05_manifestacao_fases_2a4` | produção | `ddl/04_02` |
+| `06_colunas_usuario` | produção | `ddl/06_01` |
+| `07_nfse_tipo_emissao` | produção | `ddl/07_01` |
+| `08_nfe_satelites` | produção | `ddl/08_01` |
+| `09_nfe_volume_listas` | produção | `ddl/08_02` |
+| `10_cte_conferencia_mensal` ⚠️ única | produção | `ddl/09_01` |
+| `11_relatorio_colunas` | produção | `ddl/10_01` |
+| `12_modelos_usuario` ⚠️ única | produção | `ddl/11_01` |
+| `13_nota_cfop_xml` ⚠️ única | produção | `ddl/12_01` |
+| `14_manifestacao_pedido` ⚠️ única | produção | `ddl/13_01` |
+| `15_usuario_aba_propria` | produção | `ddl/14_01` |
+| `16_parametros_prd` | produção | `producao/P1_02` |
+
+**Não edite a pasta.** `ddl/` segue sendo o único caminho de instalação (os rollbacks e o hub citam os nomes `01_01`, `04_02`…). A pasta é gerada por `python gera_ordem_producao.py`; `--confere` diz se está em dia. O número do arquivo **não** é o número do bloco: o `10_cte_…` da pasta é o `09_01` do `ddl/`.
+
 ## 1. Ordem
 
 | # | Arquivo | O que faz | Observação |
