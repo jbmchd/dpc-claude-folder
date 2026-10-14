@@ -9,7 +9,7 @@ Branch `feature/motor-busca-nfe-sefaz-no-lugar-da-qive` · PR #9
 O agendamento está dentro do guard que já existe:
 
 ```php
-if (env('RUN_SCHEDULE') == 1) {
+if (env('RUN_SCHEDULE') == 1 && env('DFE_SCHEDULE') == 1) {   // simplificado: no Kernel real são dois grupos, em volta do Senig
     $schedule->command('dfe:ingerir --agendado')->everyFifteenMinutes()->withoutOverlapping(30);
     $schedule->command('dfe:manifestar', ['--evento' => '210210', '--auto', '--confirmar'])
         ->cron('7,37 * * * *')->withoutOverlapping(30);

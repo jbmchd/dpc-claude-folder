@@ -119,7 +119,7 @@ Isso é o comportamento correto — retentar em loop um documento que falha por 
 
 ### E hoje, está ligado?
 
-**Não, e são duas travas que se sustentam:** `RUN_SCHEDULE=0` **e** todos os fluxos pausados.
+**Não, e são duas travas que se sustentam:** os jobs do DFe desligados (`DFE_SCHEDULE=0`, ou `RUN_SCHEDULE=0`) **e** todos os fluxos pausados.
 
 Ligar o agendador sem antes ter a janela de corte da Qive faria os CNPJs dela serem consultados a cada 15 min — dois consumidores na mesma sequência de NSU é causa documentada de `656` (NT 2014.002 item 3.11.4.1), que bloqueia **aquele CNPJ** por 1 hora.
 
@@ -131,7 +131,8 @@ São dois lugares, e a divisão é proposital.
 
 | Variável | Default | O que é |
 |---|---|---|
-| `RUN_SCHEDULE` | `0` | com 0, **nada** dispara |
+| `RUN_SCHEDULE` | `0` | interruptor geral do agendador: com 0, **nada** dispara. Com 1 roda o tick e a averbação Senig |
+| `DFE_SCHEDULE` | `0` (ausente = 0) | **só os jobs `dfe:*`** (captura, normalização, conciliação, manifestação, replicação). Exige `RUN_SCHEDULE=1` também. **Alpha: 1. Produção: 0 até o motor subir lá** (desde 14/10/2026) |
 | `TIPO_AMBIENTE` | — | `1` produção · `2` homologação |
 
 **Em `POSEIDON.DPC_PARAMETRO`** ficam os parâmetros operacionais:

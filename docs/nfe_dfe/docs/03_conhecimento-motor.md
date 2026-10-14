@@ -290,9 +290,9 @@ Quem usa cada um, e quando: [§2](#2-a-regra-de-quando-consultar-a-sefaz).
 | Item | Estado |
 |---|---|
 | Agendador | `dfe:ingerir` a cada 15 min, `dfe:normalizar` a cada 10, ambos com `withoutOverlapping` |
-| Guard | tudo sob `if (env('RUN_SCHEDULE') == 1)` |
-| Trava contra concorrência | `dfe:ingerir` manual se recusa a rodar quando `RUN_SCHEDULE=1` (`--forcar` ignora) |
-| Container alpha | `apinfe-app` em `dkalpha00`, cron por supervisor, `RUN_SCHEDULE=1` |
+| Guard | dois flags (14/10/2026): `RUN_SCHEDULE=1` liga o agendador (tick e Senig); os jobs `dfe:*` exigem também **`DFE_SCHEDULE=1`**, padrão desligado |
+| Trava contra concorrência | `dfe:ingerir` manual se recusa a rodar quando `RUN_SCHEDULE=1` **e** `DFE_SCHEDULE=1` (`--forcar` ignora) |
+| Container alpha | `apinfe-app` em `dkalpha00`, cron por supervisor, `RUN_SCHEDULE=1` e `DFE_SCHEDULE=1` |
 | Base do container | `oracle_tst` → `homolog` / `operconsinco-dpc-bdhomolog01` |
 | Ambiente | `TIPO_AMBIENTE=1` com base de teste: fala com a **SEFAZ real**, grava na base de **teste** |
 | `dfe:manifestar` | **agendado desde 24/09/2026** (`--evento=210210 --auto --confirmar` nos minutos `7,37`; `--evento=210200 --auto --confirmar` no minuto `22`), sempre com `--auto` e a janela noturna 22h-06h. É agendamento, não automação ligada: as 15 empresas estão com `status_manifestar='N'` e as duas flags de automação (`status_manif_auto_ciencia`, `status_manif_auto_confirmacao`) em `'N'` — o comando roda, encontra zero candidatas e sai |

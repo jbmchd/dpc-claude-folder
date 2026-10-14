@@ -68,7 +68,7 @@ Os instaladores foram gerados do **dicionário da homolog** e provados numa cóp
 
 Não é cautela genérica. A posição de leitura (o NSU) é **uma por CNPJ e compartilhada entre quem consulta**, e hoje quem consulta os CNPJs da DPC é a **Qive**. Dois consumidores no mesmo CNPJ é causa documentada de `cStat 656`, que bloqueia **aquele CNPJ** por 1 hora (NT 2014.002 item 3.11.4.1). Ativar um fluxo exige antes saber **a data e hora em que a Qive para de consultar aquele CNPJ**.
 
-Falta, além dos fluxos, `RUN_SCHEDULE=1` no `.env` (o agendamento já está no `Kernel`) e os certificados — cadastro, não código. Cadastrar o fluxo **mesmo sem certificado** é o certo: quem reporta validade é o `dfe:monitorar`, e ele só vê o que está cadastrado; fluxo ausente não gera alerta (um vencimento passou **9 meses** assim).
+Falta, além dos fluxos, `RUN_SCHEDULE=1` **e `DFE_SCHEDULE=1`** no `.env` (o agendamento já está no `Kernel`; `DFE_SCHEDULE` nasce desligado desde 14/10/2026) e os certificados — cadastro, não código. Cadastrar o fluxo **mesmo sem certificado** é o certo: quem reporta validade é o `dfe:monitorar`, e ele só vê o que está cadastrado; fluxo ausente não gera alerta (um vencimento passou **9 meses** assim).
 
 ### Como conferir que ficou igual ao testado
 
