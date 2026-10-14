@@ -29,6 +29,8 @@ Duas decisões que valem registro:
 
 - **⏳ Pendente em produção (13/10/2026): comprador do fornecedor.** `dpc_dfe_emitente` ganhou `seq_comprador_erp` e `dsc_comprador_erp` no `ddl/01_estrutura_motor_dbeaver.sql` (594 statements), aplicado **só na homolog**. A produção está com 469 colunas e a homolog com 471, e `dfe:replicar --estrutura` acusa exatamente essas 2. **Rodar o `01` antes do deploy da ApiDPC**, senão a lista da Gestão de NFe e da tela NF-e dão ORA-00904. Só com ordem explícita.
 
+- **Teste do motor em produção, empresa 17 (14/10/2026, a pedido).** Criada a trava `dfe_motor_ativo_prd='S'` em `dpc_parametro` (a replicação passa a ser **proibida**: o `dfe:replicar` recusa) e o cursor **NFE** da 17 posto em `A` (os outros 59 seguem `P`). Rodado **à mão** no container de produção (`DFE_SCHEDULE=0`, nada automático): `dfe:ingerir --empresa=17 --tipo=NFE --max-consultas=2` capturou **100 documentos** (cStat 138, 0 repetidos, 0 falhas), `dfe:normalizar` gerou 30 notas e 70 eventos (0 erros) e `dfe:conciliar` conciliou as 100 contra o ERP (0 falhas). Só a 17 tem certificado ativo no cofre de produção (válido até 25/09/2027); 20, 29 e 30 aparecem "SEM CERT" lá. Para desfazer: `liga_17_prd.php --desfaz` (remove a trava e devolve o cursor a `P`). **Daqui em diante a produção é a escritora da 17: não retomar a 17 na homolog** (o cursor dela lá está atrás) nem ligar `dfe_replicacao_prd`.
+
 ## O que falta para o módulo andar em produção
 
 1. **Carga inicial** dos dados: `dfe:replicar --carga-inicial --confirmar`, pelo servidor 16 (rede de ~15 ms: do notebook é 10× mais lenta), acompanhada, **só com autorização explícita**. Antes, confirmar espaço no `TSD_POSEIDON` (eram ~1,9 GB a copiar e havia 43 MB livres nos arquivos atuais, com autoextensão).
