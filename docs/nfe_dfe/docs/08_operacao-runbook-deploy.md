@@ -36,7 +36,7 @@ Combinado com `TIPO_AMBIENTE=1`, isso significa consultar os CNPJs da DPC na SEF
 
 ## O que NÃO precisa fazer
 
-- **`composer install`** — o PR não adiciona nenhuma dependência (`composer.json` e `composer.lock` intactos).
+- **`composer install`** — o PR da **ApiNFE** não adiciona nenhuma dependência (`composer.json` e `composer.lock` intactos). Na **ApiDPC** a regra é outra: ver a seção [ApiDPC: quando o `composer.lock` muda](#apidpc-quando-o-composerlock-muda).
 - **`migrate`** — não há migration. O DDL é script, aplicado por DBA/DBeaver.
 - **Criar cron** — o scheduler já existe para o Senig.
 
@@ -175,6 +175,38 @@ commit;
 ```
 
 Parar **não perde dado**: o cursor fica onde está e a retomada continua de lá. O que não pode é mexer no `nro_ultimo_nsu` — ele é um token devolvido pela SEFAZ e só pode ser continuado; valor diferente resulta em `656` e bloqueia o certificado por 1 hora.
+
+---
+
+## ApiDPC: quando o `composer.lock` muda
+
+> Aprendido em **15/10/2026**, em produção. O `vendor/` **não é versionado**: o `git pull`/deploy leva o `composer.json`, o `composer.lock` e `packages/`, mas **não instala nada**. Se o `composer.lock` mudou, alguém precisa rodar `composer install` **dentro do container**.
+
+**O que aconteceu:** o deploy de 14/10 trouxe o `DanfeComEan` (que estende `NFePHP\DA\NFe\Danfe`) e a dependência `m-galdino/sped-doc-aux`, mas o `vendor` de produção seguia de 16/08/2023. Resultado: `Class 'NFePHP\DA\NFe\Danfe' not found`, e o fiscal viu *"a SEFAZ ainda não disponibilizou o XML completo"* ao abrir o DANFE de uma nota que tinha o XML completo. Afeta também o ZIP/e-mail de PDF em lote e o DACTE do CT-e.
+
+**Antes do deploy, perguntar:** `composer.lock` mudou? `git diff <commit-em-produção> -- composer.lock composer.json packages/`
+
+**Se mudou**, no container (`apidpc-app`):
+
+```bash
+# 1. ensaio, sem efeito: tem de listar SÓ o que o PR acrescentou
+docker exec -w /var/www apidpc-app composer install --dry-run --no-interaction
+
+# 2. instalar
+docker exec -w /var/www apidpc-app composer install --no-interaction --optimize-autoloader
+
+# 3. conferir (true, true)
+docker exec apidpc-app php -r 'require "/var/www/vendor/autoload.php"; var_dump(class_exists("NFePHP\\DA\\NFe\\Danfe"), class_exists("NFePHP\\DA\\CTe\\Dacte"));'
+```
+
+| Cuidado | Por quê |
+|---|---|
+| **Composer 1** (o do container é o 1.10.27) | o Composer 2 faz a API cair com `Undefined index: name` no `PackageManifest` do Laravel 5.5 |
+| **Sem `--no-dev`** | o `vendor` de produção tem os pacotes de desenvolvimento; `--no-dev` removeria dezenas de uma vez, sem necessidade |
+| **Sem `docker restart`** | se o FPM guardou cache, `docker kill --signal=USR2 apidpc-app` recarrega sem derrubar |
+| **O `--dry-run` é a conferência** | em 15/10/2026 o `composer.lock` e o `vendor` de produção diferiam **só** nos 3 pacotes novos; qualquer outra linha no ensaio é motivo para parar |
+
+**Como se diagnostica, se acontecer de novo:** o `laravel-AAAA-MM-DD.log` do container mostra `Class ... not found` (ou, desde 15/10, `DANFE: biblioteca NFePHP\DA ausente no vendor`), e `ls /var/www/vendor/m-galdino` falha. A tela da ApiDPC passou a distinguir "XML ainda não liberado" de "falha ao gerar", então a mensagem "Não foi possível gerar a DANFE agora" com o XML completo aponta para o log, não para a SEFAZ.
 
 ---
 
