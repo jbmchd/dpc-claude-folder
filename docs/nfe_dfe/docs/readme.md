@@ -34,7 +34,7 @@ e NFS-e de entrada direto da SEFAZ (`DistDFe`) e do ADN Nacional, dentro da
 | **Os dois CNPJs onde dá para testar** — e o que cada teste provou | [10_cadastros-de-teste.md](10_cadastros-de-teste.md) |
 | O que foi tocado na **Consinco de teste**, e como desfazer | [11_registro-alteracoes-tst.md](11_registro-alteracoes-tst.md) |
 | A investigação do **cStat 656** | [12_sefaz-656-consumo-indevido.md](12_sefaz-656-consumo-indevido.md) |
-| A **tela de monitoramento** | [13_tela-monitor-dfe.md](13_tela-monitor-dfe.md) |
+| A **tela de monitoramento** (5 abas: Visão geral, Captura, Documentos, Manifestação, Conciliação — ver §0) | [13_tela-monitor-dfe.md](13_tela-monitor-dfe.md) |
 | A **decisão de negócio** sobre a Qive | [01_decisao-qive.md](01_decisao-qive.md) |
 | **Conciliar com o ERP** — frente em andamento, documentada à parte | [14_conciliacao-erp.md](14_conciliacao-erp.md) 🚧 |
 

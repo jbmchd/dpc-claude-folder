@@ -6,6 +6,81 @@
 
 ---
 
+## 0. Atualização de 15/10/2026 — a tela em abas, com manifestação e conciliação
+
+> O que segue **substitui** o que o §6.3 diz sobre o layout (uma página com cinco seções empilhadas) e **acrescenta** ao §4.2 cinco endpoints. O resto do documento continua valendo.
+
+O Monitor foi escrito antes de o motor ganhar manifestação, conciliação com o ERP e classificação por emitente. Ele funcionava, mas só enxergava a **captura**. Em 15/10 foi reorganizado em **abas, cada uma um nível a mais de detalhe** sobre a anterior:
+
+```mermaid
+flowchart LR
+    G["Visão geral<br/>alertas + 1 cartão por área"] --> C["Captura<br/>Fluxos · Execuções"]
+    G --> D["Documentos<br/>Fila · Erros · Conferência"]
+    G --> M["Manifestação<br/>Por empresa · Pedidos · Falhas"]
+    G --> K["Conciliação<br/>Etapas · Regressões · Emitentes"]
+```
+
+| Aba | Responde | Tabelas na tela |
+|---|---|---|
+| **Visão geral** | "está tudo bem?" | alertas e 4 cartões de área (cor, 3 números, atalho) |
+| **Captura** | "o motor consulta a SEFAZ?" | Fluxos, Execuções |
+| **Documentos** | "o que chegou e como foi lido?" | Fila, Erros (com reprocessar), Conferência |
+| **Manifestação** | "o que foi enviado à SEFAZ e o que travou?" | Por empresa, Pedidos (com andamento), Falhas |
+| **Conciliação** | "onde cada nota está no ERP?" | Etapas por empresa, Regressões, Emitentes no C5 |
+
+Cabeçalho e filtros (empresa, fluxo, janela) valem para todas as abas. Cada aba **só é criada quando aberta**. Cada uma tem a bolinha de cor da área no rótulo, para quem está numa aba ver que outra pede atenção; a cor é a **pior** dos indicadores da área (`areas` no `painel`).
+
+### Endpoints acrescentados (todos `GET`, só leitura)
+
+| Rota (`sefaz/monitor-dfe/…`) | Devolve |
+|---|---|
+| `manifestacao` | por empresa: flags, fila, enviadas/falhas na janela, freio de 656, fila parada |
+| `manifestacao/pedidos` | pedidos criados na janela **ou** com nota na fila, com andamento (paginado) |
+| `manifestacao/falhas` | manifestações em `F` na janela, com código e retorno da SEFAZ (paginado) |
+| `conciliacao` | etapas por empresa, resumo e lista dos emitentes, conexão do ERP |
+| `conciliacao/regressoes` | notas com estado atual menor que o máximo já visto (paginado) |
+
+**Nenhuma gravação nova e nenhum DDL.** Tudo é calculado de colunas que já existiam: a manifestação não grava ciclo próprio, e o que a tela lê é `dpc_dfe_manifestacao`, `dpc_dfe_manif_pedido` e as flags de `dpc_dfe_empresa`; a conciliação é lida de `dpc_dfe_nota` e `dpc_dfe_emitente`.
+
+### Como a tela decide cada alerta novo
+
+| Alerta | Regra | Nível |
+|---|---|---|
+| Manifestação bloqueada | `cod_status_retorno='656'` em 24h ≥ `dfe_max_bloqueios_manifest` (6), **ou** cursor NFE em espera com 656 dentro do `dfe_min_backoff_656` (captura **ou** manifestação) | perigo |
+| Fila de manifestação parada | empresa **ligada**, nota esperando há mais de 30 min, sem tentativa há 30 min e **sem bloqueio que explique** | perigo |
+| Falhas de manifestação em 24h | `status_envio='F'` | atenção (≥ 10: perigo) |
+| Manifestação desligada | nenhuma empresa do filtro com `status_manifestar='S'` | **info**: em produção é decisão do fiscal, não falha |
+| Conciliação sem rodar | só **com nota pendente**: > 90 min atenção, > 180 min perigo (o job roda a cada 30) | atenção / perigo |
+| Notas nunca conciliadas | `dta_conciliacao is null` | atenção |
+| Notas que voltaram de etapa | `num_estado_erp < num_estado_erp_max` | info: é fato do ERP (entrada apagada, nota estornada) |
+| Emitentes sem conferência | `dta_conferencia_erp is null` | info |
+
+Dois cuidados que valem para qualquer alerta futuro:
+
+- **A fila parada não grita durante o próprio freio.** É o mesmo erro que `motorPossivelmenteParado` já evita: alerta que contradiz o freio ensina a ignorar os dois.
+- **`dfe_conexao_erp` ausente não é defeito.** Em produção a ausência é o estado correto (o ERP é lido da mesma base do módulo); em homologação o parâmetro aponta para a produção. A tela só mostra de onde o ERP está sendo lido.
+
+### O alerta permanente que saiu
+
+O alerta "7.287 documentos ignorados" eram os **MDF-e**: capturados e guardados, sem leitor nem tela. Aparecia sempre e ensinava o time a ignorar o painel. Agora `docs_ignorados` conta **só o que não é MDF-e** (ex.: eventos do ADN) e o MDF-e vira um cartão cinza "MDF-e guardados — esperado" na aba Documentos.
+
+> **Armadilha de plano de execução (medida em 15/10/2026).** A primeira versão contava o MDF-e como mais uma `SUM(CASE …)` dentro de `kpiDocumento`. Com filtro de empresa a consulta passou de **0,65 s para 4,3 s na produção** (de 0,9 s para 12 s na homologação): referenciar o tipo do cursor ali dentro muda o plano. Por isso o MDF-e é uma **consulta separada** (`contaMdfeIgnorado`), que começa pelos poucos cursores MDFE e entra nos documentos pelo índice `UK2 (cod_dfe_cursor, nro_nsu)`: 0,1 s nos dois bancos. Quem mexer em `kpiDocumento` deve medir **com filtro de empresa**, que é onde o plano muda.
+
+### O que ficou de fora, e o que cada item exigiria
+
+| Item | Por que não entrou | O que exigiria depois |
+|---|---|---|
+| **Validade do certificado** | não é coluna: mora dentro do PFX, e a senha precisa de `dpcf_desconvertesenhas` | a ApiNFE gravar a validade (coluna ou tabela nova), ou a ApiDPC ler o PFX com `openssl` |
+| **Saúde do cron** | hoje só existe em arquivo (`storage/logs/schedule-test.log` e `storage/app/dfe-ingerir-agendado.beat`) | um batimento gravado no banco, o que é DDL nos dois bancos |
+
+Os dois pedem **gravação nova na ApiNFE**, por isso ficaram para outra entrega. Enquanto isso, o indicador "Última execução" continua sendo o único detector de ausência do agendador.
+
+### Acesso
+
+O Monitor é **aberto a qualquer usuário logado** (middleware `cors` + `jwt`) e **não filtra pelas empresas do usuário**, como já era. As abas novas herdam isso: a manifestação e a conciliação de todas as empresas aparecem para quem abrir a tela.
+
+---
+
 ## 1. O que existe hoje, e por que a tela é necessária
 
 A DPC construiu na **ApiNFE** um motor próprio de captura de documentos fiscais de
