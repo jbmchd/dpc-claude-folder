@@ -79,6 +79,8 @@ Os dois pedem **gravação nova na ApiNFE**, por isso ficaram para outra entrega
 
 O Monitor é **aberto a qualquer usuário logado** (middleware `cors` + `jwt`) e **não filtra pelas empresas do usuário**, como já era. As abas novas herdam isso: a manifestação e a conciliação de todas as empresas aparecem para quem abrir a tela.
 
+**A tela Sefaz > Parâmetros é diferente (desde 15/10/2026).** Quem a vê é decidido pelo menu dinâmico: `menu.dpcf_menu_permite_acesso(cod_usuario, cod_menu)` (Postgres), que olha `acesso.dpc_permissao` por usuário (`U`) ou grupo (`G`) e **herda de pai para filho**; o guard do front só abre rota que esteja no menu. Até 15/10 isso era **só front**: a API `/sefaz/param/*` só conferia o token, e qualquer usuário logado que chamasse o endpoint direto podia conceder a si mesmo `MANIFESTAR` ou empresas. Agora `SefazParamController` exige o **mesmo acesso do menu** (`App\Support\AcessoTelaSefaz`, HTTP 403 se negado), com uma exceção: **ler os próprios dados** (`usuario` = dono do token), que o dashboard de Documentos Fiscais usa para listar as empresas do usuário. O nó é procurado por `acessar = 'SefazParametros'`, porque o `cod_menu` é **929 em produção e 937 na alpha**. Falha na consulta ao Postgres **nega**.
+
 ---
 
 ## 1. O que existe hoje, e por que a tela é necessária
