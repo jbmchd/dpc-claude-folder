@@ -234,7 +234,7 @@ begin
           cod_dfe_empresa            NUMBER not null,
           nro_empresa                NUMBER not null,
           num_cnpj                   VARCHAR2(14) not null,
-          status_manifestar          VARCHAR2(1) default 'N' not null,
+          status_manifestar          VARCHAR2(1) default 'S' not null,
           dsc_razao_social           VARCHAR2(120) not null,
           sig_uf                     VARCHAR2(2) not null,
           num_inscr_estadual         VARCHAR2(20),
@@ -925,7 +925,7 @@ begin
     select 'cod_dfe_empresa' as nome, q'[NUMBER not null]' as def from dual union all
     select 'nro_empresa', q'[NUMBER not null]' from dual union all
     select 'num_cnpj', q'[VARCHAR2(14) not null]' from dual union all
-    select 'status_manifestar', q'[VARCHAR2(1) default 'N' not null]' from dual union all
+    select 'status_manifestar', q'[VARCHAR2(1) default 'S' not null]' from dual union all
     select 'dsc_razao_social', q'[VARCHAR2(120) not null]' from dual union all
     select 'sig_uf', q'[VARCHAR2(2) not null]' from dual union all
     select 'num_inscr_estadual', q'[VARCHAR2(20)]' from dual union all
@@ -2923,7 +2923,7 @@ comment on column poseidon.dpc_dfe_empresa.nro_empresa is
 comment on column poseidon.dpc_dfe_empresa.num_cnpj is
   'CNPJ do estabelecimento sem mascara. E o valor enviado na tag CNPJ do distDFeInt e define de quem sao os documentos retornados';
 comment on column poseidon.dpc_dfe_empresa.status_manifestar is
-  'N-Nao manifestar | S-Manifestar automaticamente. Default N: manifestacao e ato fiscal e exige aval da contabilidade';
+  'N-Nao manifestar | S-Pode manifestar. Chave-mestra da manifestacao da empresa (manual pela tela e base das automaticas). Default S desde 16/10/2026 por decisao do usuario; manifestacao e ato fiscal sem desfazer, entao as flags de automacao seguem N.';
 comment on column poseidon.dpc_dfe_empresa.dsc_razao_social is
   'Razao social usada no configJson do sped. FONTE UNICA - o modulo nao le cadastro de empresa do ERP.';
 comment on column poseidon.dpc_dfe_empresa.sig_uf is

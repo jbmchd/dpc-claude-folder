@@ -74,7 +74,7 @@ select 30,
        'DPC DISTRIBUIDOR ATACADISTA S/A',
        'MS',
        '500041350',
-       'N',                     -- manifestar e ato fiscal: nao ligar aqui
+       'S',                     -- chave-mestra ligada por padrao (16/10/2026); as automacoes seguem N
        sysdate,
        'CADASTRO DFE'
   from dual

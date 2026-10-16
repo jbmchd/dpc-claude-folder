@@ -83,7 +83,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (1, '66471517000177', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'MG', '1348384310043',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -98,7 +98,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (2, '66471517000258', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'RJ', '75674554',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -113,7 +113,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (3, '66471517000339', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'MG', '1348384310124',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -128,7 +128,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (4, '66471517000924', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'BA', '88341600',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -143,7 +143,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (5, '66471517001149', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'SE', '271324961',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -158,7 +158,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (8, '66471517000843', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'ES', '082467293',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -173,7 +173,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (14, '66471517001491', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'SP', '190544799111',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -188,7 +188,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (15, '66471517002544', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'AL', '241094550',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -203,7 +203,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (16, '66471517001653', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'MG', '1348384310388',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -218,7 +218,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (17, '66471517001734', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'PE', '061207764',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -233,7 +233,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (18, '66471517001815', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'PB', '162670583',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 
@@ -248,7 +248,7 @@ begin
        status_manifestar, created_at, created_by)
     values
       (19, '66471517001904', 'DPC DISTRIBUIDOR ATACADISTA S/A', 'RN', '204275571',
-       'N', sysdate, 'CARGA INICIAL');
+       'S', sysdate, 'CARGA INICIAL');
   end if;
 end;
 

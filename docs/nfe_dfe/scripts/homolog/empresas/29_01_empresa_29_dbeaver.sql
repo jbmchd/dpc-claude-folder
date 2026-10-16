@@ -80,7 +80,7 @@ select 29,
        'DPC DISTRIBUIDOR ATACADISTA S/A',
        'DF',
        '0828723000183',
-       'N',                     -- manifestar e ato fiscal: nao ligar aqui
+       'S',                     -- chave-mestra ligada por padrao (16/10/2026); as automacoes seguem N
        sysdate,
        'CADASTRO DFE'
   from dual
