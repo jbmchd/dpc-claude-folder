@@ -11,7 +11,7 @@
 ## Modos de uso
 - **Standalone:** `/explicar <fonte>` — onde `<fonte>` pode ser:
   - link do Trello ou `#NNNN` (card);
-  - caminho de uma pasta de tarefa em `.claude-work-items/`;
+  - caminho de uma pasta de tarefa em `.claude/.work-items/`;
   - texto livre / conceito, mesmo sem tarefa formal (ex.: `/explicar feature de login`, `/explicar como funciona o EDI`).
 - **Modificador `--explicar`:** anexado a outro command (`/importar-tarefa --explicar`, `/planejar-tarefa --explicar`, `/executar-tarefa --explicar`). O command principal roda normalmente e, **ao final**, é gerada a explicação nos 3 níveis sobre o que aquele command produziu/fará. O `--explicar` nunca relaxa os limites do command principal.
 

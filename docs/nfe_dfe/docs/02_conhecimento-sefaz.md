@@ -126,7 +126,7 @@ conta linhas em `dpc_dfe_execucao`. Foi exatamente uma lógica de tempo que
 falhou.
 
 Detalhe em
-[../../../../.claude-work-items/temp/freio-sefaz/plano-ajuste-freio.md](../../../../.claude-work-items/temp/freio-sefaz/plano-ajuste-freio.md).
+[.claude/.work-items/temp/freio-sefaz/plano-ajuste-freio.md](../../../.work-items/temp/freio-sefaz/plano-ajuste-freio.md).
 
 ## 4. cStat — o que já vimos
 

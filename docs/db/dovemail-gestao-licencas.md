@@ -424,4 +424,4 @@ ORDER BY licenca
 
 - Regras Oracle: [../regras/alterar-codigo/apidpc-oracle-padroes.md](../regras/alterar-codigo/apidpc-oracle-padroes.md)
 - Fluxo de migração: [../regras/gerenciar-regras/migracao-legado.md](../regras/gerenciar-regras/migracao-legado.md)
-- Planejamento da tarefa: [d:/.claude-work-items/cards/3080-gestao-licencas/planejamento.md](../../../../.claude-work-items/cards/3080-gestao-licencas/planejamento.md)
+- Planejamento da tarefa: [.claude/.work-items/cards/3080-gestao-licencas/planejamento.md](../../.work-items/cards/3080-gestao-licencas/planejamento.md)

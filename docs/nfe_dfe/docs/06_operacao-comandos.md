@@ -297,7 +297,7 @@ teto de 20 por requisição — o da NT), nunca unitário.
 Reescrito em 23-24/09/2026 (Fases 1 a 3). O que existia antes deste trabalho —
 `candidatas()` lendo `status_manifestacao`, sem sequência, sem lote, sem
 throttling — está descrito só como referência histórica em
-`.claude-work-items/tarefas/manifestacao-destinatario-automatica.md`.
+`.claude/.work-items/tarefas/manifestacao-destinatario-automatica.md`.
 
 | Opção | Para quê |
 |---|---|
@@ -333,7 +333,7 @@ sem erro. Também respeita e escreve o MESMO cooldown da captura
 656 na manifestação aciona a mesma espera. Não há medição confirmando se o
 `NFeRecepcaoEvento` tem cota separada do `NFeDistribuicaoDFe`; por isso os dois
 andam juntos enquanto essa dúvida não fechar (experimento em andamento, ver
-`.claude-work-items/tarefas/manifestacao-destinatario-automatica.md`).
+`.claude/.work-items/tarefas/manifestacao-destinatario-automatica.md`).
 
 **Ação manual (Fase 4):** o mesmo núcleo de envio (`DfeManifestacaoEnvioRepository`)
 também atende `POST dfe/manifestar`, chamado pelo botão "Manifestar" do Monitor

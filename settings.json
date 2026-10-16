@@ -1,9 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Read(//d/Joabe/Documents/dev/projetos/dpc/.claude-work-items/**)",
-      "Edit(//d/Joabe/Documents/dev/projetos/dpc/.claude-work-items/**)",
-      "Write(//d/Joabe/Documents/dev/projetos/dpc/.claude-work-items/**)",
+      "Read(//d/Joabe/Documents/dev/projetos/dpc/workspace/.claude/.work-items/**)",
+      "Edit(//d/Joabe/Documents/dev/projetos/dpc/workspace/.claude/.work-items/**)",
+      "Write(//d/Joabe/Documents/dev/projetos/dpc/workspace/.claude/.work-items/**)",
 
       "mcp__composio__*",
       "mcp__dpc_mcp__*",
