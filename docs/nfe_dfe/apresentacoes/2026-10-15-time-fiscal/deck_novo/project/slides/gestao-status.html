@@ -1,0 +1,25 @@
+<section id="gestao-status" data-transition="fade" style="background:#F7F5EF;color:#14231F;font-family:'Public Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<h2 style="font-family:'Libre Baskerville', Georgia, serif;font-size:60px;font-weight:700;line-height:1.15">Status e Manifestação: duas perguntas diferentes</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<h3 style="font-size:32px;font-weight:700;color:#1E7B50">Status: onde a nota está no ERP?</h3>
+<p style="background:#EDEAE0;border-radius:10px;padding:10px 20px;font-size:26px;font-weight:600">1 · Aguardando entrada</p>
+<p style="background:#EDEAE0;border-radius:10px;padding:10px 20px;font-size:26px;font-weight:600">2 · Em digitação</p>
+<p style="background:#EDEAE0;border-radius:10px;padding:10px 20px;font-size:26px;font-weight:600">3 · Recebida</p>
+<p style="background:#1E7B50;color:#FFFFFF;border-radius:10px;padding:10px 20px;font-size:26px;font-weight:600">4 · Escriturada</p>
+<p style="font-size:24px;color:#566560;line-height:1.4"><b>Regrediu no ERP</b>: a nota voltou uma etapa (por exemplo, uma entrada apagada). <b>Não conferida</b>: ainda não passou pela conferência.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<h3 style="font-size:32px;font-weight:700;color:#1E7B50">Manifestação: o que foi dito à Receita?</h3>
+<p style="font-size:26px;line-height:1.3"><b>Ciência da Operação</b> · libera o XML completo</p>
+<p style="font-size:26px;line-height:1.3"><b>Confirmação da Operação</b> · a operação aconteceu</p>
+<p style="font-size:26px;line-height:1.3"><b>Desconhecimento da Operação</b> · a nota não é nossa</p>
+<p style="font-size:26px;line-height:1.3"><b>Operação não Realizada</b> · com justificativa</p>
+<p style="font-size:26px;line-height:1.3"><b>Na fila (pedido N)</b> · ainda não foi enviada</p>
+<p style="font-size:26px;line-height:1.3"><b>QIVE</b> · o XML completo chegou por outro caminho</p>
+<p style="font-size:26px;line-height:1.3"><b>Sem manifestação</b> · nada foi dito ainda</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#566560">Módulo DFe · apresentação ao time fiscal</p>
+<aside>Aqui costuma haver confusão, então separe bem. O Status diz onde a nota está dentro do ERP: aguardando entrada, em digitação, recebida, escriturada. Pode aparecer também Regrediu no ERP, quando a nota voltou uma etapa, e Não conferida, quando ela ainda não passou pela conferência. A Manifestação diz o que já foi dito à Receita sobre a nota: os quatro eventos, mais Na fila (um pedido em massa ainda vai enviar), QIVE (o XML completo já chegou, por norma só depois de uma manifestação, feita por outro caminho) e Sem manifestação. A SEFAZ nunca devolve ao destinatário qual evento foi usado, por isso o rótulo QIVE não diz o tipo.</aside>
+</section>

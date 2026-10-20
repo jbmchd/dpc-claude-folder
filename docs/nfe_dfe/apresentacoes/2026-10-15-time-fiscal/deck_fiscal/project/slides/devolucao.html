@@ -1,0 +1,27 @@
+<section id="devolucao" data-transition="fade" style="background:#F7F5EF;color:#14231F;font-family:'Public Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:44px">
+<h2 style="font-family:'Libre Baskerville', Georgia, serif;font-size:60px;font-weight:700;line-height:1.15">Devolução: da nota ao atendimento</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:36px">
+<p style="font-size:28px;font-weight:600;color:#566560">NF de devolução</p>
+<p style="font-family:'Libre Baskerville', Georgia, serif;font-size:64px;font-weight:700;color:#1E7B50;line-height:1.1">2581</p>
+<p style="font-size:26px;color:#566560;line-height:1.35">emitida pelo cliente</p>
+</div>
+<div style="display:flex;align-items:center;flex:none"><x-shape kind="arrow-right" style="width:48px;height:34px;background:#1E7B50"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:36px">
+<p style="font-size:28px;font-weight:600;color:#566560">NF de venda (do XML)</p>
+<p style="font-family:'Libre Baskerville', Georgia, serif;font-size:64px;font-weight:700;color:#1E7B50;line-height:1.1">2116906</p>
+<p style="font-size:26px;color:#566560;line-height:1.35">referenciada na devolução</p>
+</div>
+<div style="display:flex;align-items:center;flex:none"><x-shape kind="arrow-right" style="width:48px;height:34px;background:#1E7B50"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:36px">
+<p style="font-size:28px;font-weight:600;color:#566560">Atendimento CRM</p>
+<p style="font-family:'Libre Baskerville', Georgia, serif;font-size:64px;font-weight:700;color:#1E7B50;line-height:1.1">2376180</p>
+<p style="font-size:26px;color:#566560;line-height:1.35">empresa 17 · série 55</p>
+</div>
+</div>
+<div style="background:#F2B544;color:#14231F;border-radius:16px;padding:28px 40px">
+<p style="font-size:30px;font-weight:600;line-height:1.4">Nem toda devolução tem atendimento: 45% casam com um, 13% com vários e 41% com nenhum (medido em 13/10). Quando não casa, a tela mostra “—”.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#566560">Módulo DFe · apresentação ao time fiscal</p>
+<aside>Na aba Devolução de Clientes, a tela traz a NF de venda referenciada no XML da devolução e o número do atendimento do CRM. Exemplo conferido em produção: devolução 2581, venda 2116906, atendimento 2376180, empresa 17, série 55. Seja honesto sobre a cobertura: nos testes, 45% das devoluções casam com um atendimento, 13% com vários e 41% com nenhum; quando não casa, aparece um traço e nada é escondido.</aside>
+</section>

@@ -1,0 +1,42 @@
+<section id="gestao-paineis" data-transition="fade" style="background:#F7F5EF;color:#14231F;font-family:'Public Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'Libre Baskerville', Georgia, serif;font-size:60px;font-weight:700;line-height:1.15">Os quatro painéis: onde está a pendência</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+<div style="display:flex;flex-direction:column;gap:14px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<h3 style="font-size:32px;font-weight:700">Pendências por categoria</h3>
+<p style="font-size:26px;color:#566560;line-height:1.35">Uma rosca com a parte de cada categoria no total de pendentes, em quantidade e porcentagem.</p>
+<div style="display:flex;gap:18px;flex-wrap:wrap">
+<p style="font-size:24px;font-weight:600"><span style="color:#2E9E5B">●</span> Compras</p>
+<p style="font-size:24px;font-weight:600"><span style="color:#2F6FDB">●</span> Devolução</p>
+<p style="font-size:24px;font-weight:600"><span style="color:#B58900">●</span> Suprimentos</p>
+<p style="font-size:24px;font-weight:600"><span style="color:#8B5CF6">●</span> Próprias</p>
+<p style="font-size:24px;font-weight:600"><span style="color:#7B8794">●</span> Sem classificação</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<h3 style="font-size:32px;font-weight:700">Pendências por tempo</h3>
+<p style="font-size:26px;color:#566560;line-height:1.35">Há quantos dias, desde a emissão, as notas esperam.</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:14px"><div style="width:230px;height:16px;background:#1E7B50;border-radius:8px"></div><p style="font-size:24px;font-weight:600">0 a 1 dia</p></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="width:170px;height:16px;background:#B58900;border-radius:8px"></div><p style="font-size:24px;font-weight:600">2 a 3 dias</p></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="width:120px;height:16px;background:#C2410C;border-radius:8px"></div><p style="font-size:24px;font-weight:600">4 a 7 dias</p></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="width:70px;height:16px;background:#B91C1C;border-radius:8px"></div><p style="font-size:24px;font-weight:600">Mais de 7 dias</p></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<h3 style="font-size:32px;font-weight:700">Pendências por comprador</h3>
+<p style="font-size:26px;color:#566560;line-height:1.35">Os cinco compradores com mais notas pendentes, cada um com a quantidade e o valor.</p>
+<p style="font-size:24px;color:#566560;line-height:1.35">Serve para saber a quem cobrar o lançamento.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<h3 style="font-size:32px;font-weight:700">Alertas críticos</h3>
+<ul style="font-size:26px;line-height:1.4">
+<li>Notas com mais dias do que o prazo da empresa</li>
+<li>Notas com manifestação “Desconhecida”</li>
+<li>Notas canceladas depois de capturadas</li>
+</ul>
+<p style="font-size:24px;color:#566560;line-height:1.35">Cada alerta mostra o valor total envolvido. O prazo é de cada empresa, em Parâmetros.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#566560">Módulo DFe · apresentação ao time fiscal</p>
+<aside>Zona 3 do mapa. Categoria: a rosca mostra a participação de cada categoria nas pendências, com a legenda ao lado. Tempo: as faixas contam dias desde a emissão da nota e vão de verde (até 1 dia) a vermelho (mais de 7). Comprador: os cinco com mais pendências, com quantidade e valor. Alertas críticos: três tipos. O primeiro é a nota que passou do prazo que a própria empresa definiu em Parâmetros; o segundo é a nota em que alguém manifestou Desconhecimento; o terceiro é a nota que foi cancelada depois de capturada. Se não houver alerta, o painel diz Nenhum alerta ativo.</aside>
+</section>

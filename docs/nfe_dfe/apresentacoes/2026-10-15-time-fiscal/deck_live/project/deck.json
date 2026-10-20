@@ -1,0 +1,58 @@
+{
+  "v": 4,
+  "attachments": {},
+  "createdOnFiles": {
+    "at": "2026-10-15T11:40:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "faces": {
+    "libre-baskerville": {
+      "family": "Libre Baskerville",
+      "href": "https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap"
+    },
+    "public-sans": {
+      "family": "Public Sans",
+      "href": "https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap"
+    }
+  },
+  "lists": "css",
+  "order": [
+    "cover",
+    "antes-agora",
+    "caminho",
+    "menu",
+    "gestao",
+    "categorias",
+    "pedidos-atendidos",
+    "documentos",
+    "downloads",
+    "manifestacao",
+    "limites",
+    "precisamos",
+    "perguntas"
+  ],
+  "sections": {
+    "abertura": {
+      "description": "Por que o módulo existe e o caminho de cada nota, do XML da Receita à tela.",
+      "start": "cover"
+    },
+    "documentos": {
+      "description": "Consulta, relatórios, downloads e o DANFE com EAN.",
+      "start": "documentos"
+    },
+    "fechamento": {
+      "description": "O que ainda não prometemos e o que precisamos do time fiscal.",
+      "start": "limites"
+    },
+    "gestao": {
+      "description": "A tela do fiscal: o que chegou e ainda não foi lançado, e como cada nota é classificada.",
+      "start": "gestao"
+    },
+    "manifestacao": {
+      "description": "Ciência, confirmação e os limites da manifestação em produção.",
+      "start": "manifestacao"
+    }
+  },
+  "title": "Módulo DFe: apresentação ao time fiscal"
+}

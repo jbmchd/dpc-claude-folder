@@ -1,0 +1,42 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-10-15T11:40:00Z" },
+  "lists": "css",
+  "title": "Módulo DFe: apresentação ao time fiscal",
+  "order": [
+    "cover",
+    "antes-agora",
+    "caminho",
+    "menu",
+    "numeros",
+    "gestao",
+    "categorias",
+    "regra-c5",
+    "devolucao",
+    "pedidos-atendidos",
+    "documentos",
+    "downloads",
+    "manifestacao",
+    "limites",
+    "precisamos",
+    "perguntas"
+  ],
+  "sections": {
+    "abertura": { "description": "Por que o módulo existe e o caminho de cada nota, do XML da Receita à tela.", "start": "cover" },
+    "gestao": { "description": "A tela do fiscal: o que chegou e ainda não foi lançado, e como cada nota é classificada.", "start": "gestao" },
+    "documentos": { "description": "Consulta, relatórios, downloads e o DANFE com EAN.", "start": "documentos" },
+    "manifestacao": { "description": "Ciência, confirmação e os limites da manifestação em produção.", "start": "manifestacao" },
+    "fechamento": { "description": "O que ainda não prometemos e o que precisamos do time fiscal.", "start": "limites" }
+  },
+  "faces": {
+    "libre-baskerville": {
+      "family": "Libre Baskerville",
+      "href": "https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap"
+    },
+    "public-sans": {
+      "family": "Public Sans",
+      "href": "https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap"
+    }
+  },
+  "designSystems": []
+}

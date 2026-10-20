@@ -1,0 +1,31 @@
+<section id="gestao-acoes" data-transition="fade" style="background:#F7F5EF;color:#14231F;font-family:'Public Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'Libre Baskerville', Georgia, serif;font-size:60px;font-weight:700;line-height:1.15">Ações da linha e exportação</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<x-icon name="Search" style="color:#1E7B50;width:52px;height:52px"></x-icon>
+<h3 style="font-size:32px;font-weight:700">Ver a nota</h3>
+<p style="font-size:26px;color:#566560;line-height:1.35">abre os dados completos: emitente, categoria, grupo no C5, comprador e dias pendente</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<x-icon name="Book" style="color:#1E7B50;width:52px;height:52px"></x-icon>
+<h3 style="font-size:32px;font-weight:700">Baixar o XML</h3>
+<p style="font-size:26px;color:#566560;line-height:1.35">o arquivo da nota, direto da linha</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:32px">
+<x-icon name="Verified" style="color:#1E7B50;width:52px;height:52px"></x-icon>
+<h3 style="font-size:32px;font-weight:700">Abrir o DANFE</h3>
+<p style="font-size:26px;color:#566560;line-height:1.35">o PDF da nota, gerado do XML guardado</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#1E7B50;color:#FFFFFF;border-radius:16px;padding:32px">
+<x-icon name="Activity" style="color:#FFFFFF;width:52px;height:52px"></x-icon>
+<h3 style="font-size:32px;font-weight:700">Exportar Excel</h3>
+<p style="font-size:26px;line-height:1.35">todas as notas do filtro atual, não só a página, com valores numéricos</p>
+</div>
+</div>
+<div style="background:#F2B544;color:#14231F;border-radius:16px;padding:28px 40px;display:flex;flex-direction:column;gap:8px">
+<p style="font-size:30px;font-weight:700;line-height:1.35">Nota que só tem o resumo: XML e DANFE ficam desabilitados</p>
+<p style="font-size:26px;line-height:1.4">O ícone ao lado da chave explica o motivo. O caminho para liberar o XML completo é a Ciência da Operação.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#566560">Módulo DFe · apresentação ao time fiscal</p>
+<aside>Última coluna da tabela e o botão acima dela. O olho abre a nota com os dados completos; na devolução, também a NF de venda e o atendimento. O clipe baixa o XML e o PDF abre o DANFE, que é desenhado do XML guardado, sem consultar a Receita. Para nota que só tem o resumo, os dois botões ficam desabilitados e a dica explica por quê. O Exportar Excel leva todas as notas do filtro atual, e não só a página que está na tela; os valores saem como número, então dá para somar direto. O DANFE próprio traz o EAN logo abaixo de cada produto.</aside>
+</section>

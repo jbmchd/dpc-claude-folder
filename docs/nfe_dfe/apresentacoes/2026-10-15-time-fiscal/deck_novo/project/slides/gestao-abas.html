@@ -1,0 +1,22 @@
+<section id="gestao-abas" data-transition="fade" style="background:#F7F5EF;color:#14231F;font-family:'Public Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<h2 style="font-family:'Libre Baskerville', Georgia, serif;font-size:60px;font-weight:700;line-height:1.15">As abas seguem a regra do fiscal</h2>
+<div style="display:flex;gap:14px;flex-wrap:wrap">
+<p style="background:#14231F;color:#FFFFFF;border-radius:30px;padding:10px 24px;font-size:26px;font-weight:600">Todas</p>
+<p style="background:#FFFFFF;border:1px solid #DAD6CB;border-radius:30px;padding:10px 24px;font-size:26px;font-weight:600"><span style="color:#2E9E5B">●</span> Compras – Revenda</p>
+<p style="background:#FFFFFF;border:1px solid #DAD6CB;border-radius:30px;padding:10px 24px;font-size:26px;font-weight:600"><span style="color:#2F6FDB">●</span> Devolução de Clientes</p>
+<p style="background:#FFFFFF;border:1px solid #DAD6CB;border-radius:30px;padding:10px 24px;font-size:26px;font-weight:600"><span style="color:#B58900">●</span> Suprimentos</p>
+<p style="background:#FFFFFF;border:1px solid #DAD6CB;border-radius:30px;padding:10px 24px;font-size:26px;font-weight:600"><span style="color:#7B8794">●</span> Sem Classificação</p>
+<p style="background:#FFFFFF;border:1px solid #DAD6CB;border-radius:30px;padding:10px 24px;font-size:26px;font-weight:600"><span style="color:#8B5CF6">●</span> Notas próprias – DPC</p>
+</div>
+<table style="font-size:28px;color:#14231F">
+<tr style="background:#1E7B50"><th style="width:32%;color:#FFFFFF;text-align:left">Aba</th><th style="width:68%;color:#FFFFFF;text-align:left">O emitente da nota, no cadastro do C5, é…</th></tr>
+<tr style="background:#FFFFFF"><td style="font-weight:700">Compras – Revenda</td><td>Fornecedor de mercadoria para revenda (grupo FORNECEDOR)</td></tr>
+<tr style="background:#EDEAE0"><td style="font-weight:700">Suprimentos</td><td>Fornecedor de consumo (grupo FORNECEDOR CONSUMO)</td></tr>
+<tr style="background:#FFFFFF"><td style="font-weight:700">Devolução de Clientes</td><td>Cliente (grupo CLIENTE)</td></tr>
+<tr style="background:#EDEAE0"><td style="font-weight:700">Notas próprias – DPC</td><td>Outra filial da própria DPC (transferência entre filiais)</td></tr>
+<tr style="background:#FFFFFF"><td style="font-weight:700">Sem Classificação</td><td>CNPJ não encontrado no C5, ou em outro grupo (prestador, contato…)</td></tr>
+</table>
+<p style="font-size:28px;line-height:1.4;color:#1E7B50;font-weight:600">Cada aba mostra a quantidade entre parênteses. “Todas” reúne o que está liberado ao seu usuário.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#566560">Módulo DFe · apresentação ao time fiscal</p>
+<aside>Zona 4 do mapa. A categoria da nota sai do grupo do emitente no cadastro de pessoas do C5: fornecedor é Compras, fornecedor de consumo é Suprimentos, cliente é Devolução, a outra filial da DPC é Nota própria, e o resto é Sem Classificação. A aba de notas próprias é exclusiva: essas notas saem das outras abas, mas continuam em Todas. Só aparecem as abas liberadas para o usuário em Parâmetros. Mostre as abas ao vivo e, na tabela, passe o mouse no selo de categoria: a tela explica por que a nota caiu ali. Quando a DPC aparece só como transportadora no XML, a nota é mostrada na filial destinatária, não na que a capturou.</aside>
+</section>

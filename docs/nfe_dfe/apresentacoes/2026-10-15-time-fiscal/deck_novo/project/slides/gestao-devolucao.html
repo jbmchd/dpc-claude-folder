@@ -1,0 +1,25 @@
+<section id="gestao-devolucao" data-transition="fade" style="background:#F7F5EF;color:#14231F;font-family:'Public Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:44px">
+<h2 style="font-family:'Libre Baskerville', Georgia, serif;font-size:60px;font-weight:700;line-height:1.15">Aba Devolução: da nota ao atendimento</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:36px">
+<h3 style="font-size:34px;font-weight:700;color:#1E7B50">NF de devolução</h3>
+<p style="font-size:28px;color:#566560;line-height:1.35">a nota emitida pelo cliente, que chega pela captura</p>
+</div>
+<div style="display:flex;align-items:center;flex:none"><x-shape kind="arrow-right" style="width:48px;height:34px;background:#1E7B50"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #DAD6CB;border-radius:16px;padding:36px">
+<h3 style="font-size:34px;font-weight:700;color:#1E7B50">NF de venda (XML)</h3>
+<p style="font-size:28px;color:#566560;line-height:1.35">a venda que a devolução referencia dentro do próprio XML</p>
+</div>
+<div style="display:flex;align-items:center;flex:none"><x-shape kind="arrow-right" style="width:48px;height:34px;background:#1E7B50"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#1E7B50;color:#FFFFFF;border-radius:16px;padding:36px">
+<h3 style="font-size:34px;font-weight:700">Atendimento CRM</h3>
+<p style="font-size:28px;line-height:1.35">o atendimento aberto para essa venda, o que a logística precisa para tratar a devolução</p>
+</div>
+</div>
+<div style="background:#EDEAE0;border-radius:16px;padding:28px 40px;display:flex;flex-direction:column;gap:10px">
+<p style="font-size:30px;font-weight:600;line-height:1.35">Só nesta aba a tabela ganha duas colunas: NF de Venda (XML) e Atendimento CRM.</p>
+<p style="font-size:26px;color:#566560;line-height:1.4">Quando a venda não tem atendimento, a coluna mostra “—”.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#566560">Módulo DFe · apresentação ao time fiscal</p>
+<aside>Mostre a aba Devolução de Clientes ao vivo. Aqui a tabela ganha duas colunas depois da Categoria: a NF de venda que o XML da devolução referencia e o atendimento do CRM dessa venda. Escolha antes da apresentação uma devolução que tenha atendimento, para a demonstração fechar o caminho nota, venda, atendimento. Se uma devolução não tiver atendimento, a tela mostra um traço e nada é escondido. Na devolução o Comprador do fornecedor fica vazio, porque o emitente é cliente.</aside>
+</section>

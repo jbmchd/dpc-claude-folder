@@ -1,0 +1,63 @@
+{
+  "v": 4,
+  "attachments": {},
+  "createdOnFiles": {
+    "at": "2026-10-15T11:40:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "faces": {
+    "libre-baskerville": {
+      "family": "Libre Baskerville",
+      "href": "https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap"
+    },
+    "public-sans": {
+      "family": "Public Sans",
+      "href": "https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap"
+    }
+  },
+  "lists": "css",
+  "order": [
+    "cover",
+    "antes-agora",
+    "caminho",
+    "menu",
+    "gestao-mapa",
+    "gestao-cartoes",
+    "gestao-paineis",
+    "gestao-abas",
+    "gestao-colunas-1",
+    "gestao-colunas-2",
+    "gestao-status",
+    "gestao-acoes",
+    "gestao-devolucao",
+    "documentos",
+    "downloads",
+    "manifestacao",
+    "precisamos",
+    "perguntas"
+  ],
+  "sections": {
+    "abertura": {
+      "description": "Por que o módulo existe e o caminho de cada nota, do XML da Receita à tela.",
+      "start": "cover"
+    },
+    "gestao": {
+      "description": "A tela de Gestão de NFe, zona por zona: filtros, cartões, painéis, abas, tabela e ações.",
+      "start": "gestao-mapa"
+    },
+    "documentos": {
+      "description": "Consulta, relatórios e downloads.",
+      "start": "documentos"
+    },
+    "manifestacao": {
+      "description": "Ciência, confirmação e como a manifestação funciona.",
+      "start": "manifestacao"
+    },
+    "fechamento": {
+      "description": "Como o fiscal entra no módulo e perguntas.",
+      "start": "precisamos"
+    }
+  },
+  "title": "Módulo DFe: apresentação ao time fiscal"
+}
