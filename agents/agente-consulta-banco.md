@@ -1,7 +1,7 @@
 ---
 name: Agente Consulta Banco
 description: Executa consultas de leitura no banco via MCP DPC e retorna resultado estruturado. Não analisa nem interpreta — apenas busca dados. Use via agente-planejar-sonnet ou agente-planejar-opus quando precisar de schema ou dados para planejar.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 ---
 
 # Agente Consulta Banco

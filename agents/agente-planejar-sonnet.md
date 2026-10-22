@@ -1,7 +1,7 @@
 ---
 name: Agente Planejar Tarefa Sonnet
 description: Gera o planejamento.md para tarefas classificadas como simples. Use via orquestrador /tarefa-completa.
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 ---
 
 # Agente Planejar Tarefa (Sonnet)

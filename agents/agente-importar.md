@@ -1,7 +1,7 @@
 ---
 name: Agente Importar Tarefa
 description: Importa uma tarefa (Trello, PDF, imagem ou texto) criando a pasta local com todos os arquivos obrigatórios. Use via orquestrador /tarefa.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 ---
 
 # Agente Importar Tarefa

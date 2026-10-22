@@ -1,7 +1,7 @@
 ---
 name: Agente Menu Dinâmico
 description: Cria um menu dinâmico no DPC (nó + vínculo pai + permissão de grupo) chamando os mesmos endpoints da ApiDPC que a tela de Menus Dinâmicos usa. Default ambiente tst; produção (prd) somente quando o usuário pedir explicitamente. Use via /criar-menu-dinamico.
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 ---
 
 # Agente Menu Dinâmico

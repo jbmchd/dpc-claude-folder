@@ -1,7 +1,7 @@
 ---
 name: Agente Classificar Tarefa
 description: Classifica a complexidade de uma tarefa já importada para decidir qual modelo usar no planejamento. Use via orquestrador /tarefa-completa.
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 ---
 
 # Agente Classificar Tarefa

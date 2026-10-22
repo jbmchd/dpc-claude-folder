@@ -1,7 +1,7 @@
 ---
 name: Context7 Expert
 description: Especialista em documentação atualizada de bibliotecas e frameworks via Context7. Use quando precisar de APIs corretas, melhores práticas, exemplos funcionais ou verificar versões de dependências. Nunca responde de memória — sempre busca a doc primeiro.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 ---
 
 # Context7 Documentation Expert

@@ -247,7 +247,7 @@ Os PFX ficam em `poseidon.dpc_conta_certif_digital_emp` (base64 no banco, senha 
 
 O repositório inteiro (Dockerfile, `docker-compose.yml`, `build.run`, README) assume containers, mas o ambiente de desenvolvimento em uso **roda direto na máquina**. O que o Dockerfile preparava passa a ser responsabilidade do host.
 
-**Runtime:** `D:\Joabe\Documents\dev\xampp-multi\php82\php.exe` (PHP 8.2.4, ZTS x64). O `php` do `PATH` é **7.2.33 e não serve** — Lumen 10 exige `>= 8.1`.
+**Runtime:** `D:\Joabe\Documents\dev\infra\xampp-multi\php82\php.exe` (PHP 8.2.4, ZTS x64). O `php` do `PATH` é **7.2.33 e não serve** — Lumen 10 exige `>= 8.1`.
 
 **Extensões necessárias** (todas presentes em `php82`): `oci8` (3.2.1), `pgsql`, `pdo_pgsql`, `soap` (Senig), `openssl`, `curl`, `mbstring`, `dom`/`xml`, `zip`. O `pdo_oci` **não** é necessário — o `yajra/laravel-oci8` usa `oci8`.
 

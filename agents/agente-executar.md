@@ -1,7 +1,7 @@
 ---
 name: Agente Executar Tarefa
 description: Executa uma tarefa planejada alterando código no projeto alvo e registrando em desenvolvimento.md. Use via orquestrador /tarefa.
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 ---
 
 # Agente Executar Tarefa
