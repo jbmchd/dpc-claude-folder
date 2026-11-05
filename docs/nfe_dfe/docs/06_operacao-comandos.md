@@ -324,7 +324,7 @@ coluna que volta). As duas respeitam o prazo legal da NT 2020.001 v1.60, contado
 de `dta_recibo` (autorização), não `dta_emissao`: **10 dias** para Ciência,
 **90 dias** para as três conclusivas. Fora do prazo a SEFAZ devolve `cStat 596`
 (medido em 24/09/2026). Desconhecimento e Operação não Realizada não têm gatilho
-automático — só saem por `--chave`, decisão caso a caso.
+automático — só saem por `--chave` ou por pedido manual (a tela, até 20 na hora; acima disso, pela fila `--fila`, liberada em 05/11/2026), decisão caso a caso.
 
 **Freio e cooldown:** conta `656` atribuídos à manifestação nas últimas 24h,
 global (`dfe_max_bloqueios_manifest`, hoje 6) e por CNPJ; acima do teto, pausa
@@ -350,7 +350,7 @@ A tela manifesta até 20 notas na hora (teto da SEFAZ por lote). Acima disso a p
 
 | | |
 |---|---|
-| Eventos | só **Ciência (210210)** e **Confirmação (210200)**. Desconhecimento e Operação não realizada declaram que a operação não ocorreu e não têm volta: só no manual de até 20 |
+| Eventos | os **quatro**: Ciência (210210), Confirmação (210200), Desconhecimento (210220) e Operação não realizada (210240). Até 05/11/2026 eram só os dois primeiros; a controladoria autorizou os quatro. Os dois últimos não têm volta, então a tela pede **confirmação reforçada** (digitar o número de notas). A **justificativa** da Operação não realizada (15 a 255 caracteres) é **uma só para o pedido**: vai gravada em `dpc_dfe_manifestacao.dsc_justificativa` de cada linha `P`, e o `--fila` agrupa por empresa + evento + justificativa para mandar cada lote com o `xJust` certo. A DDL do `CHECK` de `dpc_dfe_manif_pedido` está no instalador `01_estrutura_motor` |
 | Vazão | `dfe_manifest_fila_max_ciclo` (**200** por ciclo ≈ 1.200/h; 5.000 notas em ~4 h). É parâmetro: sobe-se aos poucos medindo os 656, **sem deploy** |
 | Horário | 24h. Um pedido grande feito à tarde termina durante a noite |
 | Freio | o mesmo do `--auto`: teto de 656 em 24h (global e por empresa), espera do CNPJ, pausa entre lotes (`dfe_manifest_pausa_seg`) e o mesmo núcleo de envio (`enviaLote`) |

@@ -15,10 +15,12 @@ nfe_dfe/scripts/
 │   ├── 02_estrutura_telas_dbeaver.sql    6 tabelas de tela
 │   ├── 03_parametros_dbeaver.sql         os 11 dfe_* de DPC_PARAMETRO
 │   ├── 04_validacao_dbeaver.sql          somente leitura (secao 5: insert + rollback)
+│   ├── 05_desacordo_cte_dbeaver.sql      tabela dpc_dfe_cte_desacordo (trilha do desacordo do CT-e, 05/11/2026)
 │   └── rollback/                         UM por DDL
 │       ├── 01_99_rollback_estrutura_motor_dbeaver.sql
 │       ├── 02_99_rollback_estrutura_telas_dbeaver.sql
-│       └── 03_99_rollback_parametros_dbeaver.sql
+│       ├── 03_99_rollback_parametros_dbeaver.sql
+│       └── 05_99_rollback_desacordo_cte_dbeaver.sql
 ├── homolog/                              dado e valor que so existem na base de TESTE
 │   ├── 01_estabelecimentos_dbeaver.sql   12 CNPJs e 48 fluxos, pausados
 │   ├── 02_parametros_homolog_dbeaver.sql dfe_conexao_erp e dfe_replicacao_prd
@@ -91,6 +93,7 @@ Tudo grava `created_by = 'CADASTRO DFE'`, o marcador que identifica a origem. An
 |---|---|
 | `pausa_empresas` | **pausa completa**: os 4 cursores de cada empresa em `P` e manifestação, Ciência e Confirmação automáticas em `N`. Troque a lista de empresas nos pontos marcados `EDITE`; o carimbo `PAUSA COMPLETA AAAA-MM-DD` entra em `updated_by` |
 | `retomada_empresas` | devolve cursores `A`, manifestação `S`, Ciência `S`, Confirmação `N` **só onde o carimbo da pausa ainda vale** |
+| `backfill_cte_cancelado_e_tomador` | **correção única de 05/11/2026**: CT-e cancelado que aparecia como autorizado (evento 110111 chegou antes do CT-e) e CT-e de tomador "Outros" em "Não tomados". Foto antes, duas `update`, validação e desfazer por carimbo (`BACKFILL CTE 2026-11-05 CANC/TOMA/CT`). **Em prd só com ordem do Joabe**; na homolog já rodou (239 + 8.630 linhas) |
 
 O `P` resiste a uma execução que já estava drenando: o `DfeCursorRepository` mantém `P` como `P` ao registrar consulta. Prazo que corre durante a pausa: Ciência = 10 dias da **autorização** (NT 2020.001); nota que só tem resumo e passa da janela fica sem XML completo (`cStat 596`). A captura aguenta: a SEFAZ segura 90 dias.
 

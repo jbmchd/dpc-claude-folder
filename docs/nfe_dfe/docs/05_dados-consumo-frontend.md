@@ -128,7 +128,7 @@ O CT-e não tem "emitente e destinatário" como a NF-e: tem **cinco papéis** po
 | `num_cnpj_emitente` / `dsc_razao_emitente` | VARCHAR2 | a transportadora |
 | `num_cnpj_remetente` · `_expedidor` · `_recebedor` · `_destinat` | VARCHAR2(14) | os outros quatro papéis — **nulos no resumo** |
 | `cod_tomador` | VARCHAR2(1) | quem contratou: `0` remetente · `1` expedidor · `2` recebedor · `3` destinatário · `4` outro |
-| **`sig_papel_empresa`** | VARCHAR2(6) | papel da **nossa** empresa: `TOMA` · `REM` · `EXP` · `REC` · `DEST` · `EMIT` · `OUTRO` |
+| **`sig_papel_empresa`** | VARCHAR2(6) | papel da **nossa** empresa: `TOMA` · `REM` · `EXPED` · `RECEB` · `DEST` · `OUTRO`. `TOMA` também quando o tomador é "Outros" (`cod_tomador = 4`) e o CNPJ de `num_cnpj_tomador4` é o **inteiro** da empresa (corrigido em 05/11/2026; antes caía em `OUTRO` e o CT-e ia para "Não tomados") |
 | `vlr_prestacao` / `vlr_receber` | NUMBER | valor do serviço e valor a receber |
 | `nro_protocolo` | VARCHAR2(20) | protocolo de autorização |
 | `cod_situacao` / `dsc_situacao` | NUMBER / VARCHAR2(20) | 1 autorizado · 3 cancelado |

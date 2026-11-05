@@ -368,3 +368,25 @@ Sem pressa: a linha remanescente é inofensiva, porque o motor não lê mais a
 > **Alcance maior que esta reversão:** enquanto os índices estiverem `UNUSABLE`,
 > **qualquer** `insert`/`update`/`delete` em `consinco.MFL_DOCTOFISCAL` falha em
 > homologação. Quem estiver testando módulo fiscal por lá vai bater no mesmo erro.
+
+---
+
+## 05/11/2026 — CT-e (status e papel) e manifestação em massa
+
+Alterações feitas **direto na homolog**, todas com script versionado no hub.
+
+| O quê | Como | Resultado |
+|---|---|---|
+| CT-e cancelado como autorizado | `operacao/backfill_cte_cancelado_e_tomador`, seção 2 | 239 CT-e passaram a `Cancelado` (carimbo `BACKFILL CTE 2026-11-05 CANC`) |
+| CT-e de tomador "Outros" em "Não tomados" | mesmo script, seção 3 | 8.630 CT-e passaram a `TOMA` (carimbo `... TOMA`) |
+| `DPC_DFE_MANIF_PEDIDO_CK1` | redefinida para os 4 eventos (210210, 210200, 210220, 210240), como o instalador `01_estrutura_motor` faz | pedido em massa aceita Desconhecimento e Operação não realizada |
+
+**Produção (somente leitura, conferida em 05/11/2026):** 287 CT-e cancelados como autorizados (em todos o NSU do evento é anterior ao do CT-e; 12 empresas) e 9.747 CT-e de tomador "Outros" = empresa com papel `OUTRO` (empresas DFe 7, 24, 1 e 21). Os 11.654 CT-e cuja raiz de CNPJ é a da empresa mas o CNPJ inteiro é de outra filial **continuam `OUTRO`, de propósito**. **Nada foi gravado em prd**: o backfill e o `CHECK` aguardam a ordem do Joabe / o deploy do Douglas.
+
+### Desacordo do CT-e (evento 610110) — 05/11/2026
+
+| O quê | Como | Resultado |
+|---|---|---|
+| Tabela `poseidon.dpc_dfe_cte_desacordo` | instalador `ddl/05_desacordo_cte_dbeaver.sql`, aplicado na homolog (rodou duas vezes, convergente) | 1 tabela, 11 colunas, 10 constraints (7 NOT NULL + PK + FK1 + CK1), 2 índices |
+
+**Não enviado a SEFAZ em nenhum teste.** O envio foi substituído por um stub que devolve um `retEventoCTe` pronto; o XML do evento foi gerado, assinado e validado contra o XSD do `eventoCTe` pela própria `sped-cte` antes do "envio". O primeiro envio real precisa ser acompanhado: a UF/`cOrgao` do evento (hoje a UF do CT-e, como no cancelamento da lib; o MOC fala em SVRS) e o prazo de 45 dias saem do MOC local e de busca web, **não da NT oficial**, que o portal não serviu.

@@ -18,6 +18,7 @@ Reescrito em **13/10/2026**: o que eram 17 arquivos acumulados (14 blocos, de 02
 | 2 | `02_estrutura_telas_dbeaver.sql` | **6 tabelas** de tela: `usuario_empresa`, `usuario_aba`, `usuario_permissao`, `usuario_coluna`, `usuario_modelo`, `painel_alerta` |
 | 3 | `03_parametros_dbeaver.sql` | os **11** parâmetros `dfe_*` de `DPC_PARAMETRO` (só insere o que falta; nunca atualiza) |
 | — | `04_validacao_dbeaver.sql` | somente leitura; compare com o ESPERADO de cada seção (a seção 5 faz um insert que termina em `rollback`) |
+| 5 | `05_desacordo_cte_dbeaver.sql` | **desde 05/11/2026**: a tabela `dpc_dfe_cte_desacordo` (trilha de auditoria do desacordo do CT-e). Roda depois do `01` (a FK aponta para `dpc_dfe_cte`) e **antes do deploy da ApiNFE** que traz o endpoint `dfe/cte/desacordo`. Convergente, com a conferência no fim; desfazer em `rollback/05_99`. Fica fora do `01` de propósito: o `01` é gerado, com uma seção por tipo de objeto |
 | — | `rollback/01_99`, `02_99`, `03_99` | **um rollback para cada DDL** (derruba o motor / as telas / remove os parâmetros) |
 
 **Instalar:** `01` → `02` → `03`; depois `04`. **Desfazer:** `02_99` → `01_99` → `03_99`.
