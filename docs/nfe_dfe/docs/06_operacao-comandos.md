@@ -312,7 +312,7 @@ throttling — está descrito só como referência histórica em
 **As trancas, em ordem:**
 1. `status_manifestar='S'` na empresa — chave-mestra, vale para todo evento, manual ou automático.
 2. Só em `--auto`: a flag daquele evento (`status_manif_auto_ciencia`/`_confirmacao`). Permite ligar a Ciência numa filial-piloto sem liberar a Confirmação.
-3. Só na Confirmação automática: `dta_inicio_manif_auto_conf` preenchida, e a nota precisa ter `dta_entrada_erp` posterior a essa data — decisão de 24/09/2026 de não drenar o backlog de notas já escrituradas quando a flag for ligada.
+3. Só na Confirmação automática: `dta_inicio_manif_auto_conf` preenchida, e a nota precisa ter `dta_entrada_erp` posterior a essa data — decisão de 24/09/2026 de não drenar o backlog de notas já escrituradas quando a flag for ligada. **Sem `dta_entrada_erp`, vale `dta_lancamento_erp`** (09/11/2026): a entrada só vem do recebimento (`mlf_*`), e nota de **despesa do módulo Orçamento** (`consinco.or_nfdespesa`) ou escriturada direto no fiscal nunca passa por ele — fica ESCRITURADA em `rf_notamestre`, sem data de entrada. Em 06/11, 68 das 923 notas escrituradas no dia ficaram só em Ciência por isso (pergunta do Sérgio; 67 dessas 68 casam com `or_nfdespesa` pela chave). `dta_lancamento_erp` é DATE contra um corte TIMESTAMP: nota lançada no dia do corte, depois dele, fica de fora (lado seguro). Quem tem as duas datas usa a de entrada. Ao entrar no ar, a mudança tornou candidatas 260 notas que já estavam escrituradas e dentro do prazo (69 de 06/11 em diante, 191 de 21/10 a 05/11); a Confirmação não tem desfazer.
 4. `--confirmar` na chamada.
 5. A UK `(cod_dfe_nota, cod_tipo_evento, nro_seq_evento)` no banco — a única que não depende de ninguém lembrar de checar antes.
 

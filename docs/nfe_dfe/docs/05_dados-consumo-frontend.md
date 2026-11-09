@@ -81,7 +81,7 @@ UK `(cod_dfe_empresa, chave_nf)`.
 | `dsc_razao_social` / `sig_uf` / `num_inscr_estadual` | os campos do configJson do sped |
 | `status_manifestar` | `N`/`S` — chave-mestra: sem `S` a empresa não manifesta de jeito nenhum, nem pela tela manual. Manifestação só existe para NF-e |
 | `status_manif_auto_ciencia` / `status_manif_auto_confirmacao` | `N`/`S`, novas em 23/09/2026 — habilitam SÓ a automação de cada evento (agendador `--auto`); exigem `status_manifestar='S'` junto |
-| `dta_inicio_manif_auto_conf` | DATE, nova em 24/09/2026 — segunda trava da Confirmação automática: com a flag em `S` mas esta data nula, a automação não roda. Preenchida, só pega nota com `dta_entrada_erp` posterior à data (decisão de não drenar o backlog anterior por automação) |
+| `dta_inicio_manif_auto_conf` | DATE, nova em 24/09/2026 — segunda trava da Confirmação automática: com a flag em `S` mas esta data nula, a automação não roda. Preenchida, só pega nota com `dta_entrada_erp` posterior à data (decisão de não drenar o backlog anterior por automação); sem `dta_entrada_erp` (despesa do Orçamento, escrituração direta), vale `dta_lancamento_erp` (09/11/2026) |
 
 ### `DPC_DFE_CURSOR` — estado de leitura (tela de monitoramento)
 
