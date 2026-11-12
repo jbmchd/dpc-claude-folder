@@ -298,6 +298,12 @@ A extração foi validada por um golden test: 37 requisições (listagem, abas, 
 
 Tela **Sefaz > Gestão de NFe** (`/sefaz/documentos-fiscais`; ApiDPC `SefazDocumentosFiscaisRepository`). Seis pedidos da equipe fiscal, e o que a medição achou em cada um.
 
+### Só notas autorizadas, e por que a Gestão mostra nota que Documentos não mostra (12/11/2026)
+
+- **Só autorizadas.** `condAutorizada()` = `NVL(cod_situacao, 1) = 1`, aplicada em `queryBase()` (lista, exportação, cards, painel de tempo) e em `wherePermissaoBase()` (donut, tempo, top 5 de compradores, alertas), os dois pontos por onde passa toda consulta de nota da tela. Antes, nota cancelada (`cod_situacao = 3`) aparecia em tudo: em outubro eram 195 pendentes, e no recorte da filial 1 (print da equipe) 72 de 9.871. Domínio em produção: 1 AUTORIZADA, 3 CANCELADA, nulo. **Nulo continua visível** de propósito: 48 `procNF` com XML completo sem situação gravada (falha de normalização, não cancelamento). `compradores()` (dropdown) e o download de XML/DANFE por chave ficaram de fora. ApiDPC `a4575845` (alpha em 12/11; produção pendente de PR).
+- **O alerta "canceladas após captura" é código morto:** usa `cod_situacao IN (101, 135, 110)`, que não existem na base (o domínio é 1/3), então sempre devolveu 0. Não foi tratado (fora do pedido); pendência a perguntar.
+- **Por que uma nota aparece na Gestão e não em Documentos:** a tela de Documentos separa por **aba de papel** (`mapaDeAbas`: Recebidas = `DEST`, Emitidas, Transporte = `TRANSP`, Citadas, Indefinidas) e a aba padrão é "Recebidas". A Gestão **não filtra papel**: só tira o CNPJ do emitente igual ao da empresa e a cópia TRANSP duplicada. Caso real, NF 208 (Mercado Nova Opção, `procNF`, autorizada): papel `TRANSP` na empresa 1, destinatário (CNPJ 21895144000123) que **não é empresa DPC**, sem registro em `rf_notamestre`/`mlf_*`; aparece na Gestão como pendente e, em Documentos, só na aba **Transporte**. Em produção a Gestão traz 68.351 notas `TRANSP` pendentes (68.299 com destinatário externo, a maioria categoria "Nota própria"). **Decisão do Joabe: não mudar**; esconder as de transporte esvaziaria "Nota própria" e mudaria todos os números do painel.
+
 ### Categoria: o grupo do emitente no cadastro de pessoas do C5 (13/10/2026)
 
 > **Regra do time fiscal, em vigor desde 13/10/2026.** Substitui a categoria por CFOP/escrituração descrita nas duas seções seguintes, que ficam como registro do que foi medido e **derrubado**.
