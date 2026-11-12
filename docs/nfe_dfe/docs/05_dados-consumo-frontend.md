@@ -415,6 +415,13 @@ Pedido da logística: o DANFE da Qive mostra o EAN sob cada produto e isso facil
 - **Custo:** a nota fica mais longa. Medido: 16 itens, de 1 para 2 páginas; 300 itens, de 7 para 11.
 - **Fora do escopo:** os DANFEs da **ApiNFE** (`DaRepository::emitirDanfe`, `NotaFiscalController`) têm cópia própria da biblioteca e não mudaram.
 
+### DANFE que quebrava com "<" na informação complementar (12/11/2026)
+
+- **Sintoma:** DANFE não sai para parte das notas (log de produção `DANFE: falha ao renderizar o XML completo`, `DOMDocument::loadXML(): StartTag: invalid element name in Entity`). Exemplos NF 76875 e 77093 (BIC AMAZONIA SA).
+- **Causa:** `Danfe::pAnfavea()` (biblioteca, `Danfe.php:810`, chamada para o `infCpl` da nota e para o `infAdProd` de cada item) trata **todo `<`** como começo de um bloco XML do padrão ANFAVEA (montadoras) e lê com `loadXML()`. Texto livre como `---- > Pedido SUPPLOG-SP: 1505031 < ---- ===== > Nosso Pedido: 525003 SO < =====` faz o `loadXML` recusar; o Laravel converte o warning em `ErrorException`; `renderizaPdf()` captura e devolve `null`. O XML guarda `&amp;gt;`/`&amp;lt;`, a biblioteca decodifica e o `<` chega cru.
+- **Alcance (amostra de 0,4% das NF-e completas em prd, 12/11):** 158 de 696 (23%), ~37 mil das 162 mil, de mais de um emitente (na amostra, DRL Distribuidor Atacadista; a BIC não caiu nela).
+- **Correção:** `DanfeComEan::pAnfavea()` chama o pai com um `set_error_handler` local e, em qualquer `\Throwable`, **devolve o texto como veio**. Texto sem `<` ou ANFAVEA válido passa pelo pai igual a antes (551 notas comparadas, 0 diferenças; nova amostra de 700, 0 falhas). Sem log por nota. A DANFE é gerada na hora, então vale para todas as notas sem reprocesso. ApiDPC `4f18bae7`, PR #1110 (master) e #1111 (Master → production).
+
 ### Comprador: o filtro nunca teve o que filtrar (🔴 comprador do item, superado em 13/10/2026)
 
 > 🔴 **Superado** quanto a *de onde vem* o comprador: hoje é o do fornecedor (seção acima). O resto, o select preenchido por `GET documentos-fiscais/compradores`, continua valendo.
