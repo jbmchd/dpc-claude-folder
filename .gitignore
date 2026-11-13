@@ -56,3 +56,8 @@ docs/nfe_dfe/itens/
 #  Pasta de work items (cards, planejamentos, rascunhos) e local, nao versionada
 # ---------------------------------------------------------------------------
 .work-items/
+
+# ---------------------------------------------------------------------------
+#  Permissoes locais do Claude Code (acumuladas pelo uso, por maquina): nao versionar
+# ---------------------------------------------------------------------------
+settings.local.json
