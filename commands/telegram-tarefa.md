@@ -17,6 +17,8 @@
 >
 > **Componentes omitidos dentro do início/fim** (autorizado pelo usuário) assumem o valor **corrente** (agora): ano, **mês**, **dia** e **hora/minuto**. Ex.: `08:00` → hoje às 08:00; `05 08:00` → dia 05 do mês corrente; `05/11` (sem hora) → 05/11 na hora atual. Isso vale só para o que faltar **dentro** de um início/fim informado; um início ou fim **inteiramente ausente** continua exigindo pergunta.
 >
+> **Só dias informados, sem hora** (autorizado pelo usuário, 18/11/2026): `dias 17 e 18`, `dia 17`, `17 a 19`, `de 17/11 a 18/11` significam **dias inteiros**. Início = **00:00 do primeiro dia**; fim = **23:59:59 do último dia**, e se esse dia for **hoje** (ou futuro) o fim é **agora**. Isso **prevalece** sobre "hora omitida = agora", que vale só quando o usuário digita uma data/hora de início ou fim e esquece parte dela. Ex. (agora = 18/11 09:55): `dias 17 e 18` → `2026-11-17 00:00` até `2026-11-18 09:55`; `dia 12` → `2026-11-12 00:00` até `2026-11-12 23:59:59`. Sem ano/mês, usar os correntes; sem **chat**, continua perguntando.
+>
 > Antes de ler, repetir a janela interpretada, já com os valores preenchidos (`de AAAA-MM-DD hh:mm até AAAA-MM-DD hh:mm`), e exigir fim > início. Se o preenchimento produzir fim ≤ início ou um fim no futuro, perguntar.
 
 **Saída:** uma pasta por demanda em `.claude/.work-items/` (via importar → classificar → planejar), cada uma com `planejamento.md`, e um relatório final.
@@ -55,11 +57,11 @@ Separar **pedidos** de conversa solta, agrupando por resposta/autor/assunto e **
 ### Fase 4 — Classificar (Sonnet)
 `Agente Classificar Tarefa` por pasta → `complexidade` e `motivo`.
 
-### Fase 5 — Planejar (Sonnet ou Opus)
-`"simples"` → `Agente Planejar Tarefa Sonnet`; `"complexa"` → `Agente Planejar Tarefa Opus`. Informar ao usuário o modelo escolhido e o motivo antes de spawnar. Gera `planejamento.md` (com a seção **Branch** apenas como planejamento — a branch **não** é criada).
+### Fase 5 — Planejar (sempre Sonnet; Opus só como recomendação)
+**Sempre** `Agente Planejar Tarefa Sonnet`, independentemente da `complexidade`. O `Agente Planejar Tarefa Opus` **nunca** é acionado automaticamente: para demandas `"complexa"`, apenas **recomendar** o Opus no relatório (Fase 6) e só rodá-lo se o usuário confirmar. Informar ao usuário que o planejamento usa Sonnet antes de spawnar. Gera `planejamento.md` (com a seção **Branch** apenas como planejamento — a branch **não** é criada).
 
 ### Fase 6 — Relatório
-Apresentar: janela lida (e quantas mensagens), tabela de demandas (título · autor · projeto · complexidade · pasta/`planejamento.md`), mensagens **ignoradas** (para o usuário corrigir se algo era pedido), **mensagens em anexo lidas fora da janela** (id · data/hora · autor · a qual mensagem da janela respondem), dúvidas em aberto.
+Apresentar: janela lida (e quantas mensagens), tabela de demandas (título · autor · projeto · complexidade · pasta/`planejamento.md`), mensagens **ignoradas** (para o usuário corrigir se algo era pedido), **mensagens em anexo lidas fora da janela** (id · data/hora · autor · a qual mensagem da janela respondem), dúvidas em aberto, e — se houver demandas `"complexa"` — a **recomendação de refazer o planejamento delas com Opus** (listar quais e o motivo), perguntando se o usuário confirma. Sem confirmação, não usar Opus.
 
 ---
 

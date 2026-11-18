@@ -14,7 +14,7 @@ flowchart LR
   B --> C[Extrair demandas]
   C --> D[Importar]
   D --> E[Classificar]
-  E --> F[Planejar<br/>Sonnet / Opus]
+  E --> F[Planejar<br/>Sonnet]
   F --> G[Relatório<br/>sem executar]
 ```
 
@@ -30,6 +30,7 @@ flowchart LR
 | Mês omitido | Mês corrente |
 | Dia omitido | Dia corrente |
 | Hora omitida (só data) | Hora/minuto correntes (agora) |
+| **Só dias**, sem hora ("dias 17 e 18", "dia 17", "17 a 19") | **Dias inteiros** (decisão do usuário, 18/11/2026): início 00:00 do 1º dia; fim 23:59:59 do último, ou **agora** se esse dia for hoje/futuro. Prevalece sobre "hora omitida = agora" |
 | Fim informado ≤ início, ou fim no futuro | Perguntar de novo |
 
 ### Sugestão de chat quando não informado
@@ -48,6 +49,8 @@ Os componentes corrente valem **só dentro** de um início/fim informado (decis�
 | `05 08:00` | 2026-11-05 08:00 |
 | `05/11` | 2026-11-05 14:20 |
 | `05/11 08:30` | 2026-11-05 08:30 |
+| `dias 17 e 18` (agora = 18/11 09:55) | 2026-11-17 00:00 até 2026-11-18 09:55 |
+| `dia 12` | 2026-11-12 00:00 até 2026-11-12 23:59:59 |
 
 Sempre repetir a janela **já preenchida** antes de ler, para o usuário pegar um preenchimento que não era o pretendido.
 

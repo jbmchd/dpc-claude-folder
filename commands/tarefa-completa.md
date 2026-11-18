@@ -63,14 +63,11 @@ Acionar `Agente Classificar Tarefa` passando o caminho da pasta.
 - Se `{"status": "erro"}` → exibir motivo e **encerrar**.
 - Se `{"status": "ok"}` → guardar `complexidade` e `motivo`, avançar.
 
-### Fase 3 — Planejar (Sonnet ou Opus)
+### Fase 3 — Planejar (sempre Sonnet; Opus só como recomendação)
 
-Rotear conforme `complexidade`:
+**Sempre** acionar `Agente Planejar Tarefa Sonnet`, independentemente da `complexidade`. O `Agente Planejar Tarefa Opus` **nunca** é acionado automaticamente: só roda se o usuário confirmar na pausa abaixo.
 
-- `"simples"` → acionar `Agente Planejar Tarefa Sonnet`
-- `"complexa"` → acionar `Agente Planejar Tarefa Opus`
-
-Passar o caminho da pasta. Informar ao usuário qual modelo foi escolhido e o motivo da classificação antes de spawnar.
+Passar o caminho da pasta. Informar ao usuário que o planejamento usa Sonnet (e, se `complexidade` = `"complexa"`, o motivo da classificação) antes de spawnar.
 
 - Se `{"status": "erro"}` → exibir motivo e **encerrar**. Orientar a corrigir e rodar `/planejar-tarefa` manualmente.
 - Se `{"status": "ok"}` → exibir o `resumo` e a **pausa de aprovação**.
@@ -80,7 +77,7 @@ Passar o caminho da pasta. Informar ao usuário qual modelo foi escolhido e o mo
 Apresentar ao usuário:
 
 ```
-Planejamento concluído. [Sonnet|Opus]
+Planejamento concluído. [Sonnet]
 
 [resumo do agente-planejar]
 
@@ -92,9 +89,17 @@ O que deseja fazer?
   3. Cancelar
 ```
 
+Se a classificação foi `"complexa"`, incluir antes das opções a **recomendação** (sem agir):
+
+```
+⚠ Tarefa classificada como complexa (<motivo>). Recomendo refazer o planejamento com Opus.
+```
+
+e acrescentar a opção `4. Refazer o planejamento com Opus`. Só ao usuário escolher a 4 → acionar `Agente Planejar Tarefa Opus` (sobrescreve o `planejamento.md`) e voltar a esta pausa. Sem a escolha explícita da 4, **não usar Opus**.
+
 Aguardar resposta. **Não avançar sem confirmação explícita de opção 1.**
 
-> **Modo A:** a pausa é **única** e lista os N planos (um resumo por card, com sua branch). As opções passam a ser **1. Aprovar e executar todos** / **2. Ajustar manualmente** / **3. Cancelar**. Aprovar (opção 1) libera a execução sequencial de todos os cards.
+> **Modo A:** a pausa é **única** e lista os N planos (um resumo por card, com sua branch). As opções passam a ser **1. Aprovar e executar todos** / **2. Ajustar manualmente** / **3. Cancelar** (+ **4. Refazer com Opus** apenas para os cards complexos, indicando quais). Aprovar (opção 1) libera a execução sequencial de todos os cards.
 
 ### Fase 4 — Executar (Sonnet) — somente se opção 1 aprovada
 
